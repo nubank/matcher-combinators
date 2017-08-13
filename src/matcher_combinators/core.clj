@@ -17,7 +17,6 @@
 (defn- value [match-result]
   (second match-result))
 
-
 (defrecord Value [expected]
   Matcher
   (match [_this actual]
@@ -29,17 +28,28 @@
 (defn equals-value [expected]
   (->Value expected))
 
+(defn- match-map [expected actual])
+
+(defn- compare-maps [expected actual unexpected-handler]
+  (let [entry-results      (map (fn [[key value-matcher]] [key (match value-matcher (get actual key))]) expected)
+        unexpected-entries (keep (fn [[key value]] (when-not (find expected key) [key (unexpected-handler value)])) actual)]
+    (if (and (every? (comp match? second) entry-results)
+             (empty? unexpected-entries))
+      [:match actual]
+      [:mismatch (->> entry-results
+                      (map (fn [[key match-result]] [key (value match-result)]))
+                      (concat unexpected-entries)
+                      (into actual))])))
+
+(defn- match-map [expected actual unexpected-handler]
+  (if-not (map? actual)
+    [:mismatch (->Mismatch expected actual)]
+    (compare-maps expected actual unexpected-handler)))
+
 (defrecord ContainsMap [expected]
   Matcher
   (match [_this actual]
-    (if-not (map? actual)
-      [:mismatch (->Mismatch expected actual)]
-      (let [entry-results (map (fn [[key value-matcher]] [key (match value-matcher (get actual key))]) expected)]
-        (if (every? (fn [[_ match-result]] (match? match-result)) entry-results)
-          [:match actual]
-          [:mismatch (->> entry-results
-                          (map (fn [[key match-result]] [key (value match-result)]))
-                          (into actual))])))))
+    (match-map expected actual identity)))
 
 (defn contains-map [expected]
   (->ContainsMap expected))
@@ -47,15 +57,7 @@
 (defrecord EqualsMap [expected]
   Matcher
   (match [_this actual]
-    (let [entry-results      (map (fn [[key value-matcher]] [key (match value-matcher (get actual key))]) expected)
-          unexpected-entries (keep (fn [[key value]] (when-not (find expected key) [key (->Unexpected value)])) actual)]
-      (if (and (every? (fn [[_ match-result]] (match? match-result)) entry-results)
-               (empty? unexpected-entries))
-        [:match actual]
-        [:mismatch (->> entry-results
-                        (map (fn [[key match-result]] [key (value match-result)]))
-                        (concat unexpected-entries)
-                        (into actual))]))))
+    (match-map expected actual ->Unexpected)))
 
 (defn equals-map [expected]
   (->EqualsMap expected))
@@ -63,9 +65,9 @@
 (defrecord EqualsSequence [expected]
   Matcher
   (match [_this actual]
-    (let [expected-matchers (concat (map #(partial match %) expected)
-                                    (repeat (fn [extra-element] [:mismatch (->Unexpected extra-element)])))
-          match-results     (map (fn [match-fn actual-element] (match-fn actual-element)) expected-matchers actual)]
+    (let [matcher-fns   (concat (map #(partial match %) expected)
+                                (repeat (fn [extra-element] [:mismatch (->Unexpected extra-element)])))
+          match-results (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual)]
       (if (every? match? match-results)
         [:match actual]
         [:mismatch (map value match-results)]))))

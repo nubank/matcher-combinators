@@ -65,8 +65,8 @@
     (match (equals-map {:a (equals-value 42)}) {:b 42})
     => [:mismatch {:b (->Unexpected 42), :a (->Missing 42)}]))
 
-  (future-fact "when not given a map"
-    (match (equals-map {:a (equals-value 10)}) 10) => [:mismatch (->Mismatch {:a 10} 10)]))
+  (fact "when not given a map"
+    (match (equals-map {:a (equals-value 10)}) 10) => [:mismatch (->Mismatch {:a (equals-value 10)} 10)]))
 
 (facts "on the equals-sequence matcher"
   (fact "perfect match"
@@ -92,12 +92,14 @@
     => [:mismatch [[1 (->Mismatch 2 5)] 20]]
 
     (match (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)]) [[1 5] 21])
-    => [:mismatch [[1 (->Mismatch 2 5)] (->Mismatch 20 21)]])
-  )
+    => [:mismatch [[1 (->Mismatch 2 5)] (->Mismatch 20 21)]]))
 
 (facts "on nesting multiple matchers"
-  ;(match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)]) [[1 5] 20])
-  )
+  (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])
+         [{:a 42 :b 1337} 20])
+  => [:match [{:a 42 :b 1337} 20]]
 
-(def ms [(equals-value 1) (equals-value 2)])
-(map #(partial match %) ms)
+  (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])
+         [{:a 43 :b 1337} 20])
+  => [:mismatch [{:a (->Mismatch 42 43) :b 1337} 20]])
+
