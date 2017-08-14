@@ -140,13 +140,13 @@
     (fact "does not match when none of the expected matchers is a match for one element of the given sequence"
       (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
              [{:id 1 :a 1} {:id 2 :a 200}])
-      => [:mismatch [{:id 1 :a 1} {:id 2 :a (->Mismatch 2 200)}]]
+      => [:mismatch [{:id 1 :a 1} {:id 2 :a (->Mismatch 2 200)}]])
 
-      (fact "multiple mismatches"
-        (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
-               [{:id 1 :a 10} {:id 2 :a 200}])
-        => [:mismatch [{:id 1 :a (->Mismatch 1 10)} {:id 2 :a (->Mismatch 2 200)}]])
-      )))
+    (fact "multiple mismatches"
+      (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
+             [{:id 1 :a 10} {:id 2 :a 200}])
+      => [:mismatch [{:id 1 :a (->Mismatch 1 10)} {:id 2 :a (->Mismatch 2 200)}]])
+    ))
 
 
 (facts "on selecting matchers for a value"

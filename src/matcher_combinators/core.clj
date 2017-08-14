@@ -116,13 +116,12 @@
          matched-elements []]
     (if (empty? elements)
       [matching? (reverse matched-elements)]
-      (let [[element & rest-elements] elements]
-        (if-let [selected-matcher (find-first #(select? % select-fn element) matchers)]
-          (let [[match-result match-value] (match selected-matcher element)]
-            (if (= :match match-result)
-              (recur rest-elements (remove #{selected-matcher} matchers) matching? (cons match-value matched-elements))
-              (recur rest-elements (remove #{selected-matcher} matchers) :mismatch (cons match-value matched-elements))))
-          (recur rest-elements matchers :mismatch (cons (->Unexpected element) matched-elements)))))))
+      (let [[element & rest-elements]  elements
+            selected-matcher           (find-first #(select? % select-fn element) matchers)
+            [match-result match-value] (if selected-matcher (match selected-matcher element) [:mismatch (->Unexpected element)])]
+        (if (= :match match-result)
+          (recur rest-elements (remove #{selected-matcher} matchers) matching? (cons match-value matched-elements))
+          (recur rest-elements (remove #{selected-matcher} matchers) :mismatch (cons match-value matched-elements)))))))
 
 (defrecord SelectingInAnyOrder [select-fn expected]
   Matcher
