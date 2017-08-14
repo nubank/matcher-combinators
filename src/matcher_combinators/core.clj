@@ -75,3 +75,21 @@
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
 
+(defn matches-in-any-order? [matchers elements]
+  (if (empty? elements)
+    (empty? matchers)
+    (let [[first-element & rest-elements] elements
+          matching-matcher (first (filter #(match? (match % first-element)) matchers))]
+      (if (nil? matching-matcher)
+        false
+        (recur (remove #{matching-matcher} matchers) rest-elements)))))
+
+(defrecord InAnyOrder [expected]
+  Matcher
+  (match [_this actual]
+    (if (matches-in-any-order? expected actual)
+      [:match actual]
+      [:mismatch (->Mismatch expected actual)])))
+
+(defn in-any-order [expected]
+  (->InAnyOrder expected))

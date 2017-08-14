@@ -92,7 +92,9 @@
     => [:mismatch [[1 (->Mismatch 2 5)] 20]]
 
     (match (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)]) [[1 5] 21])
-    => [:mismatch [[1 (->Mismatch 2 5)] (->Mismatch 20 21)]]))
+    => [:mismatch [[1 (->Mismatch 2 5)] (->Mismatch 20 21)]])
+
+  (future-fact "when not given a sequence"))
 
 (facts "on nesting multiple matchers"
   (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])
@@ -103,3 +105,23 @@
          [{:a 43 :b 1337} 20])
   => [:mismatch [{:a (->Mismatch 42 43) :b 1337} 20]])
 
+(facts "on the in-any-order sequence matcher"
+  (fact "matches a sequence with elements corresponding to the expected matchers, in order"
+    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2])
+    => [:match [1 2]])
+
+  (fact "does not match when none of the expected matchers is a match for one element of the given sequence"
+    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2000])
+    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2000])])
+
+  (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
+    (match (in-any-order [(equals-value 1) (equals-value 2)]) [2 1]) => [:match [2 1]])
+
+  (fact "only matches when all expected matchers are matched by elements of the given sequence"
+    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
+    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1])])
+
+  (facts "does not match when the given sequence contains elements not matched by any matcher"
+    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
+    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
+  )
