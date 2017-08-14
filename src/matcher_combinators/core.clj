@@ -1,8 +1,16 @@
 (ns matcher-combinators.core
   (:require [clojure.set :as set]))
 
+(defn- find-first [pred coll]
+  (->> coll (filter pred) first))
+
 (defprotocol Matcher
+  (select? [this select-fn candidate])
   (match [this actual]))
+
+(extend-type nil
+  Matcher
+  (select? [_ _ _] false))
 
 (defrecord Mismatch [expected actual])
 (defrecord Missing  [expected])
@@ -19,6 +27,8 @@
 
 (defrecord Value [expected]
   Matcher
+  (select? [_this _select-fn candidate]
+    (= expected candidate))
   (match [_this actual]
    (cond (and (nil? expected) (nil? actual)) true
          (nil? actual) [:mismatch (->Missing expected)]
@@ -48,6 +58,10 @@
 
 (defrecord ContainsMap [expected]
   Matcher
+  (select? [this select-fn candidate]
+    (let [selected-matcher (select-fn expected)
+          selected-value   (select-fn candidate)]
+      (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
     (match-map expected actual identity)))
 
@@ -56,6 +70,10 @@
 
 (defrecord EqualsMap [expected]
   Matcher
+  (select? [_this select-fn candidate]
+    (let [selected-matcher (select-fn expected)
+          selected-value   (select-fn candidate)]
+      (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
     (match-map expected actual ->Unexpected)))
 
@@ -75,21 +93,44 @@
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
 
-(defn matches-in-any-order? [matchers elements]
+(defn- matches-in-any-order? [matchers elements]
   (if (empty? elements)
     (empty? matchers)
     (let [[first-element & rest-elements] elements
-          matching-matcher (first (filter #(match? (match % first-element)) matchers))]
+          matching-matcher (find-first #(match? (match % first-element)) matchers)]
       (if (nil? matching-matcher)
         false
         (recur (remove #{matching-matcher} matchers) rest-elements)))))
 
-(defrecord InAnyOrder [expected]
+(defrecord AllOrNothingInAnyOrder [expected]
   Matcher
   (match [_this actual]
     (if (matches-in-any-order? expected actual)
       [:match actual]
       [:mismatch (->Mismatch expected actual)])))
 
-(defn in-any-order [expected]
-  (->InAnyOrder expected))
+(defn selecting-match [select-fn all-matchers all-elements]
+  (loop [elements         all-elements
+         matchers         all-matchers
+         matching?        :match
+         matched-elements []]
+    (if (empty? elements)
+      [matching? (reverse matched-elements)]
+      (let [[element & rest-elements] elements]
+        (if-let [selected-matcher (find-first #(select? % select-fn element) matchers)]
+          (let [[match-result match-value] (match selected-matcher element)]
+            (if (= :match match-result)
+              (recur rest-elements (remove #{selected-matcher} matchers) matching? (cons match-value matched-elements))
+              (recur rest-elements (remove #{selected-matcher} matchers) :mismatch (cons match-value matched-elements))))
+          (recur rest-elements matchers :mismatch (cons (->Unexpected element) matched-elements)))))))
+
+(defrecord SelectingInAnyOrder [select-fn expected]
+  Matcher
+  (match [_this actual]
+    (selecting-match select-fn expected actual)))
+
+(defn in-any-order
+  ([expected]
+   (->AllOrNothingInAnyOrder expected))
+  ([select-fn expected]
+   (->SelectingInAnyOrder select-fn expected)))

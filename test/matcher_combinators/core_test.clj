@@ -106,22 +106,63 @@
   => [:mismatch [{:a (->Mismatch 42 43) :b 1337} 20]])
 
 (facts "on the in-any-order sequence matcher"
-  (fact "matches a sequence with elements corresponding to the expected matchers, in order"
-    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2])
-    => [:match [1 2]])
+  (facts "the 1-argument arity has a simple all-or-nothing behavior:"
+    (fact "matches a sequence with elements corresponding to the expected matchers, in order"
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2])
+      => [:match [1 2]])
 
-  (fact "does not match when none of the expected matchers is a match for one element of the given sequence"
-    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2000])
-    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2000])])
+    (fact "does not match when none of the expected matchers is a match for one element of the given sequence"
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2000])
+      => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2000])])
 
-  (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
-    (match (in-any-order [(equals-value 1) (equals-value 2)]) [2 1]) => [:match [2 1]])
+    (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [2 1]) => [:match [2 1]])
 
-  (fact "only matches when all expected matchers are matched by elements of the given sequence"
-    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
-    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1])])
+    (fact "only matches when all expected matchers are matched by elements of the given sequence"
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
+      => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1])])
 
-  (facts "does not match when the given sequence contains elements not matched by any matcher"
-    (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
-    => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
+    (facts "does not match when the given sequence contains elements not matched by any matcher"
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
+      => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
+
+    (fact "nesting matchers"
+      (match (in-any-order [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
+             [{:id 1 :a 1} {:id 2 :a 2}])
+      => [:match [{:id 1 :a 1} {:id 2 :a 2}]]))
+
+  (facts "the 2-argument arity will look for an element to match by id"
+    (fact "matches a sequence with elements corresponding to the expected matchers, in order"
+      (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
+             [{:id 1 :a 1} {:id 2 :a 2}])
+      => [:match [{:id 1 :a 1} {:id 2 :a 2}]])
+
+    (fact "does not match when none of the expected matchers is a match for one element of the given sequence"
+      (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
+             [{:id 1 :a 1} {:id 2 :a 200}])
+      => [:mismatch [{:id 1 :a 1} {:id 2 :a (->Mismatch 2 200)}]]
+
+      (fact "multiple mismatches"
+        (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
+               [{:id 1 :a 10} {:id 2 :a 200}])
+        => [:mismatch [{:id 1 :a (->Mismatch 1 10)} {:id 2 :a (->Mismatch 2 200)}]])
+      )))
+
+
+(facts "on selecting matchers for a value"
+  (select? (equals-value 10) :id 10) => truthy
+  (select? (equals-value 10) :id 11) => falsey
+
+  (select? (equals-value 10) :whatever 10) => truthy
+  (select? (equals-value 10) :whatever 11) => falsey
+
+  (select? (equals-map {:id (equals-value 10)}) :id {:id 10}) => truthy
+  (select? (equals-map {:id (equals-value 10)}) :id {:id 20}) => falsey
+  (select? (equals-map {:id (equals-value 10)}) :xx {:id 10}) => falsey
+
+  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 42})   => truthy
+  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 20 :a 42})   => falsey
+  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :xx {:id 10 :a 42})   => falsey
+  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 1337}) => truthy
+
   )
