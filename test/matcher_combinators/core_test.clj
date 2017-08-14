@@ -116,7 +116,8 @@
       => [:mismatch (->Mismatch [(equals-value 1) (equals-value 2)] [1 2000])])
 
     (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
-      (match (in-any-order [(equals-value 1) (equals-value 2)]) [2 1]) => [:match [2 1]])
+      (match (in-any-order [(equals-value 1) (equals-value 2)]) [2 1]) => [:match [2 1]]
+      (match (in-any-order [(equals-value 1) (equals-value 2) (equals-value 3)]) [2 1 3]) => [:match [2 1 3]])
 
     (fact "only matches when all expected matchers are matched by elements of the given sequence"
       (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
@@ -142,10 +143,21 @@
              [{:id 1 :a 1} {:id 2 :a 200}])
       => [:mismatch [{:id 1 :a 1} {:id 2 :a (->Mismatch 2 200)}]])
 
-    (fact "multiple mismatches"
+    (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
+      (match (in-any-order :id [(equals-map {:id (equals-value 1) :x (equals-value 1)}) (equals-map {:id (equals-value 2) :x (equals-value 2)})]) [{:id 2 :x 2} {:id 1 :x 1}])
+      => [:match [{:id 2 :x 2} {:id 1 :x 1}]]
+      (match (in-any-order :id [(equals-map {:id (equals-value 1) :x (equals-value 1)}) (equals-map {:id (equals-value 2) :x (equals-value 2)}) (equals-map {:id (equals-value 3) :x (equals-value 3)})]) [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
+      => [:match [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]])
+
+    (fact "captures multiple mismatches"
       (match (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)}) (equals-map {:id (equals-value 2) :a (equals-value 2)})])
              [{:id 1 :a 10} {:id 2 :a 200}])
       => [:mismatch [{:id 1 :a (->Mismatch 1 10)} {:id 2 :a (->Mismatch 2 200)}]])
+
+    (fact "only matches when all expected matchers are matched by elements of the given sequence"
+      (match (in-any-order :id [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
+      => [:mismatch [1 2 (->Missing 3)]])
+
     ))
 
 
