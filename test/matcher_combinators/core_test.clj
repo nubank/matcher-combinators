@@ -105,7 +105,11 @@
     '12
     :12
     {:x 12}
-    #{1 2}))
+    #{1 2})
+
+  (fact "mismatch when there are more matchers then actual elements"
+    (match (equals-sequence [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
+    => [:mismatch [1 2 (model/->Missing 3)]]))
 
 (facts "on nesting multiple matchers"
   (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])

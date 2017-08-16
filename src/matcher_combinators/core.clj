@@ -80,13 +80,16 @@
 (defrecord EqualsSequence [expected]
   Matcher
   (match [_this actual]
-    (let [matcher-fns   (concat (map #(partial match %) expected)
-                                (repeat (fn [extra-element] [:mismatch (model/->Unexpected extra-element)])))
-          match-results (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual)]
-      (cond
-        (not (sequential? actual))     [:mismatch (model/->Mismatch expected actual)]
-        (some mismatch? match-results) [:mismatch (map value match-results)]
-        :else                          [:match actual]))))
+    (if-not (sequential? actual)
+      [:mismatch (model/->Mismatch expected actual)]
+      (let [matcher-fns     (concat (map #(partial match %) expected)
+                                    (repeat (fn [extra-element] [:mismatch (model/->Unexpected extra-element)])))
+            actual-elements (concat actual (repeat nil))
+            match-results'  (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual-elements)
+            match-results   (take (max (count actual) (count expected)) match-results')]
+        (if (some mismatch? match-results)
+          [:mismatch (map value match-results)]
+          [:match actual])))))
 
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
