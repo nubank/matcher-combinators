@@ -1,5 +1,6 @@
 (ns matcher-combinators.core
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [matcher-combinators.model :as model]))
 
 (defn- find-first [pred coll]
   (->> coll (filter pred) first))
@@ -11,10 +12,6 @@
 (extend-type nil
   Matcher
   (select? [_ _ _] false))
-
-(defrecord Mismatch [expected actual])
-(defrecord Missing  [expected])
-(defrecord Unexpected [actual])
 
 (defn- match? [match-result]
   (= :match (first match-result)))
@@ -31,9 +28,9 @@
     (= expected candidate))
   (match [_this actual]
    (cond (and (nil? expected) (nil? actual)) true
-         (nil? actual) [:mismatch (->Missing expected)]
+         (nil? actual) [:mismatch (model/->Missing expected)]
          (= expected actual) [:match actual]
-         :else [:mismatch (->Mismatch expected actual)])))
+         :else [:mismatch (model/->Mismatch expected actual)])))
 
 (defn equals-value [expected]
   (->Value expected))
@@ -53,7 +50,7 @@
 
 (defn- match-map [expected actual unexpected-handler]
   (if-not (map? actual)
-    [:mismatch (->Mismatch expected actual)]
+    [:mismatch (model/->Mismatch expected actual)]
     (compare-maps expected actual unexpected-handler)))
 
 (defrecord ContainsMap [expected]
@@ -75,7 +72,7 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (match-map expected actual ->Unexpected)))
+    (match-map expected actual model/->Unexpected)))
 
 (defn equals-map [expected]
   (->EqualsMap expected))
@@ -84,7 +81,7 @@
   Matcher
   (match [_this actual]
     (let [matcher-fns   (concat (map #(partial match %) expected)
-                                (repeat (fn [extra-element] [:mismatch (->Unexpected extra-element)])))
+                                (repeat (fn [extra-element] [:mismatch (model/->Unexpected extra-element)])))
           match-results (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual)]
       (if (every? match? match-results)
         [:match actual]
@@ -107,7 +104,7 @@
   (match [_this actual]
     (if (matches-in-any-order? expected actual)
       [:match actual]
-      [:mismatch (->Mismatch expected actual)])))
+      [:mismatch (model/->Mismatch expected actual)])))
 
 (defn selecting-match [select-fn all-matchers all-elements]
   (loop [elements         all-elements
@@ -120,7 +117,7 @@
         [:mismatch (concat (reverse matched-elements) (map #(value (match % nil)) matchers))])
       (let [[element & rest-elements]  elements
             selected-matcher           (find-first #(select? % select-fn element) matchers)
-            [match-result match-value] (if selected-matcher (match selected-matcher element) [:mismatch (->Unexpected element)])]
+            [match-result match-value] (if selected-matcher (match selected-matcher element) [:mismatch (model/->Unexpected element)])]
         (recur rest-elements
                (remove #{selected-matcher} matchers)
                (if (= :mismatch matching?) :mismatch match-result)
