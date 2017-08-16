@@ -95,7 +95,17 @@
     (match (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)]) [[1 5] 21])
     => [:mismatch [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]])
 
-  (future-fact "when not given a sequence"))
+  (tabular
+    (fact "mismatches when not given a sequence"
+     (match (equals-sequence [(equals-value 1) (equals-value 2)]) ?actual)
+     => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] ?actual)])
+    ?actual
+    12
+    "12"
+    '12
+    :12
+    {:x 12}
+    #{1 2}))
 
 (facts "on nesting multiple matchers"
   (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])

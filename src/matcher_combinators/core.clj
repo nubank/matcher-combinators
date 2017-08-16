@@ -83,9 +83,10 @@
     (let [matcher-fns   (concat (map #(partial match %) expected)
                                 (repeat (fn [extra-element] [:mismatch (model/->Unexpected extra-element)])))
           match-results (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual)]
-      (if (every? match? match-results)
-        [:match actual]
-        [:mismatch (map value match-results)]))))
+      (cond
+        (not (sequential? actual))     [:mismatch (model/->Mismatch expected actual)]
+        (some mismatch? match-results) [:mismatch (map value match-results)]
+        :else                          [:match actual]))))
 
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
