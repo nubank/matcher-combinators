@@ -106,9 +106,10 @@
 (defrecord AllOrNothingInAnyOrder [expected]
   Matcher
   (match [_this actual]
-    (if (matches-in-any-order? expected actual)
-      [:match actual]
-      [:mismatch (model/->Mismatch expected actual)])))
+    (cond
+      (not (sequential? actual)) [:mismatch (model/->Mismatch expected actual)]
+      (matches-in-any-order? expected actual) [:match actual]
+      :else [:mismatch (model/->Mismatch expected actual)])))
 
 (defn selecting-match [select-fn all-matchers all-elements]
   (loop [elements         all-elements
@@ -130,7 +131,9 @@
 (defrecord SelectingInAnyOrder [select-fn expected]
   Matcher
   (match [_this actual]
-    (selecting-match select-fn expected actual)))
+    (if-not (sequential? actual)
+      [:mismatch (model/->Mismatch expected actual)]
+      (selecting-match select-fn expected actual))))
 
 (defn in-any-order
   ([expected]
