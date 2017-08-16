@@ -9,65 +9,41 @@
   (fact "value missing"
     (match (equals-value 42) nil) => [:mismatch (model/->Missing 42)]))
 
+(fact "on map matchers"
+  (tabular
+    (facts "on common behaviors among all map matchers"
+      (fact "matches when given a map with matching values for every key"
+        (match (?map-matcher {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 1337})
+        => [:match {:a 42, :b 1337}])
 
-(facts "on the contains-map matcher"
-  (fact "perfect match"
-    (match (contains-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 1337}) => [:match {:a 42, :b 1337}])
+      (fact "when actual values fail to match expected matchers for corresponding keys, mismatch marking each value Mismatch"
+        (match (?map-matcher {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 1337}) => [:mismatch {:a (model/->Mismatch 42 43), :b 1337}]
+        (match (?map-matcher {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 13373}) => [:mismatch {:a 42, :b (model/->Mismatch 1337 13373)}]
+        (match (?map-matcher {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 13373}) => [:mismatch {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}])
 
-  (fact "value mismatches"
-    (match (contains-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 1337}) => [:mismatch {:a (model/->Mismatch 42 43), :b 1337}]
-    (match (contains-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 13373}) => [:mismatch {:a 42, :b (model/->Mismatch 1337 13373)}]
-    (match (contains-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 13373}) => [:mismatch {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}])
+      (fact "when actual input map doesn't contain values for expected keys, mismatch marking each key with a Missing value"
+        (match (?map-matcher {:a (equals-value 42)}) {}) => [:mismatch {:a (model/->Missing 42)}]
+        (match (?map-matcher {:a (equals-value 42) :b (equals-value 42)}) {:b 42}) => [:mismatch {:b 42, :a (model/->Missing 42)}])
 
+      (tabular
+        (fact "mismatch when given an actual input that is not a map"
+          (match (?map-matcher {:a (equals-value 1)}) ?actual) => [:mismatch (model/->Mismatch {:a (equals-value 1)} ?actual)])
+        ?actual
+        1
+        "a1"
+        [[:a 1]]))
+    ?map-matcher
+    contains-map
+    equals-map)
 
-  (fact "missing expected keys"
-    (match (contains-map {:a (equals-value 42)}) {:b 42}) => [:mismatch {:b 42, :a (model/->Missing 42)}]
-    (match (contains-map {:a (equals-value 42) :b (equals-value 42)}) {:b 42}) => [:mismatch {:b 42, :a (model/->Missing 42)}])
+  (facts "on the equals-map matcher"
+    (fact "when the actual input map contains keys for which there are no corresponding matchers specified,
+           mismatch marking each key with an Unexpected value"
+      (match (equals-map {:a (equals-value 42)}) {:a 42 :b 1337})
+      => [:mismatch {:a 42, :b (model/->Unexpected 1337)}]
 
-  (facts "nesting contains-map"
-    (match (contains-map {:a (equals-value 42) :m (contains-map {:x (equals-value "foo")})}) {:a 42 :m {:x "foo"}})
-    => [:match {:a 42 :m {:x "foo"}}]
-
-
-    (match (contains-map {:a (equals-value 42)
-                    :m (contains-map {:x (equals-value "foo")})})
-      {:a 42
-       :m {:x "bar"}})
-    => [:mismatch {:a 42
-                   :m {:x (model/->Mismatch "foo" "bar")}}]
-
-    (match (contains-map {:a (equals-value 42)
-                    :m (contains-map {:x (equals-value "foo")})})
-      {:a 43
-       :m {:x "bar"}})
-    => [:mismatch {:a (model/->Mismatch 42 43)
-                   :m {:x (model/->Mismatch "foo" "bar")}}]
-
-    (fact "when not given a map"
-      (match (contains-map {:a (equals-value 10)}) 10) => [:mismatch (model/->Mismatch {:a (equals-value 10)} 10)])))
-
-(facts "on the equals-map matcher"
-  (fact "perfect match"
-    (match (equals-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 1337}) => [:match {:a 42, :b 1337}])
-
-  (fact "value mismatches"
-    (match (equals-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 1337}) => [:mismatch {:a (model/->Mismatch 42 43), :b 1337}]
-    (match (equals-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 42, :b 13373}) => [:mismatch {:a 42, :b (model/->Mismatch 1337 13373)}]
-    (match (equals-map {:a (equals-value 42), :b (equals-value 1337)}) {:a 43, :b 13373}) => [:mismatch {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}])
-
-  (fact "missing expected keys"
-    (match (equals-map {:a (equals-value 42) :b (equals-value 42)}) {:b 42}) => [:mismatch {:b 42, :a (model/->Missing 42)}]
-
-
-  (fact "observing extra keys"
-    (match (equals-map {:a (equals-value 42)}) {:a 42 :b 1337})
-    => [:mismatch {:a 42, :b (model/->Unexpected 1337)}]
-
-    (match (equals-map {:a (equals-value 42)}) {:b 42})
-    => [:mismatch {:b (model/->Unexpected 42), :a (model/->Missing 42)}]))
-
-  (fact "when not given a map"
-    (match (equals-map {:a (equals-value 10)}) 10) => [:mismatch (model/->Mismatch {:a (equals-value 10)} 10)]))
+      (match (equals-map {:a (equals-value 42)}) {:b 42})
+      => [:mismatch {:b (model/->Unexpected 42), :a (model/->Missing 42)}])))
 
 (def in-any-order-selecting (partial in-any-order :id))
 
@@ -189,6 +165,25 @@
            [{:id 1 :a 1} {:id 2 :a 2}])
     => [:match [{:id 1 :a 1} {:id 2 :a 2}]])
 
+  (facts "nesting contains-map"
+    (match (contains-map {:a (equals-value 42) :m (contains-map {:x (equals-value "foo")})}) {:a 42 :m {:x "foo"}})
+    => [:match {:a 42 :m {:x "foo"}}]
+
+
+    (match (contains-map {:a (equals-value 42)
+                          :m (contains-map {:x (equals-value "foo")})})
+           {:a 42
+            :m {:x "bar"}})
+    => [:mismatch {:a 42
+                   :m {:x (model/->Mismatch "foo" "bar")}}]
+
+    (match (contains-map {:a (equals-value 42)
+                          :m (contains-map {:x (equals-value "foo")})})
+           {:a 43
+            :m {:x "bar"}})
+    => [:mismatch {:a (model/->Mismatch 42 43)
+                   :m {:x (model/->Mismatch "foo" "bar")}}])
+
   (match (equals-sequence [(equals-map {:a (equals-value 42), :b (equals-value 1337)}) (equals-value 20)])
          [{:a 42 :b 1337} 20])
   => [:match [{:a 42 :b 1337} 20]]
@@ -215,3 +210,6 @@
   (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 1337}) => truthy
 
   )
+
+
+(future-fact "on contains-elements sequence matcher")
