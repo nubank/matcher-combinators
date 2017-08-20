@@ -15,7 +15,7 @@
 
                                   [midje "1.9.0-alpha8" :exclusions [org.clojure/clojure]]
                                   ;[org.clojure/java.classpath "0.2.3"]
-                                  ;[org.clojure/test.check "0.9.0"]
+                                  [org.clojure/test.check "0.9.0"]
                                   [nu-test "0.3.4"]
                                   ]}}
 
