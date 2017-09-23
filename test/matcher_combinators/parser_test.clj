@@ -5,7 +5,8 @@
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model]
+            [midje-generative :refer [for-all *midje-generative-runs*]]))
 
 (def gen-big-decimal
   (gen/fmap (fn [[integral fractional]]
@@ -49,20 +50,12 @@
 
 (def gen-vector (gen/vector gen-matcher-expression))
 
-(def values-match-as-equals-value-matchers
-  (prop/for-all [i gen-scalar]
-    (= (match i i) (match (equals-value i) i))))
-
-(def values-mismatch-as-equals-value-matchers
-  (prop/for-all [[i j] gen-scalar-pair]
-    (= (match i j) (match (equals-value i) j))))
-
 (facts "scalar values act as equals-value matchers"
-  (tc/quick-check 100 values-match-as-equals-value-matchers)
-  => (contains {:result true})
+  (for-all [i gen-scalar]
+    (match i i) => (match (equals-value i) i))
 
-  (tc/quick-check 100 values-mismatch-as-equals-value-matchers)
-  => (contains {:result true}))
+  (for-all [[i j] gen-scalar-pair]
+    (match i j) => (match (equals-value i) j)))
 
 (def maps-match-as-equals-map-matchers
   (prop/for-all [i gen-map]
