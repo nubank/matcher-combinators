@@ -50,35 +50,37 @@
 
 (def gen-vector (gen/vector gen-matcher-expression))
 
-(facts "scalar values act as equals-value matchers"
-  (for-all [i gen-scalar]
-    (match i i) => (match (equals-value i) i))
+(binding [*midje-generative-runs* 100]
 
-  (for-all [[i j] gen-scalar-pair]
-    (match i j) => (match (equals-value i) j)))
+  (facts "scalar values act as equals-value matchers"
+    (for-all [i gen-scalar]
+      (match i i) => (match (equals-value i) i))
 
-(fact "maps act as equals-map matchers"
-  (fact
-    (= (match (equals-map {:a (equals-value 10)}) {:a 10})
-       (match (equals-map {:a 10}) {:a 10})
-       (match {:a 10} {:a 10})) => truthy)
+    (for-all [[i j] gen-scalar-pair]
+      (match i j) => (match (equals-value i) j)))
 
   (fact "maps act as equals-map matchers"
-    (for-all [i gen-map]
-      (match i i) => (match (equals-map i) i))
+    (fact
+      (= (match (equals-map {:a (equals-value 10)}) {:a 10})
+         (match (equals-map {:a 10}) {:a 10})
+         (match {:a 10} {:a 10})) => truthy)
 
-    (prop/for-all [[i j] (gen-distinct-pair gen-map)]
-      (match i j) => (match (equals-map i) j))))
+    (fact "maps act as equals-map matchers"
+      (for-all [i gen-map]
+        (match i i) => (match (equals-map i) i))
 
-(fact "vectors act as equals-sequence matchers"
-  (fact
-    (= (match (equals-sequence [(equals-value 10)]) [10])
-       (match [(equals-value 10)] [10])
-       (match [10] [10])) => truthy)
+      (prop/for-all [[i j] (gen-distinct-pair gen-map)]
+        (match i j) => (match (equals-map i) j))))
 
   (fact "vectors act as equals-sequence matchers"
-    (prop/for-all [v gen-vector]
-      (match v v) => (match (equals-sequence v) v))
+    (fact
+      (= (match (equals-sequence [(equals-value 10)]) [10])
+         (match [(equals-value 10)] [10])
+         (match [10] [10])) => truthy)
 
-    (prop/for-all [[i j] (gen-distinct-pair gen-vector)]
-      (match i j) => (match (equals-map i) j))))
+    (fact "vectors act as equals-sequence matchers"
+      (prop/for-all [v gen-vector]
+        (match v v) => (match (equals-sequence v) v))
+
+      (prop/for-all [[i j] (gen-distinct-pair gen-vector)]
+        (match i j) => (match (equals-map i) j)))))
