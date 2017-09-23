@@ -57,14 +57,6 @@
   (for-all [[i j] gen-scalar-pair]
     (match i j) => (match (equals-value i) j)))
 
-(def maps-match-as-equals-map-matchers
-  (prop/for-all [i gen-map]
-    (= (match i i) (match (equals-map i) i))))
-
-(def maps-mismatch-as-equals-map-matchers
-  (prop/for-all [[i j] (gen-distinct-pair gen-map)]
-    (= (match i j) (match (equals-map i) j))))
-
 (fact "maps act as equals-map matchers"
   (fact
     (= (match (equals-map {:a (equals-value 10)}) {:a 10})
@@ -72,19 +64,11 @@
        (match {:a 10} {:a 10})) => truthy)
 
   (fact "maps act as equals-map matchers"
-    (tc/quick-check 100 maps-match-as-equals-map-matchers)
-    => (contains {:result true})
+    (for-all [i gen-map]
+      (match i i) => (match (equals-map i) i))
 
-    (tc/quick-check 100 maps-mismatch-as-equals-map-matchers)
-    => (contains {:result true})))
-
-(def vectors-match-as-equals-sequence-matchers
-  (prop/for-all [v gen-vector]
-    (= (match v v) (match (equals-sequence v) v))))
-
-(def vectors-mismatch-as-equals-sequence-matchers
-  (prop/for-all [[i j] (gen-distinct-pair gen-vector)]
-    (= (match i j) (match (equals-map i) j))))
+    (prop/for-all [[i j] (gen-distinct-pair gen-map)]
+      (match i j) => (match (equals-map i) j))))
 
 (fact "vectors act as equals-sequence matchers"
   (fact
@@ -93,8 +77,8 @@
        (match [10] [10])) => truthy)
 
   (fact "vectors act as equals-sequence matchers"
-    (tc/quick-check 100 vectors-match-as-equals-sequence-matchers)
-    => (contains {:result true})
+    (prop/for-all [v gen-vector]
+      (match v v) => (match (equals-sequence v) v))
 
-    (tc/quick-check 100 vectors-mismatch-as-equals-sequence-matchers)
-    => (contains {:result true})))
+    (prop/for-all [[i j] (gen-distinct-pair gen-vector)]
+      (match i j) => (match (equals-map i) j))))
