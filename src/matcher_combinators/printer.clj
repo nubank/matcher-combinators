@@ -5,29 +5,32 @@
             [colorize.core :as colorize])
   (:import [matcher_combinators.model Mismatch Missing Unexpected]))
 
-(defrecord InColor [color expression])
+(defrecord ColorTag [color expression])
 
-(defmulti print-diff-dispatch class)
+(defmulti markup-expression class)
 
-(defmethod print-diff-dispatch Mismatch [mismatch]
-  (print-diff-dispatch
-    (list 'mismatch (->InColor :yellow (:expected mismatch)) (->InColor :red (:actual mismatch)))))
+(defmethod markup-expression Mismatch [mismatch]
+  (list 'mismatch (->ColorTag :yellow (:expected mismatch)) (->ColorTag :red (:actual mismatch))))
 
-(defmethod print-diff-dispatch Missing [missing]
-  (print-diff-dispatch
-    (list 'missing (->InColor :yellow (:expected missing)))))
+(defmethod markup-expression Missing [missing]
+  (list 'missing (->ColorTag :yellow (:expected missing))))
 
-(defmethod print-diff-dispatch Unexpected [unexpected]
-  (print-diff-dispatch
-    (list 'unexpected (->InColor :red (:actual unexpected)))))
+(defmethod markup-expression Unexpected [unexpected]
+  (list 'unexpected (->ColorTag :red (:actual unexpected))))
 
-(defmethod print-diff-dispatch InColor [in-color]
+(defmethod markup-expression :default [expression]
+  expression)
+
+(defn colorized-print [in-color]
   (clojure.core/print (colorize/ansi (:color in-color)))
   (pprint/write-out (:expression in-color))
   (clojure.core/print (colorize/ansi :reset)))
 
-(defmethod print-diff-dispatch :default [expression]
-  (pprint/simple-dispatch expression))
+(defn print-diff-dispatch [expression]
+  (let [markup (markup-expression expression)]
+    (if (instance? ColorTag markup)
+      (colorized-print markup)
+      (pprint/simple-dispatch markup))))
 
 (defn print [expression]
   (with-out-str
