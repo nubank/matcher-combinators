@@ -13,7 +13,7 @@
   (list 'mismatch (->ColorTag :yellow (:expected mismatch)) (->ColorTag :red (:actual mismatch))))
 
 (defmethod markup-expression Missing [missing]
-  (list 'missing (->ColorTag :yellow (:expected missing))))
+  (list 'missing (->ColorTag :red (:expected missing))))
 
 (defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))
