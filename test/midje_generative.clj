@@ -21,16 +21,16 @@
          (m-state/set-output-counters! output-counters-before#)
          result#))))
 
-(defn log-error [names values]
-  (when (emission/config-above? :print-nothing)
-    (util/emit-one-line (str "With generated values: "
-                             (format-binding-map (zipmap names values))))))
-
 ; from midje.emission.plugins.util
 (defn- format-binding-map [binding-map]
   (let [formatted-entries (for [[k v] binding-map]
                             (str (pr-str k) " " (pr-str v)))]
     (str "[" (string/join "\n                        " formatted-entries) "]")))
+
+(defn log-error [names values]
+  (when (emission/config-above? :print-nothing)
+    (util/emit-one-line (str "With generated values: "
+                             (format-binding-map (zipmap names values))))))
 
 (def ^:dynamic *midje-generative-runs* 10)
 
