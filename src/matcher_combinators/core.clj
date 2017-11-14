@@ -27,20 +27,27 @@
   (select? [_this _select-fn candidate]
     (= expected candidate))
   (match [_this actual]
-   (cond (and (nil? expected) (nil? actual)) true
-         (nil? actual) [:mismatch (model/->Missing expected)]
-         (= expected actual) [:match actual]
-         :else [:mismatch (model/->Mismatch expected actual)])))
+   (cond
+     (and (nil? expected)
+          (nil? actual))  true
+     (nil? actual)        [:mismatch (model/->Missing expected)]
+     (= expected actual)  [:match actual]
+     :else                [:mismatch (model/->Mismatch expected actual)])))
 
 (defn equals-value [expected]
   (->Value expected))
 
-(defn- match-map [expected actual])
+;(defn- match-map [expected actual])
 
 (defn- compare-maps [expected actual unexpected-handler]
-  (let [entry-results      (map (fn [[key value-matcher]] [key (match value-matcher (get actual key))]) expected)
-        unexpected-entries (keep (fn [[key value]] (when-not (find expected key) [key (unexpected-handler value)])) actual)]
-    (if (and (every? (comp match? second) entry-results)
+  (let [entry-results      (map (fn [[key value-matcher]]
+                                  [key (match value-matcher (get actual key))])
+                                expected)
+        unexpected-entries (keep (fn [[key val]]
+                                   (when-not (find expected key)
+                                     [key (unexpected-handler val)]))
+                                 actual)]
+    (if (and (every? (comp match? value) entry-results)
              (empty? unexpected-entries))
       [:match actual]
       [:mismatch (->> entry-results
@@ -83,9 +90,11 @@
     (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
       (let [matcher-fns     (concat (map #(partial match %) expected)
-                                    (repeat (fn [extra-element] [:mismatch (model/->Unexpected extra-element)])))
+                                    (repeat (fn [extra-element]
+                                              [:mismatch (model/->Unexpected extra-element)])))
             actual-elements (concat actual (repeat nil))
-            match-results'  (map (fn [match-fn actual-element] (match-fn actual-element)) matcher-fns actual-elements)
+            match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
+                                 matcher-fns actual-elements)
             match-results   (take (max (count actual) (count expected)) match-results')]
         (if (some mismatch? match-results)
           [:mismatch (map value match-results)]
@@ -111,18 +120,23 @@
       (matches-in-any-order? expected actual) [:match actual]
       :else [:mismatch (model/->Mismatch expected actual)])))
 
-(defn selecting-match [select-fn all-matchers all-elements]
+(defn- foo [matchers matching? matched-elements]
+  (if (empty? matchers)
+    [matching? (reverse matched-elements)]
+    [:mismatch (concat (reverse matched-elements) (map #(value (match % nil)) matchers))]))
+
+(defn- selecting-match [select-fn all-matchers all-elements]
   (loop [elements         all-elements
          matchers         all-matchers
          matching?        :match
          matched-elements []]
     (if (empty? elements)
-      (if (empty? matchers)
-        [matching? (reverse matched-elements)]
-        [:mismatch (concat (reverse matched-elements) (map #(value (match % nil)) matchers))])
+      (foo matchers matching? matched-elements)
       (let [[element & rest-elements]  elements
             selected-matcher           (find-first #(select? % select-fn element) matchers)
-            [match-result match-value] (if selected-matcher (match selected-matcher element) [:mismatch (model/->Unexpected element)])]
+            [match-result match-value] (if selected-matcher
+                                         (match selected-matcher element)
+                                         [:mismatch (model/->Unexpected element)])]
         (recur rest-elements
                (remove #{selected-matcher} matchers)
                (if (= :mismatch matching?) :mismatch match-result)
