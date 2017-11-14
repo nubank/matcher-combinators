@@ -3,7 +3,7 @@
   (:require [clojure.pprint :as pprint]
             [matcher-combinators.model :as model]
             [colorize.core :as colorize])
-  (:import [matcher_combinators.model Mismatch Missing Unexpected]))
+  (:import [matcher_combinators.model Mismatch Missing Unexpected FailedChecker]))
 
 (defrecord ColorTag [color expression])
 
@@ -17,6 +17,9 @@
 
 (defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))
+
+(defmethod markup-expression FailedChecker [failed-checker]
+  (list 'checker (->ColorTag :yellow (:form failed-checker)) (->ColorTag :red (:actual failed-checker))))
 
 (defmethod markup-expression :default [expression]
   expression)

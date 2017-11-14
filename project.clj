@@ -13,11 +13,8 @@
   :profiles {:dev {:dependencies [;[ns-tracker "0.3.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
 
-                                  [midje "1.9.0-alpha11" :exclusions [org.clojure/clojure]]
+                                  [midje "1.9.0-alpha12" :exclusions [org.clojure/clojure]]
                                   ;[org.clojure/java.classpath "0.2.3"]
                                   [org.clojure/test.check "0.9.0"]
                                   ;[nu-test "0.3.4"]
-                                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]
-                                  ]}}
-
-  )
+                                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]]}})

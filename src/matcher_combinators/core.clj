@@ -2,18 +2,16 @@
   (:require [clojure.set :as set]
             [matcher-combinators.model :as model]))
 
-(defn- find-first [pred coll]
-  (->> coll (filter pred) first))
-
 (defprotocol Matcher
-  (select? [this select-fn candidate])
-  (match [this actual]))
+  ""
+  (select? [this select-fn candidate] "")
+  (match   [this actual]              ""))
 
 (extend-type nil
   Matcher
   (select? [_ _ _] false))
 
-(defn- match? [match-result]
+(defn match? [match-result]
   (= :match (first match-result)))
 
 (defn- mismatch? [match-result]
@@ -36,8 +34,6 @@
 
 (defn equals-value [expected]
   (->Value expected))
-
-;(defn- match-map [expected actual])
 
 (defn- compare-maps [expected actual unexpected-handler]
   (let [entry-results      (map (fn [[key value-matcher]]
@@ -103,6 +99,9 @@
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
 
+(defn- find-first [pred coll]
+  (->> coll (filter pred) first))
+
 (defn- matches-in-any-order? [matchers elements]
   (if (empty? elements)
     (empty? matchers)
@@ -120,10 +119,11 @@
       (matches-in-any-order? expected actual) [:match actual]
       :else [:mismatch (model/->Mismatch expected actual)])))
 
-(defn- foo [matchers matching? matched-elements]
+(defn- base-selecting-match [matchers matching? matched-elements]
   (if (empty? matchers)
     [matching? (reverse matched-elements)]
-    [:mismatch (concat (reverse matched-elements) (map #(value (match % nil)) matchers))]))
+    [:mismatch (concat (reverse matched-elements)
+                       (map #(value (match % nil)) matchers))]))
 
 (defn- selecting-match [select-fn all-matchers all-elements]
   (loop [elements         all-elements
@@ -131,7 +131,7 @@
          matching?        :match
          matched-elements []]
     (if (empty? elements)
-      (foo matchers matching? matched-elements)
+      (base-selecting-match matchers matching? matched-elements)
       (let [[element & rest-elements]  elements
             selected-matcher           (find-first #(select? % select-fn element) matchers)
             [match-result match-value] (if selected-matcher
@@ -154,3 +154,17 @@
    (->AllOrNothingInAnyOrder expected))
   ([select-fn expected]
    (->SelectingInAnyOrder select-fn expected)))
+
+(defrecord Checker [func form]
+  Matcher
+  (match [_this actual]
+    (if (func actual)
+      [:match actual]
+      [:mismatch (model/->FailedChecker form actual)])))
+
+(defmacro checker->matcher
+  "turns a normal midje checker into a matcher"
+  [checker & args]
+  (if (empty? args)
+    `(->Checker ~checker '~checker)
+    `(->Checker (~checker ~@args) '(~checker ~@args))))
