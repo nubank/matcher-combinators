@@ -2,11 +2,8 @@
   (:require [midje.sweet :refer :all]
             [matcher-combinators.parser]
             [matcher-combinators.core :refer :all]
-            [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
-            [clojure.test.check.properties :as prop]
-            [matcher-combinators.model :as model]
-            [midje-generative :refer [for-all *midje-generative-runs*]]))
+            [matcher-combinators.model :as model]))
 
 (def gen-big-decimal
   (gen/fmap (fn [[integral fractional]]
@@ -50,37 +47,43 @@
 
 (def gen-vector (gen/vector gen-matcher-expression))
 
-(binding [*midje-generative-runs* 100]
+(facts "scalar values act as equals-value matchers"
+  (for-all [i gen-scalar]
+    {:num-tests 50}
+    (match i i) => (match (equals-value i) i))
 
-  (facts "scalar values act as equals-value matchers"
-    (for-all [i gen-scalar]
-      (match i i) => (match (equals-value i) i))
+  (for-all [[i j] gen-scalar-pair]
+    {:num-tests 50}
+    (match i j) => (match (equals-value i) j)))
 
-    (for-all [[i j] gen-scalar-pair]
-      (match i j) => (match (equals-value i) j)))
+(fact "maps act as equals-map matchers"
+  (fact
+    (= (match (equals-map {:a (equals-value 10)}) {:a 10})
+       (match (equals-map {:a 10}) {:a 10})
+       (match {:a 10} {:a 10}))
+    => truthy)
 
   (fact "maps act as equals-map matchers"
-    (fact
-      (= (match (equals-map {:a (equals-value 10)}) {:a 10})
-         (match (equals-map {:a 10}) {:a 10})
-         (match {:a 10} {:a 10})) => truthy)
+    (for-all [i gen-map]
+      {:num-tests 50}
+      (match i i) => (match (equals-map i) i))
 
-    (fact "maps act as equals-map matchers"
-      (for-all [i gen-map]
-        (match i i) => (match (equals-map i) i))
+    (for-all [[i j] (gen-distinct-pair gen-map)]
+      {:num-tests 50}
+      (match i j) => (match (equals-map i) j))))
 
-      (prop/for-all [[i j] (gen-distinct-pair gen-map)]
-        (match i j) => (match (equals-map i) j))))
+(fact "vectors act as equals-sequence matchers"
+  (fact
+    (= (match (equals-sequence [(equals-value 10)]) [10])
+       (match [(equals-value 10)] [10])
+       (match [10] [10]))
+    => truthy)
 
   (fact "vectors act as equals-sequence matchers"
-    (fact
-      (= (match (equals-sequence [(equals-value 10)]) [10])
-         (match [(equals-value 10)] [10])
-         (match [10] [10])) => truthy)
+    (for-all [v gen-vector]
+      {:num-tests 50}
+      (match v v) => (match (equals-sequence v) v))
 
-    (fact "vectors act as equals-sequence matchers"
-      (prop/for-all [v gen-vector]
-        (match v v) => (match (equals-sequence v) v))
-
-      (prop/for-all [[i j] (gen-distinct-pair gen-vector)]
-        (match i j) => (match (equals-map i) j)))))
+    (for-all [[i j] (gen-distinct-pair gen-vector)]
+      {:num-tests 50}
+      (match i j) => (match (equals-map i) j))))
