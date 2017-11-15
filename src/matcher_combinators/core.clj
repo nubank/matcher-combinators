@@ -35,13 +35,13 @@
 (defn equals-value [expected]
   (->Value expected))
 
-(declare derive-map-matcher)
+(declare derive-matcher)
 (defn- allow-unexpected? [matcher-type]
   (= matcher-type :embeds))
 
 (defn- compare-maps [expected actual unexpected-handler matcher-type]
   (let [entry-results      (map (fn [[key value-or-matcher]]
-                                  [key (match (derive-map-matcher value-or-matcher matcher-type)
+                                  [key (match (derive-matcher value-or-matcher matcher-type)
                                               (get actual key))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
@@ -97,25 +97,6 @@
 
 (defn embeds-map [expected]
   (->EmbedsMap expected))
-
-(defn- derive-map-matcher [value-or-matcher parent-matcher-type]
-  (cond
-    (not (map? value-or-matcher))
-    value-or-matcher
-
-    (= :equals parent-matcher-type)
-    (equals-map value-or-matcher)
-
-    (= :embeds parent-matcher-type)
-    (embeds-map value-or-matcher)
-
-    (= :contains parent-matcher-type)
-    (contains-map value-or-matcher)
-
-    :else
-    (throw (ex-info "Unable to derive matcher"
-                    {:input value-or-matcher
-                     :parent-matcher parent-matcher-type}))))
 
 (defrecord EqualsSequence [expected]
   Matcher
@@ -205,3 +186,25 @@
   (if (empty? args)
     `(->Checker ~checker '~checker)
     `(->Checker (~checker ~@args) '(~checker ~@args))))
+
+(defn- derive-matcher [value-or-matcher parent-matcher-type]
+  (cond
+    (satisfies? Matcher value-or-matcher)
+    value-or-matcher
+
+    (vector? value-or-matcher)
+    (equals-sequence value-or-matcher)
+
+    (= :equals parent-matcher-type)
+    (equals-map value-or-matcher)
+
+    (= :embeds parent-matcher-type)
+    (embeds-map value-or-matcher)
+
+    (= :contains parent-matcher-type)
+    (contains-map value-or-matcher)
+
+    :else
+    (throw (ex-info "Unable to derive matcher"
+                    {:input value-or-matcher
+                     :parent-matcher parent-matcher-type}))))
