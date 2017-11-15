@@ -34,8 +34,13 @@
   {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb anything}})
   {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb (roughly 1)}}))
 
-(fact "you can't use any predicate inside matchers, w/o wrapping them"
-  {:a {:bb 1} :c 2} =not=> (ch/match {:a {:bb odd?} :c 2})
-  {:a {:bb 1} :c 2} =not=> (ch/embeds {:a {:bb odd?}})
-  {:a {:bb 1} :c 2} => (ch/match {:a {:bb (c/pred->matcher odd?)} :c 2})
-  {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb (c/pred->matcher odd?)}}))
+(facts "predicates in matchers"
+  (fact "you can't use a plain predicate inside matchers"
+    {:a {:bb 1} :c 2} =not=> (ch/match {:a {:bb odd?} :c 2})
+    {:a {:bb 1} :c 2} =not=> (ch/embeds {:a {:bb odd?}}))
+  (fact "but if you wrap them as matchers you're set"
+    {:a {:bb 1} :c 2} => (ch/match {:a {:bb (c/pred->matcher odd?)} :c 2})
+    {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb (c/pred->matcher odd?)}}))
+  (fact "or if you wrap them as midje checkers you're also set"
+    {:a {:bb 1} :c 2} => (ch/match {:a {:bb (as-checker odd?)} :c 2})
+    {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb (as-checker odd?)}})))
