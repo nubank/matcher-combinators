@@ -35,26 +35,31 @@
 (defn equals-value [expected]
   (->Value expected))
 
-(defn- compare-maps [expected actual unexpected-handler]
-  (let [entry-results      (map (fn [[key value-matcher]]
-                                  [key (match value-matcher (get actual key))])
+(declare derive-map-matcher)
+(defn- allow-unexpected? [matcher-type]
+  (= matcher-type :embeds))
+
+(defn- compare-maps [expected actual unexpected-handler matcher-type]
+  (let [entry-results      (map (fn [[key value-or-matcher]]
+                                  [key (match (derive-map-matcher value-or-matcher matcher-type)
+                                              (get actual key))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
                                    (when-not (find expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
     (if (and (every? (comp match? value) entry-results)
-             (empty? unexpected-entries))
+             (or (allow-unexpected? matcher-type) (empty? unexpected-entries)))
       [:match actual]
       [:mismatch (->> entry-results
                       (map (fn [[key match-result]] [key (value match-result)]))
                       (concat unexpected-entries)
                       (into actual))])))
 
-(defn- match-map [expected actual unexpected-handler]
+(defn- match-map [expected actual unexpected-handler matcher-type]
   (if-not (map? actual)
     [:mismatch (model/->Mismatch expected actual)]
-    (compare-maps expected actual unexpected-handler)))
+    (compare-maps expected actual unexpected-handler matcher-type)))
 
 (defrecord ContainsMap [expected]
   Matcher
@@ -63,7 +68,7 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (match-map expected actual identity)))
+    (match-map expected actual identity :contains)))
 
 (defn contains-map [expected]
   (->ContainsMap expected))
@@ -75,10 +80,42 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (match-map expected actual model/->Unexpected)))
+    (match-map expected actual model/->Unexpected :equals)))
 
 (defn equals-map [expected]
   (->EqualsMap expected))
+
+(defn- match-embeds-map [expected actual unexpected-handler]
+  (if-not (map? actual)
+    [:mismatch (model/->Mismatch expected actual)]
+    (compare-maps expected actual unexpected-handler :embeds)))
+
+(defrecord EmbedsMap [expected]
+  Matcher
+  (match [_this actual]
+    (match-embeds-map expected actual identity)))
+
+(defn embeds-map [expected]
+  (->EmbedsMap expected))
+
+(defn- derive-map-matcher [value-or-matcher parent-matcher-type]
+  (cond
+    (not (map? value-or-matcher))
+    value-or-matcher
+
+    (= :equals parent-matcher-type)
+    (equals-map value-or-matcher)
+
+    (= :embeds parent-matcher-type)
+    (embeds-map value-or-matcher)
+
+    (= :contains parent-matcher-type)
+    (contains-map value-or-matcher)
+
+    :else
+    (throw (ex-info "Unable to derive matcher"
+                    {:input value-or-matcher
+                     :parent-matcher parent-matcher-type}))))
 
 (defrecord EqualsSequence [expected]
   Matcher
