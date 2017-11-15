@@ -58,9 +58,9 @@
       => (list 'unexpected
                (printer/->ColorTag :red actual))))
 
-  (fact "Failed checker"
-    (printer/markup-expression (model/->FailedChecker '(roughly 1) 2))
-    => (list 'checker
+  (fact "Failed predicate"
+    (printer/markup-expression (model/->FailedPredicate '(roughly 1) 2))
+    => (list 'predicate
              (printer/->ColorTag :yellow '(roughly 1))
              (printer/->ColorTag :red 2))))
 

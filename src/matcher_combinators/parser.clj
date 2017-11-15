@@ -1,6 +1,6 @@
 (ns matcher-combinators.parser
   (:require [matcher-combinators.core :as core])
-  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap IPersistentVector]
+  (:import [clojure.lang Keyword Symbol Ratio BigInt]
            [java.util UUID Date]
            [java.time LocalDate LocalDateTime YearMonth]))
 
@@ -27,6 +27,3 @@
                BigInteger
                BigInt
                Character)
-
-;(mimic-matcher core/equals-map IPersistentMap)
-;(mimic-matcher core/equals-sequence IPersistentVector)

@@ -176,19 +176,19 @@
   ([select-fn expected]
    (->SelectingInAnyOrder select-fn expected)))
 
-(defrecord Checker [func form]
+(defrecord Predicate [func form]
   Matcher
   (match [_this actual]
     (if (func actual)
       [:match actual]
-      [:mismatch (model/->FailedChecker form actual)])))
+      [:mismatch (model/->FailedPredicate form actual)])))
 
-(defmacro checker->matcher
-  "turns a normal midje checker into a matcher"
-  [checker & args]
+(defmacro pred->matcher
+  "turns a normal predicate function into a matcher"
+  [pred & args]
   (if (empty? args)
-    `(->Checker ~checker '~checker)
-    `(->Checker (~checker ~@args) '(~checker ~@args))))
+    `(->Predicate ~pred '~pred)
+    `(->Predicate (~pred ~@args) '(~pred ~@args))))
 
 (defn- derive-matcher [value-or-matcher parent-matcher-type]
   (cond
@@ -201,7 +201,7 @@
     (equals-sequence value-or-matcher)
 
     (checkers.defining/checker? value-or-matcher)
-    (checker->matcher value-or-matcher)
+    (pred->matcher value-or-matcher)
 
     (= :equals parent-matcher-type)
     (equals-map value-or-matcher)

@@ -31,7 +31,7 @@
         (match-and-format expected actual)
 
         (checkers.defining/checker? expected)
-        (match-and-format (core/checker->matcher expected) actual)
+        (match-and-format (core/pred->matcher expected) actual)
 
         :else
         (checking/as-data-laden-falsehood
@@ -56,7 +56,7 @@
         (match-and-format expected actual)
 
         (checkers.defining/checker? expected)
-        (match-and-format (core/checker->matcher expected) actual)
+        (match-and-format (core/pred->matcher expected) actual)
 
         :else
         (checking/as-data-laden-falsehood
