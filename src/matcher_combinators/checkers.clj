@@ -4,6 +4,7 @@
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
             [midje.checking.checkers.util :as checkers.util]
+            [midje.checking.checkers.defining :as checkers.defining]
             [midje.util.exceptions :as exception]
             [midje.sweet :as sw]))
 
@@ -29,6 +30,9 @@
         (satisfies? core/Matcher expected)
         (match-and-format expected actual)
 
+        (checkers.defining/checker? expected)
+        (match-and-format (core/checker->matcher expected) actual)
+
         :else
         (checking/as-data-laden-falsehood
           {:notes ["`match` couldn't parse `expected` input into a matcher-combinators"
@@ -50,6 +54,9 @@
 
         (satisfies? core/Matcher expected)
         (match-and-format expected actual)
+
+        (checkers.defining/checker? expected)
+        (match-and-format (core/checker->matcher expected) actual)
 
         :else
         (checking/as-data-laden-falsehood

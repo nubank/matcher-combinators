@@ -1,6 +1,7 @@
 (ns matcher-combinators.core
   (:require [clojure.set :as set]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model]
+            [midje.checking.checkers.defining :as checkers.defining]))
 
 (defprotocol Matcher
   ""
@@ -198,6 +199,9 @@
     ;; sequence matchers
     (vector? value-or-matcher)
     (equals-sequence value-or-matcher)
+
+    (checkers.defining/checker? value-or-matcher)
+    (checker->matcher value-or-matcher)
 
     (= :equals parent-matcher-type)
     (equals-map value-or-matcher)
