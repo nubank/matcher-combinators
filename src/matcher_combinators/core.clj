@@ -103,7 +103,9 @@
   (match [_this actual]
     (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
-      (let [matcher-fns     (concat (map #(partial match %) expected)
+      ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
+      ;; the `:equals` needs to be dynamically determined
+      (let [matcher-fns     (concat (map #(partial match (derive-matcher % :equals)) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
             actual-elements (concat actual (repeat nil))
@@ -192,6 +194,8 @@
     (satisfies? Matcher value-or-matcher)
     value-or-matcher
 
+    ;; TODO PLM: potentially needs to be refined to handle different type of
+    ;; sequence matchers
     (vector? value-or-matcher)
     (equals-sequence value-or-matcher)
 
