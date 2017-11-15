@@ -44,3 +44,13 @@
   (fact "or if you wrap them as midje checkers you're also set"
     {:a {:bb 1} :c 2} => (ch/match {:a {:bb (as-checker odd?)} :c 2})
     {:a {:bb 1} :c 2} => (ch/embeds {:a {:bb (as-checker odd?)}})))
+
+(defrecord Point [x y])
+
+(fact "matching records with maps"
+  (->Point 1 2) => (ch/match {:x 1 :y 2})
+  {:a (->Point 1 2) :b 2} => (ch/embeds {:a (->Point 1 2)})
+  {:a (->Point 1 2) :b 2} => (ch/embeds {:a {:x 1 :y 2}})
+  (->Point {:a 1} {:b 2}) => (ch/embeds {:x {:a 1}})
+  (->Point {:a [1 2]} {:b 2}) => (ch/embeds {:x {:a (c/in-any-order [2 1])}})
+  (->Point {:a 1 :c 3} {:b 2}) =not=> (ch/embeds {:x {:a 1 :c 6}}))
