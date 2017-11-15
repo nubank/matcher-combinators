@@ -21,14 +21,14 @@
         (exception/captured-throwable? actual)
         (checking/as-data-laden-falsehood {:notes [(exception/friendly-stacktrace actual)]})
 
+        (satisfies? core/Matcher expected)
+        (match-and-format expected actual)
+
         (map? expected)
         (match-and-format (core/equals-map expected) actual)
 
         (vector? expected)
         (match-and-format (core/equals-sequence expected) actual)
-
-        (satisfies? core/Matcher expected)
-        (match-and-format expected actual)
 
         (checkers.defining/checker? expected)
         (match-and-format (core/pred->matcher expected) actual)
@@ -46,14 +46,14 @@
         (exception/captured-throwable? actual)
         (checking/as-data-laden-falsehood {:notes [(exception/friendly-stacktrace actual)]})
 
+        (satisfies? core/Matcher expected)
+        (match-and-format expected actual)
+
         (map? expected)
         (match-and-format (core/embeds-map expected) actual)
 
         (vector? expected)
         (match-and-format (core/equals-sequence expected) actual)
-
-        (satisfies? core/Matcher expected)
-        (match-and-format expected actual)
 
         (checkers.defining/checker? expected)
         (match-and-format (core/pred->matcher expected) actual)
