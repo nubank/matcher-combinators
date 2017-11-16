@@ -80,19 +80,12 @@
 ;; TODO PLM: implement this using matchers somehow
 (fact [5 1 4 2] => (m/contains [1 2 5] :gaps-ok :in-any-order))
 
-;; TODO PLM: fix this failing test
-(fact
-  {:a [1 3]} => (ch/match {:a (c/in-any-order [(m/as-checker odd?) 1])}))
-
-;; TODO PLM: these should also be fixed
-(future-fact "Find optimal in-any-order matching just like midje"
+(fact "Find optimal in-any-order matching just like midje"
   [1 3] => (m/just [odd? 1] :in-any-order)
 
-  {:a [1 3]} => (ch/match {:a (c/in-any-order [(m/as-checker odd?) 1])})
-  [1 3] => (ch/match (c/in-any-order [(m/as-checker odd?) 1]))
-  [1 3] => (ch/match (c/in-any-order [1 (m/as-checker odd?)]))
-  [1 2] => (ch/match (c/in-any-order [(m/as-checker even?)
-                                      (m/as-checker odd?)]))
+  {:a [1 3]} => (ch/match {:a (c/in-any-order [(c/pred->matcher odd?) 1])})
+  {:a [1 3]} => (ch/match {:a (c/in-any-order [1 (c/pred->matcher odd?)])})
 
-  {:a [1 3]} => (ch/match {:a (c/in-any-order [1 3])})
-  [1 3] => (ch/match (c/in-any-order [3 1])))
+  {:a [1 3]} => (ch/match {:a (c/in-any-order [(m/as-checker odd?) 1])})
+  [1 2] => (ch/match (c/in-any-order [(m/as-checker even?)
+                                      (m/as-checker odd?)])))

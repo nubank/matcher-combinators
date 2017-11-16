@@ -123,22 +123,41 @@
 (defn- find-first [pred coll]
   (->> coll (filter pred) first))
 
+(defn- permutations
+  "Lazy seq of all permutations of a seq"
+  [coll]
+  (for [i (range 0 (count coll))]
+    (lazy-cat (drop i coll) (take i coll))))
+
 (defn- matches-in-any-order? [matchers elements]
   (if (empty? elements)
     (empty? matchers)
     (let [[first-element & rest-elements] elements
-          matching-matcher (find-first #(match? (match % first-element)) matchers)]
+          matching-matcher (find-first #(match? (match (derive-matcher % :equals) first-element)) matchers)]
       (if (nil? matching-matcher)
         false
         (recur (remove #{matching-matcher} matchers) rest-elements)))))
+
+(defn- match-all-permutations [matchers elements]
+  (find-first (fn [matchers] (matches-in-any-order? matchers elements))
+              (permutations matchers)))
 
 (defrecord AllOrNothingInAnyOrder [expected]
   Matcher
   (match [_this actual]
     (cond
-      (not (sequential? actual)) [:mismatch (model/->Mismatch expected actual)]
-      (matches-in-any-order? expected actual) [:match actual]
-      :else [:mismatch (model/->Mismatch expected actual)])))
+      (not (sequential? actual))
+      [:mismatch (model/->Mismatch expected actual)]
+
+      (not (= (count expected) (count actual)))
+      ;; for size mismatch, is there a more detailed mismatch model to use?
+      [:mismatch (model/->Mismatch expected actual)]
+
+      (match-all-permutations expected actual)
+      [:match actual]
+
+      :else
+      [:mismatch (model/->Mismatch expected actual)])))
 
 (defn- base-selecting-match [matchers matching? matched-elements]
   (if (empty? matchers)
