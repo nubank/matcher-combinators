@@ -1,5 +1,5 @@
 (ns matcher-combinators.checkers-test
-  (:require [midje.sweet :as m :refer [fact facts future-fact]]
+  (:require [midje.sweet :as m :refer [fact facts future-fact =>]]
             [matcher-combinators.parser]
             [matcher-combinators.core :as c]))
 
@@ -98,3 +98,10 @@
   {:a [1]} =not=> (c/equals-map {:a (c/in-any-order [(m/as-checker odd?) 1])})
   [1 2] => (c/in-any-order [(m/as-checker even?)
                             (m/as-checker odd?)]))
+
+(m/unfinished f)
+(let [short-list (c/equals-sequence [m/anything m/anything m/anything])]
+  (fact "using matchers on the left side of the arrow"
+    (f [1 2 3]) => 1
+    (provided
+      (f short-list) => 1)))
