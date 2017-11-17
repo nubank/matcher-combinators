@@ -99,10 +99,8 @@
 (defn embeds-map [expected]
   (->EmbedsMap expected))
 
-(defrecord EqualsSequence [expected]
-  Matcher
-  (match [_this actual]
-    (if-not (sequential? actual)
+(defn sequence-match [expected actual subseq?]
+  (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
       ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
       ;; the `:equals` needs to be dynamically determined
@@ -112,10 +110,18 @@
             actual-elements (concat actual (repeat nil))
             match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
                                  matcher-fns actual-elements)
-            match-results   (take (max (count actual) (count expected)) match-results')]
+            match-size      (if subseq?
+                              (count expected)
+                              (max (count actual) (count expected)))
+            match-results   (take match-size match-results')]
         (if (some mismatch? match-results)
           [:mismatch (map value match-results)]
-          [:match actual])))))
+          [:match actual]))))
+
+(defrecord EqualsSequence [expected]
+  Matcher
+  (match [_this actual]
+    (sequence-match expected actual false)))
 
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
@@ -129,35 +135,38 @@
   (for [i (range 0 (count coll))]
     (lazy-cat (drop i coll) (take i coll))))
 
-(defn- matches-in-any-order? [matchers elements]
-  (if (empty? elements)
-    (empty? matchers)
+(defn- matches-in-any-order? [matchers elements subset?]
+  (if (empty? matchers)
+    (or subset? (empty? elements))
     (let [[first-element & rest-elements] elements
           matching-matcher (find-first #(match? (match (derive-matcher % :equals) first-element)) matchers)]
       (if (nil? matching-matcher)
         false
-        (recur (remove #{matching-matcher} matchers) rest-elements)))))
+        (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
 
-(defn- match-all-permutations [matchers elements]
-  (find-first (fn [matchers] (matches-in-any-order? matchers elements))
+(defn- match-all-permutations [match-apply-fn matchers elements subset?]
+  (find-first (fn [matchers] (match-apply-fn matchers elements subset?))
               (permutations matchers)))
+
+(defn- match-any-order [expected actual subset?]
+  (cond
+    (not (sequential? actual))
+    [:mismatch (model/->Mismatch expected actual)]
+
+    (and (not subset?) (not (= (count expected) (count actual))))
+    ;; for size mismatch, is there a more detailed mismatch model to use?
+    [:mismatch (model/->Mismatch expected actual)]
+
+    (match-all-permutations matches-in-any-order? expected actual subset?)
+    [:match actual]
+
+    :else
+    [:mismatch (model/->Mismatch expected actual)]))
 
 (defrecord AllOrNothingInAnyOrder [expected]
   Matcher
   (match [_this actual]
-    (cond
-      (not (sequential? actual))
-      [:mismatch (model/->Mismatch expected actual)]
-
-      (not (= (count expected) (count actual)))
-      ;; for size mismatch, is there a more detailed mismatch model to use?
-      [:mismatch (model/->Mismatch expected actual)]
-
-      (match-all-permutations expected actual)
-      [:match actual]
-
-      :else
-      [:mismatch (model/->Mismatch expected actual)])))
+    (match-any-order expected actual false)))
 
 (defn- base-selecting-match [matchers matching? matched-elements]
   (if (empty? matchers)
@@ -194,6 +203,22 @@
    (->AllOrNothingInAnyOrder expected))
   ([select-fn expected]
    (->SelectingInAnyOrder select-fn expected)))
+
+(defrecord SubSeq [expected]
+  Matcher
+  (match [_this actual]
+    (sequence-match expected actual true)))
+
+(defn match-subseq [expected]
+  (->SubSeq expected))
+
+(defrecord SubSet [expected]
+  Matcher
+  (match [_this actual]
+    (match-any-order expected actual true)))
+
+(defn match-subset [expected]
+   (->SubSet expected))
 
 (defrecord Predicate [func form]
   Matcher
