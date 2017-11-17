@@ -123,6 +123,7 @@
   (match [_this actual]
     (sequence-match expected actual false)))
 
+;; This is just like midje's `just`
 (defn equals-sequence [expected]
   (->EqualsSequence expected))
 
@@ -198,6 +199,7 @@
       [:mismatch (model/->Mismatch expected actual)]
       (selecting-match select-fn expected actual))))
 
+;; This is just like midje's `just :in-any-order`
 (defn in-any-order
   ([expected]
    (->AllOrNothingInAnyOrder expected))
@@ -209,6 +211,7 @@
   (match [_this actual]
     (sequence-match expected actual true)))
 
+;; This is just like midje's `contains`
 (defn match-subseq [expected]
   (->SubSeq expected))
 
@@ -217,6 +220,7 @@
   (match [_this actual]
     (match-any-order expected actual true)))
 
+;; This is just like midje's `contains :in-any-order :gaps-ok`
 (defn match-subset [expected]
    (->SubSet expected))
 
