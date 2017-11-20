@@ -1,10 +1,7 @@
 (ns matcher-combinators.core
   (:require [clojure.set :as set]
             [matcher-combinators.model :as model]
-            [matcher-combinators.printer :as printer]
-            [midje.checking.core :as checking]
-            [midje.util.exceptions :as exception]
-            [midje.checking.checkers.defining :as checkers.defining]))
+            ))
 
 (defprotocol Matcher
   ""
@@ -20,14 +17,6 @@
 
 (defn- mismatch? [match-result]
   (= :mismatch (first match-result)))
-
-(defn- check-match [matcher actual]
-  (if (exception/captured-throwable? actual)
-    (checking/as-data-laden-falsehood {:notes [(exception/friendly-stacktrace actual)]})
-    (let [result (match matcher actual)]
-      (if (match? result)
-        true
-        (checking/as-data-laden-falsehood {:notes [(printer/print result)]})))))
 
 (defn- value [match-result]
   (second match-result))
@@ -45,7 +34,7 @@
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
 (defn equals-value [expected]
-  (checkers.defining/as-checker (->Value expected)))
+  (->Value expected))
 
 (declare derive-matcher)
 (defn- allow-unexpected? [matcher-type]
@@ -74,10 +63,6 @@
     (compare-maps expected actual unexpected-handler matcher-type)))
 
 (defrecord ContainsMap [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (select? [this select-fn candidate]
     (let [selected-matcher (select-fn expected)
@@ -87,13 +72,9 @@
     (match-map expected actual identity :contains)))
 
 (defn contains-map [expected]
-  (checkers.defining/as-checker (->ContainsMap expected)))
+  (->ContainsMap expected))
 
 (defrecord EqualsMap [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (select? [_this select-fn candidate]
     (let [selected-matcher (select-fn expected)
@@ -104,7 +85,7 @@
 
 (defn equals-map [expected]
   (assert (map? expected))
-  (checkers.defining/as-checker (->EqualsMap expected)))
+  (->EqualsMap expected))
 
 (defn- match-embeds-map [expected actual unexpected-handler]
   (if-not (map? actual)
@@ -112,16 +93,12 @@
     (compare-maps expected actual unexpected-handler :embeds)))
 
 (defrecord EmbedsMap [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (match-embeds-map expected actual identity)))
 
 (defn embeds-map [expected]
-  (checkers.defining/as-checker (->EmbedsMap expected)))
+  (->EmbedsMap expected))
 
 (defn sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
@@ -143,10 +120,6 @@
           [:match actual]))))
 
 (defrecord EqualsSequence [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (sequence-match expected actual false)))
@@ -154,7 +127,7 @@
 ;; This is just like midje's `just`
 (defn equals-sequence [expected]
   (assert (vector? expected))
-  (checkers.defining/as-checker (->EqualsSequence expected)))
+  (->EqualsSequence expected))
 
 (defn- find-first [pred coll]
   (->> coll (filter pred) first))
@@ -194,10 +167,6 @@
     [:mismatch (model/->Mismatch expected actual)]))
 
 (defrecord AllOrNothingInAnyOrder [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (match-any-order expected actual false)))
@@ -226,10 +195,6 @@
                (cons match-value matched-elements))))))
 
 (defrecord SelectingInAnyOrder [select-fn expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (if-not (sequential? actual)
@@ -239,15 +204,11 @@
 ;; This is just like midje's `just :in-any-order`
 (defn in-any-order
   ([expected]
-   (checkers.defining/as-checker (->AllOrNothingInAnyOrder expected)))
+   (->AllOrNothingInAnyOrder expected))
   ([select-fn expected]
-   (checkers.defining/as-checker (->SelectingInAnyOrder select-fn expected))))
+   (->SelectingInAnyOrder select-fn expected)))
 
 (defrecord SubSeq [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (sequence-match expected actual true)))
@@ -255,13 +216,9 @@
 ;; This is just like midje's `contains`
 (defn match-subseq [expected]
   (assert (vector? expected))
-  (checkers.defining/as-checker (->SubSeq expected)))
+  (->SubSeq expected))
 
 (defrecord SubSet [expected]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (match-any-order expected actual true)))
@@ -269,13 +226,9 @@
 ;; This is just like midje's `contains :in-any-order :gaps-ok`
 (defn match-subset [expected]
   (assert (vector? expected))
-  (checkers.defining/as-checker (->SubSet expected)))
+  (->SubSet expected))
 
 (defrecord Predicate [func form]
-  clojure.lang.IFn
-    (invoke [this actual]
-      (check-match this actual))
-
   Matcher
   (match [_this actual]
     (if (func actual)
@@ -289,6 +242,9 @@
     `(->Predicate ~pred '~pred)
     `(->Predicate (~pred ~@args) '(~pred ~@args))))
 
+(defn- midje-checker? [value-or-matcher]
+  (:midje/checker (meta value-or-matcher)))
+
 (defn- derive-matcher [value-or-matcher parent-matcher-type]
   (cond
     (satisfies? Matcher value-or-matcher)
@@ -299,7 +255,7 @@
     (vector? value-or-matcher)
     (equals-sequence value-or-matcher)
 
-    (checkers.defining/checker? value-or-matcher)
+    (midje-checker? value-or-matcher)
     (pred->matcher value-or-matcher)
 
     (= :equals parent-matcher-type)
