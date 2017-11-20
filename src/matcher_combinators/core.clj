@@ -1,7 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.set :as set]
-            [matcher-combinators.model :as model]
-            ))
+            [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
   ""

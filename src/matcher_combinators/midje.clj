@@ -1,5 +1,6 @@
 (ns matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.parser]
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
             [midje.util.exceptions :as exception]
