@@ -35,15 +35,12 @@
   {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb (m/roughly 1)}}))
 
 (facts "predicates in matchers"
-  (fact "you can't use a plain predicate inside matchers"
-    {:a {:bb 1} :c 2} =not=> (ch/equals-map {:a {:bb odd?} :c 2})
-    {:a {:bb 1} :c 2} =not=> (ch/embeds-map {:a {:bb odd?}}))
-  (fact "but if you wrap them as matchers you're set"
-    {:a {:bb 1} :c 2} => (ch/equals-map {:a {:bb (c/pred->matcher odd?)} :c 2})
-    {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb (c/pred->matcher odd?)}}))
-  (fact "or if you wrap them as midje checkers you're also set"
-    {:a {:bb 1} :c 2} => (ch/equals-map {:a {:bb (m/as-checker odd?)} :c 2})
-    {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb (m/as-checker odd?)}})))
+  (fact "you can use a plain predicate inside matchers"
+    {:a {:bb 1} :c 2} => (ch/equals-map {:a {:bb odd?} :c 2})
+    {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb odd?}}))
+  (fact "but if you want to check exact functions use midje's 'exactly'"
+    {:a {:bb odd?} :c 2} =not=> (ch/equals-map {:a {:bb odd?} :c 2})
+    {:a {:bb odd?} :c 2} => (ch/equals-map {:a {:bb (m/exactly odd?)} :c 2})))
 
 (defrecord Point [x y])
 

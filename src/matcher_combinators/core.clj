@@ -255,7 +255,8 @@
     (vector? value-or-matcher)
     (equals-sequence value-or-matcher)
 
-    (midje-checker? value-or-matcher)
+    (or (midje-checker? value-or-matcher)
+        (fn? value-or-matcher))
     (pred->matcher value-or-matcher)
 
     (= :equals parent-matcher-type)
