@@ -244,9 +244,12 @@
 (defn- midje-checker? [value-or-matcher]
   (:midje/checker (meta value-or-matcher)))
 
+(defn matcher? [x]
+  (satisfies? Matcher x))
+;; TODO PLM: pass in `form` to use in predicate
 (defn- derive-matcher [value-or-matcher parent-matcher-type]
   (cond
-    (satisfies? Matcher value-or-matcher)
+    (matcher? value-or-matcher)
     value-or-matcher
 
     ;; TODO PLM: potentially needs to be refined to handle different type of
@@ -256,7 +259,7 @@
 
     (or (midje-checker? value-or-matcher)
         (fn? value-or-matcher))
-    (pred->matcher value-or-matcher)
+    (->Predicate value-or-matcher 'TODO)
 
     (= :equals parent-matcher-type)
     (equals-map value-or-matcher)
@@ -271,3 +274,4 @@
     (throw (ex-info "Unable to derive matcher"
                     {:input value-or-matcher
                      :parent-matcher parent-matcher-type}))))
+

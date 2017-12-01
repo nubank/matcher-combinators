@@ -16,6 +16,7 @@
   {:a {:bb 1} :c 2} => (ch/equals-map {:a {:bb (c/pred->matcher odd?)} :c 2}))
 
 (fact "map embeds"
+  {:a {:aa 11 :bb {:aaa 111}} :b 2} => (ch/embeds-map {:a {:bb {:aaa 111}}})
   {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb 1}})
   {:a {:bb 1} :c 2} => (ch/embeds-map {:a {:bb (c/pred->matcher odd?)}}))
 

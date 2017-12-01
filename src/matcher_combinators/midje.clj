@@ -9,11 +9,12 @@
 
 (defn- check-match [matcher actual]
   (if (exception/captured-throwable? actual)
-    (checking/as-data-laden-falsehood {:notes [(exception/friendly-stacktrace actual)]})
+    (checking/as-data-laden-falsehood
+      {:notes [(exception/friendly-stacktrace actual)]})
     (let [result (core/match matcher actual)]
       (if (core/match? result)
         true
-        (checking/as-data-laden-falsehood {:notes [(printer/print result)]})))))
+        (checking/as-data-laden-falsehood {:notes [(printer/as-string result)]})))))
 
 
 (defrecord Checker [matcher]

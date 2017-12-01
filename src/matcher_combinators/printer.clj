@@ -35,8 +35,11 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
-(defn print [expression]
+(defn print [expr]
+  (pprint/with-pprint-dispatch
+    print-diff-dispatch
+    (pprint/pprint expr)))
+
+(defn as-string [expr]
   (with-out-str
-    (pprint/with-pprint-dispatch
-      print-diff-dispatch
-      (pprint/pprint expression))))
+    (print expr)))
