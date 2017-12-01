@@ -1,5 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.set :as set]
+            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
@@ -16,6 +17,9 @@
 
 (defn- mismatch? [match-result]
   (= :mismatch (first match-result)))
+
+(defn matcher? [x]
+  (satisfies? Matcher x))
 
 (defn- value [match-result]
   (second match-result))
@@ -35,9 +39,6 @@
 (defn equals-value [expected]
   (->Value expected))
 
-(defn matcher? [x]
-  (satisfies? Matcher x))
-
 (defrecord Predicate [func form]
   Matcher
   (match [_this actual]
@@ -52,20 +53,15 @@
     `(->Predicate ~pred '~pred)
     `(->Predicate (~pred ~@args) '(~pred ~@args))))
 
-(defn- extended-fn? [x]
-  ;; via suchwow
-  (or (fn? x)
-      (instance? clojure.lang.MultiFn x)))
-
 (defn- derive-matcher [matcher-or-pred]
   (cond
     (matcher? matcher-or-pred)
     matcher-or-pred
 
-    (extended-fn? matcher-or-pred)
-    ;; Ideally we would capture the syntactical form of the pred, because now
-    ;; anonymous function info gets lost. Note that doing so would require
-    ;; macro magic, so a work-around is to use `pred->matcher`.
+    ;; Ideally we would capture the syntactical form of the pred, because
+    ;; currently anonymous function info gets lost. Note that doing so would
+    ;; require macro magic, so a work-around is to use `pred->matcher`.
+    (helpers/extended-fn? matcher-or-pred)
     (->Predicate matcher-or-pred (str matcher-or-pred))
 
     :else
@@ -118,7 +114,7 @@
   (assert (map? expected))
   (->EqualsMap expected))
 
-(defn sequence-match [expected actual subseq?]
+(defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
       ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
@@ -147,27 +143,18 @@
   (assert (vector? expected))
   (->EqualsSequence expected))
 
-(defn- find-first [pred coll]
-  (->> coll (filter pred) first))
-
-(defn- permutations
-  "Lazy seq of all permutations of a seq"
-  [coll]
-  (for [i (range 0 (count coll))]
-    (lazy-cat (drop i coll) (take i coll))))
-
 (defn- matches-in-any-order? [matchers elements subset?]
   (if (empty? matchers)
     (or subset? (empty? elements))
     (let [[first-element & rest-elements] elements
-          matching-matcher (find-first #(match? (match (derive-matcher %) first-element)) matchers)]
+          matching-matcher (helpers/find-first #(match? (match (derive-matcher %) first-element)) matchers)]
       (if (nil? matching-matcher)
         false
         (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
 
-(defn- match-all-permutations [match-apply-fn matchers elements subset?]
-  (find-first (fn [matchers] (match-apply-fn matchers elements subset?))
-              (permutations matchers)))
+(defn- match-all-permutations [matchers elements subset?]
+  (helpers/find-first (fn [matchers] (matches-in-any-order? matchers elements subset?))
+              (helpers/permutations matchers)))
 
 (defn- match-any-order [expected actual subset?]
   (cond
@@ -178,7 +165,7 @@
     ;; for size mismatch, is there a more detailed mismatch model to use?
     [:mismatch (model/->Mismatch expected actual)]
 
-    (match-all-permutations matches-in-any-order? expected actual subset?)
+    (match-all-permutations expected actual subset?)
     [:match actual]
 
     :else
@@ -203,7 +190,7 @@
     (if (empty? elements)
       (base-selecting-match matchers matching? matched-elements)
       (let [[element & rest-elements]  elements
-            selected-matcher           (find-first #(select? % select-fn element) matchers)
+            selected-matcher           (helpers/find-first #(select? % select-fn element) matchers)
             [match-result match-value] (if selected-matcher
                                          (match selected-matcher element)
                                          [:mismatch (model/->Unexpected element)])]
