@@ -11,16 +11,18 @@
       {:file (.getFileName s) :line (.getLineNumber s)})
     {:file nil :line nil}))
 
+(defn- core-or-this-class-name? [^StackTraceElement stacktrace]
+  (let [cl-name (.getClassName stacktrace)]
+    (or (str/starts-with? cl-name "matcher_combinators.test$")
+        (str/starts-with? cl-name "java.lang."))))
+
 ;; had to include this from `clojure.test` because there is no good way to run
 ;; this logic when not reporting a `:fail` or `:error`.
-(defn- with-file+line-info [report]
-  (merge
-    report
-    (stacktrace-file-and-line (drop-while
-                                #(let [cl-name (.getClassName ^StackTraceElement %)]
-                                   (or (str/starts-with? cl-name "matcher_combinators.test$")
-                                       (str/starts-with? cl-name "java.lang.")))
-                                (.getStackTrace (Thread/currentThread))))))
+(defn with-file+line-info [report]
+  (->> (.getStackTrace (Thread/currentThread))
+      (drop-while core-or-this-class-name?)
+      stacktrace-file-and-line
+      (merge report)))
 
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [[matcher# actual#] (list ~@(rest form))]
