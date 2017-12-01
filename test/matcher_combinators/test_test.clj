@@ -8,5 +8,5 @@
 (deftest basic-matching
   (is (match? 1 1))
   (is (match? (core/equals-sequence [1 odd?]) [1 3]))
-  (is (match? (core/embeds-map {:a {:b odd?}}) {:a {:b 1}}))
-  (is (match? (core/embeds-map {:a {:b 1}}) {:a {:b 1}})))
+  (is (match? {:a {:b odd?}} {:a {:b 1}}))
+  (is (match? {:a {:b 1}} {:a {:b 1}})))

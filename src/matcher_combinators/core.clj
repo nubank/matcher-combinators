@@ -35,13 +35,45 @@
 (defn equals-value [expected]
   (->Value expected))
 
-(declare derive-matcher)
-(defn- allow-unexpected? [matcher-type]
-  (= matcher-type :embeds))
+(defn matcher? [x]
+  (satisfies? Matcher x))
 
-(defn- compare-maps [expected actual unexpected-handler matcher-type]
-  (let [entry-results      (map (fn [[key value-or-matcher]]
-                                  [key (match (derive-matcher value-or-matcher matcher-type)
+(defrecord Predicate [func form]
+  Matcher
+  (match [_this actual]
+    (if (func actual)
+      [:match actual]
+      [:mismatch (model/->FailedPredicate form actual)])))
+
+(defmacro pred->matcher
+  "turns a normal predicate function into a matcher"
+  [pred & args]
+  (if (empty? args)
+    `(->Predicate ~pred '~pred)
+    `(->Predicate (~pred ~@args) '(~pred ~@args))))
+
+(defn- extended-fn? [x]
+  ;; via suchwow
+  (or (fn? x)
+      (instance? clojure.lang.MultiFn x)))
+
+(defn- derive-matcher [matcher-or-pred]
+  (cond
+    (matcher? matcher-or-pred)
+    matcher-or-pred
+
+    (extended-fn? matcher-or-pred)
+    ;; Ideally we would capture the syntactical form of the pred, because now
+    ;; anonymous function info gets lost. Note that doing so would require
+    ;; macro magic, so a work-around is to use `pred->matcher`.
+    (->Predicate matcher-or-pred (str matcher-or-pred))
+
+    :else
+    (throw (ex-info "Unable to derive matcher" {:input matcher-or-pred}))))
+
+(defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
+  (let [entry-results      (map (fn [[key matcher-or-pred]]
+                                  [key (match (derive-matcher matcher-or-pred)
                                               (get actual key))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
@@ -49,7 +81,7 @@
                                      [key (unexpected-handler val)]))
                                  actual)]
     (if (and (every? (comp match? value) entry-results)
-             (or (allow-unexpected? matcher-type) (empty? unexpected-entries)))
+             (or allow-unexpected? (empty? unexpected-entries)))
       [:match actual]
       [:mismatch (->> entry-results
                       (map (fn [[key match-result]] [key (value match-result)]))
@@ -68,7 +100,7 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (match-map expected actual identity :contains)))
+    (match-map expected actual identity true)))
 
 (defn contains-map [expected]
   (->ContainsMap expected))
@@ -80,31 +112,18 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (match-map expected actual model/->Unexpected :equals)))
+    (match-map expected actual model/->Unexpected false)))
 
 (defn equals-map [expected]
   (assert (map? expected))
   (->EqualsMap expected))
-
-(defn- match-embeds-map [expected actual unexpected-handler]
-  (if-not (map? actual)
-    [:mismatch (model/->Mismatch expected actual)]
-    (compare-maps expected actual unexpected-handler :embeds)))
-
-(defrecord EmbedsMap [expected]
-  Matcher
-  (match [_this actual]
-    (match-embeds-map expected actual identity)))
-
-(defn embeds-map [expected]
-  (->EmbedsMap expected))
 
 (defn sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
       ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
       ;; the `:equals` needs to be dynamically determined
-      (let [matcher-fns     (concat (map #(partial match (derive-matcher % :equals)) expected)
+      (let [matcher-fns     (concat (map #(partial match (derive-matcher %)) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
             actual-elements (concat actual (repeat nil))
@@ -141,7 +160,7 @@
   (if (empty? matchers)
     (or subset? (empty? elements))
     (let [[first-element & rest-elements] elements
-          matching-matcher (find-first #(match? (match (derive-matcher % :equals) first-element)) matchers)]
+          matching-matcher (find-first #(match? (match (derive-matcher %) first-element)) matchers)]
       (if (nil? matching-matcher)
         false
         (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
@@ -226,52 +245,3 @@
 (defn match-subset [expected]
   (assert (vector? expected))
   (->SubSet expected))
-
-(defrecord Predicate [func form]
-  Matcher
-  (match [_this actual]
-    (if (func actual)
-      [:match actual]
-      [:mismatch (model/->FailedPredicate form actual)])))
-
-(defmacro pred->matcher
-  "turns a normal predicate function into a matcher"
-  [pred & args]
-  (if (empty? args)
-    `(->Predicate ~pred '~pred)
-    `(->Predicate (~pred ~@args) '(~pred ~@args))))
-
-(defn- midje-checker? [value-or-matcher]
-  (:midje/checker (meta value-or-matcher)))
-
-(defn matcher? [x]
-  (satisfies? Matcher x))
-;; TODO PLM: pass in `form` to use in predicate
-(defn- derive-matcher [value-or-matcher parent-matcher-type]
-  (cond
-    (matcher? value-or-matcher)
-    value-or-matcher
-
-    ;; TODO PLM: potentially needs to be refined to handle different type of
-    ;; sequence matchers
-    (vector? value-or-matcher)
-    (equals-sequence value-or-matcher)
-
-    (or (midje-checker? value-or-matcher)
-        (fn? value-or-matcher))
-    (->Predicate value-or-matcher 'TODO)
-
-    (= :equals parent-matcher-type)
-    (equals-map value-or-matcher)
-
-    (= :embeds parent-matcher-type)
-    (embeds-map value-or-matcher)
-
-    (= :contains parent-matcher-type)
-    (contains-map value-or-matcher)
-
-    :else
-    (throw (ex-info "Unable to derive matcher"
-                    {:input value-or-matcher
-                     :parent-matcher parent-matcher-type}))))
-

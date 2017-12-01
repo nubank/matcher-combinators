@@ -1,5 +1,6 @@
 (ns matcher-combinators.printer-test
   (:require [midje.sweet :refer :all]
+            [midje.experimental :refer [for-all]]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.model :as model]
             [matcher-combinators.core :as core]

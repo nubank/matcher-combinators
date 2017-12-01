@@ -28,5 +28,5 @@
                BigInt
                Character)
 
-;(mimic-matcher core/equals-map IPersistentMap)
-;(mimic-matcher core/equals-sequence IPersistentVector)
+(mimic-matcher core/contains-map IPersistentMap)
+(mimic-matcher core/equals-sequence IPersistentVector)

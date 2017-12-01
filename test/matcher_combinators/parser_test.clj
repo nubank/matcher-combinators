@@ -1,5 +1,6 @@
 (ns matcher-combinators.parser-test
   (:require [midje.sweet :refer :all]
+            [midje.experimental :refer [for-all]]
             [matcher-combinators.parser]
             [matcher-combinators.core :refer :all]
             [clojure.test.check.generators :as gen]
