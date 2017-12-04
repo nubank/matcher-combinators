@@ -6,6 +6,22 @@ A Clojure library designed to ... well, that part is up to you.
 
 FIXME
 
+## Matchers
+
+### default matchers for parsers
+
+### built-in matchers
+
+- `subset`:
+- `sublist`:
+- `equals-map`:
+- `contains-map`:
+- `equals-seq`:
+- `in-any-order`:
+- `equals-value`:
+
+- `pred->matcher`:
+
 ## License
 
 Copyright © 2017 FIXME

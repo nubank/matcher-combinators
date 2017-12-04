@@ -4,7 +4,8 @@
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
-  ""
+  "For matching expected and actual values, providing helpful mismatch info on
+  unsucessful matches"
   (select? [this select-fn candidate]
            "useful for anchoring specific substructures for `in-any-order` matchers")
   (match   [this actual]
@@ -38,7 +39,10 @@
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
-(defn equals-value [expected]
+(defn equals-value
+  "Matcher that will match when the given value is exactly the same as the
+  `expected`."
+  [expected]
   (->Value expected))
 
 (defrecord Predicate [func form]
@@ -102,8 +106,8 @@
     (match-map expected actual identity true)))
 
 (defn contains-map
-  "Matcher that will match when the given list is exactly the same as the
-  `expected`."
+  "Matcher that will match when the map, and any nested maps, contain some of
+  the same key/values as the `expected` map."
   [expected]
   (->ContainsMap expected))
 
@@ -116,7 +120,10 @@
   (match [_this actual]
     (match-map expected actual model/->Unexpected false)))
 
-(defn equals-map [expected]
+(defn equals-map
+  "Matcher that will match when the given map is exactly the same as the
+  `expected` map."
+  [expected]
   (assert (map? expected))
   (->EqualsMap expected))
 
@@ -157,7 +164,9 @@
   (if (empty? matchers)
     (or subset? (empty? elements))
     (let [[first-element & rest-elements] elements
-          matching-matcher (helpers/find-first #(match? (match (derive-matcher %) first-element)) matchers)]
+          matching-matcher (helpers/find-first
+                             #(match? (match (derive-matcher %) first-element))
+                             matchers)]
       (if (nil? matching-matcher)
         false
         (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
