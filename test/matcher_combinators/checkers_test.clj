@@ -67,25 +67,25 @@
 
 (fact "equals-map doesn't coerce like midje `just`"
   {:a 1 :b 2} => (m/just [[:a 1] [:b 2]])
-  {:a 1 :b 2} =not=> (ch/match (c/equals-sequence [[:a 1] [:b 2]])))
+  {:a 1 :b 2} =not=> (ch/match (c/equals-seq [[:a 1] [:b 2]])))
 
 (future-fact "dealing with sets"
   #{3 8 1} => (m/just [odd? 3 even?])
   ;; When would someone write a test like this:
   ;; and how is the best way to write such tests using matcher-combinators?
-  #{3 8 1} =not=> (ch/match (c/equals-sequence [(m/as-checker odd?) 3 (m/as-checker even?)])))
+  #{3 8 1} =not=> (ch/match (c/equals-seq [(m/as-checker odd?) 3 (m/as-checker even?)])))
 
 (fact [5 1 4 2] => (m/contains [1 2 5] :gaps-ok :in-any-order))
-(fact [5 1 4 2] => (ch/match (c/match-subseq [5 1]))
-      [5 1 4 2] => (ch/match (c/match-subseq [5 1 4 2]))
-      [5 1 4 2] =not=> (ch/match (c/match-subseq [5 1 4 2 6]))
-      [5 1 4 2] =not=> (ch/match (c/match-subseq [1 5])))
+(fact [5 1 4 2] => (ch/match (c/sublist [5 1]))
+      [5 1 4 2] => (ch/match (c/sublist [5 1 4 2]))
+      [5 1 4 2] =not=> (ch/match (c/sublist [5 1 4 2 6]))
+      [5 1 4 2] =not=> (ch/match (c/sublist [1 5])))
 
-(fact [5 1 4 2] => (ch/match (c/match-subset [5 1]))
-      [5 1 4 2] => (ch/match (c/match-subset [1 5]))
-      [5 1 4 2] => (ch/match (c/match-subset [5 1 4 2]))
-      [5 1 4 2] => (ch/match (c/match-subset [1 5 2 4]))
-      [5 1 4 2] =not=> (ch/match (c/match-subset [5 1 4 2 6])))
+(fact [5 1 4 2] => (ch/match (c/subset [5 1]))
+      [5 1 4 2] => (ch/match (c/subset [1 5]))
+      [5 1 4 2] => (ch/match (c/subset [5 1 4 2]))
+      [5 1 4 2] => (ch/match (c/subset [1 5 2 4]))
+      [5 1 4 2] =not=> (ch/match (c/subset [5 1 4 2 6])))
 
 (fact "Find optimal in-any-order matching just like midje"
   [1 3] => (m/just [odd? 1] :in-any-order)
@@ -99,7 +99,7 @@
                                       (m/as-checker odd?)])))
 
 (m/unfinished f)
-(let [short-list (ch/match (c/equals-sequence [m/anything m/anything m/anything]))]
+(let [short-list (ch/match (c/equals-seq [m/anything m/anything m/anything]))]
   (fact "using matchers on the left side of the arrow"
     (f [1 2 3]) => 1
     (provided

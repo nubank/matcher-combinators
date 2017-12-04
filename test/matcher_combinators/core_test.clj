@@ -102,24 +102,24 @@
         #{1 2}))
 
     ?sequence-matcher
-    equals-sequence
+    equals-seq
     in-any-order
     in-any-order-selecting)
 
-  (facts "on the equals-sequence matcher"
+  (facts "on the equals-seq matcher"
     (fact "on element mismatches, marks each mismatch"
-      (match (equals-sequence [(equals-value 1) (equals-value 2)]) [2 1])
+      (match (equals-seq [(equals-value 1) (equals-value 2)]) [2 1])
       => [:mismatch [(model/->Mismatch 1 2) (model/->Mismatch 2 1)]]
 
-      (match (equals-sequence [(equals-value 1) (equals-value 2)]) [1 3])
+      (match (equals-seq [(equals-value 1) (equals-value 2)]) [1 3])
       => [:mismatch [1 (model/->Mismatch 2 3)]])
 
     (fact "when there are more elements than expected matchers, mark each extra element as Unexpected"
-      (match (equals-sequence [(equals-value 1) (equals-value 2)]) [1 2 3])
+      (match (equals-seq [(equals-value 1) (equals-value 2)]) [1 2 3])
       => [:mismatch [1 2 (model/->Unexpected 3)]])
 
     (fact "when there are more matchers then actual elements, append the expected values marked as Missing"
-      (match (equals-sequence [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
+      (match (equals-seq [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
       => [:mismatch [1 2 (model/->Missing 3)]]))
 
   (facts "on the in-any-order sequence matcher"
@@ -177,19 +177,19 @@
         => [:mismatch [1 2 (model/->Missing 3)]]))))
 
 (facts "on nesting multiple matchers"
-  (facts "on nesting equals-sequence matchers"
+  (facts "on nesting equals-seq matchers"
     (match
-      (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)])
+      (equals-seq [(equals-seq [(equals-value 1) (equals-value 2)]) (equals-value 20)])
       [[1 2] 20])
     => [:match [[1 2] 20]]
 
     (match
-      (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)])
+      (equals-seq [(equals-seq [(equals-value 1) (equals-value 2)]) (equals-value 20)])
       [[1 5] 20])
     => [:mismatch [[1 (model/->Mismatch 2 5)] 20]]
 
     (match
-      (equals-sequence [(equals-sequence [(equals-value 1) (equals-value 2)]) (equals-value 20)])
+      (equals-seq [(equals-seq [(equals-value 1) (equals-value 2)]) (equals-value 20)])
       [[1 5] 21])
     => [:mismatch [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]])
 
@@ -221,13 +221,13 @@
     => [:mismatch {:a (model/->Mismatch 42 43)
                    :m {:x (model/->Mismatch "foo" "bar")}}])
 
-  (match (equals-sequence [(equals-map {:a (equals-value 42)
+  (match (equals-seq [(equals-map {:a (equals-value 42)
                                         :b (equals-value 1337)})
                            (equals-value 20)])
          [{:a 42 :b 1337} 20])
   => [:match [{:a 42 :b 1337} 20]]
 
-  (match (equals-sequence [(equals-map {:a (equals-value 42)
+  (match (equals-seq [(equals-map {:a (equals-value 42)
                                         :b (equals-value 1337)})
                            (equals-value 20)])
          [{:a 43 :b 1337} 20])

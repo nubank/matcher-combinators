@@ -29,4 +29,4 @@
                Character)
 
 (mimic-matcher core/contains-map IPersistentMap)
-(mimic-matcher core/equals-sequence IPersistentVector)
+(mimic-matcher core/equals-seq IPersistentVector)

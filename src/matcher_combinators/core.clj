@@ -5,8 +5,10 @@
 
 (defprotocol Matcher
   ""
-  (select? [this select-fn candidate] "")
-  (match   [this actual]              ""))
+  (select? [this select-fn candidate]
+           "useful for anchoring specific substructures for `in-any-order` matchers")
+  (match   [this actual]
+           "determine if a concrete `actual` value satisfies this matcher"))
 
 (extend-type nil
   Matcher
@@ -47,7 +49,8 @@
       [:mismatch (model/->FailedPredicate form actual)])))
 
 (defmacro pred->matcher
-  "turns a normal predicate function into a matcher"
+  "Turns a normal predicate function into a matcher.
+  Preserves syntactical info when showing mismatch output."
   [pred & args]
   (if (empty? args)
     `(->Predicate ~pred '~pred)
@@ -98,7 +101,10 @@
   (match [_this actual]
     (match-map expected actual identity true)))
 
-(defn contains-map [expected]
+(defn contains-map
+  "Matcher that will match when the given list is exactly the same as the
+  `expected`."
+  [expected]
   (->ContainsMap expected))
 
 (defrecord EqualsMap [expected]
@@ -138,8 +144,12 @@
   (match [_this actual]
     (sequence-match expected actual false)))
 
-;; This is just like midje's `just`
-(defn equals-sequence [expected]
+(defn equals-seq
+  "Matcher that will match when the given list is exactly the same as the
+  `expected`.
+
+  Similar to midje's `(just expected)`"
+  [expected]
   (assert (vector? expected))
   (->EqualsSequence expected))
 
@@ -171,7 +181,7 @@
     :else
     [:mismatch (model/->Mismatch expected actual)]))
 
-(defrecord AllOrNothingInAnyOrder [expected]
+(defrecord InAnyOrder [expected]
   Matcher
   (match [_this actual]
     (match-any-order expected actual false)))
@@ -206,10 +216,16 @@
       [:mismatch (model/->Mismatch expected actual)]
       (selecting-match select-fn expected actual))))
 
-;; This is just like midje's `just :in-any-order`
 (defn in-any-order
+  "Matcher that will match when the given a list that is the same as the
+  `expected` list but with elements in a different order.
+
+  `select-fn`: optional argument used to anchoring specific substructures to
+               clarify mismatch output
+
+  Similar to Midje's `(just expected :in-any-order)`"
   ([expected]
-   (->AllOrNothingInAnyOrder expected))
+   (->InAnyOrder expected))
   ([select-fn expected]
    (->SelectingInAnyOrder select-fn expected)))
 
@@ -218,8 +234,12 @@
   (match [_this actual]
     (sequence-match expected actual true)))
 
-;; This is just like midje's `contains`
-(defn match-subseq [expected]
+(defn sublist
+  "Matcher that will match when provided a (ordered) prefix of the `expected`
+  list.
+
+  Similar to Midje's `(contains expected)`"
+  [expected]
   (assert (vector? expected))
   (->SubSeq expected))
 
@@ -228,7 +248,11 @@
   (match [_this actual]
     (match-any-order expected actual true)))
 
-;; This is just like midje's `contains :in-any-order :gaps-ok`
-(defn match-subset [expected]
+(defn subset
+  "Order-agnostic matcher that will match when provided a subset of the
+  `expected` list.
+
+  Similar to Midje's `(contains expected :in-any-order :gaps-ok)`"
+  [expected]
   (assert (vector? expected))
   (->SubSet expected))

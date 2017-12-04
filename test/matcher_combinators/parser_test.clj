@@ -47,8 +47,8 @@
        (match (equals-map {:a 10}) {:a 10}))
     => truthy))
 
-(fact "vectors act as equals-sequence matchers"
+(fact "vectors act as equals-seq matchers"
   (fact
-    (= (match (equals-sequence [10]) [10])
-       (match (equals-sequence [(equals-value 10)]) [10]))
+    (= (match (equals-seq [10]) [10])
+       (match (equals-seq [(equals-value 10)]) [10]))
     => truthy))
