@@ -106,8 +106,8 @@
     (match-map expected actual identity true)))
 
 (defn contains-map
-  "Matcher that will match when the map, and any nested maps, contain some of
-  the same key/values as the `expected` map."
+  "Matcher that will match when the map contains some of the same key/values as
+  the `expected` map."
   [expected]
   (->ContainsMap expected))
 
@@ -121,8 +121,9 @@
     (match-map expected actual model/->Unexpected false)))
 
 (defn equals-map
-  "Matcher that will match when the given map is exactly the same as the
-  `expected` map."
+  "Matcher that will match when:
+    1. the keys of the `expected` map are equal to the given map's keys
+    2. the value matchers of `expected` map matches the given map's values"
   [expected]
   (assert (map? expected))
   (->EqualsMap expected))
@@ -152,8 +153,7 @@
     (sequence-match expected actual false)))
 
 (defn equals-seq
-  "Matcher that will match when the given list is exactly the same as the
-  `expected`.
+  "Matcher that will match when the `expected` list's matchers match the given list.
 
   Similar to midje's `(just expected)`"
   [expected]

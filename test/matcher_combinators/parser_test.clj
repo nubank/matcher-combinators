@@ -1,5 +1,5 @@
 (ns matcher-combinators.parser-test
-  (:require [midje.sweet :refer :all]
+  (:require [midje.sweet :refer :all :exclude [exactly]]
             [midje.experimental :refer [for-all]]
             [matcher-combinators.parser]
             [matcher-combinators.core :refer :all]

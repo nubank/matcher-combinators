@@ -1,5 +1,5 @@
 (ns matcher-combinators.core-test
-  (:require [midje.sweet :refer :all]
+  (:require [midje.sweet :refer :all :exclude [exactly]]
             [matcher-combinators.core :refer :all]
             [matcher-combinators.model :as model]))
 

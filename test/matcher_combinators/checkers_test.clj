@@ -40,8 +40,10 @@
   (fact "you can use a plain predicate inside matchers"
     {:a {:bb 1} :c 2} => (ch/match (c/equals-map {:a {:bb odd?} :c 2}))
     {:a {:bb 1} :c 2} => (ch/match {:a {:bb odd?}}))
-  (fact "but if you want to check exact functions use midje's 'exactly'"
+  (fact "but if you want to check exact functions use `equals-value` which
+        works like midje's 'exactly'"
     {:a {:bb odd?} :c 2} =not=> (ch/match (c/equals-map {:a {:bb odd?} :c 2}))
+    {:a {:bb odd?} :c 2} => (ch/match (c/equals-map {:a {:bb (c/equals-value odd?)} :c 2}))
     {:a {:bb odd?} :c 2} => (ch/match (c/equals-map {:a {:bb (m/exactly odd?)} :c 2}))))
 
 (defrecord Point [x y])

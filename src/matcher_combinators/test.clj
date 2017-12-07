@@ -55,4 +55,4 @@
     (when-let [message (:message m)]
       (println message))
     (println "mismatch:")
-    (printer/print (:markup m))))
+    (printer/pretty-print (:markup m))))
