@@ -9,17 +9,16 @@
   [1] => (ch/match [1])
   [[1]] => (ch/match [[1]])
   [[[1]]] => (ch/match [[[1]]])
-  [[[1]]] => (ch/match [[[(c/pred->matcher odd?)]]])
   [[[1]]] => (ch/match [[[odd?]]]))
 
 (fact "map matching"
   {:a {:bb 1} :c 2} => (ch/match (c/equals-map {:a {:bb 1} :c 2}))
-  {:a {:bb 1} :c 2} => (ch/match (c/equals-map {:a {:bb (c/pred->matcher odd?)} :c 2})))
+  {:a {:bb 1} :c 2} => (ch/match (c/equals-map {:a {:bb odd?} :c 2})))
 
 (fact "map embeds"
   {:a {:aa 11 :bb {:aaa 111}} :b 2} => (ch/match {:a {:bb {:aaa 111}}})
   {:a {:bb 1} :c 2} => (ch/match {:a {:bb 1}})
-  {:a {:bb 1} :c 2} => (ch/match {:a {:bb (c/pred->matcher odd?)}}))
+  {:a {:bb 1} :c 2} => (ch/match {:a {:bb odd?}}))
 
 (fact "map in a sequence in a map"
   {:a [{:bb 1} {:cc 2 :dd 3}] :b 4} => (ch/match {:a [{:bb 1} {:cc 2 :dd 3}] :b 4})
@@ -92,8 +91,8 @@
 (fact "Find optimal in-any-order matching just like midje"
   [1 3] => (m/just [odd? 1] :in-any-order)
 
-  {:a [1 3]} => (ch/match (c/equals-map {:a (c/in-any-order [(c/pred->matcher odd?) 1])}))
-  {:a [1 3]} => (ch/match (c/equals-map {:a (c/in-any-order [1 (c/pred->matcher odd?)])}))
+  {:a [1 3]} => (ch/match (c/equals-map {:a (c/in-any-order [odd? 1])}))
+  {:a [1 3]} => (ch/match (c/equals-map {:a (c/in-any-order [1 odd?])}))
 
   {:a [1 3]} => (ch/match (c/equals-map {:a (c/in-any-order [(m/as-checker odd?) 1])}))
   {:a [1]} =not=> (ch/match (c/equals-map {:a (c/in-any-order [(m/as-checker odd?) 1])}))

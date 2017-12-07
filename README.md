@@ -20,8 +20,6 @@ FIXME
 - `in-any-order`:
 - `equals-value`:
 
-- `pred->matcher`:
-
 ## License
 
 Copyright © 2017 FIXME

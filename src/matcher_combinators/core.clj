@@ -52,31 +52,9 @@
       [:match actual]
       [:mismatch (model/->FailedPredicate form actual)])))
 
-(defmacro pred->matcher
-  "Turns a normal predicate function into a matcher.
-  Preserves syntactical info when showing mismatch output."
-  [pred & args]
-  (if (empty? args)
-    `(->Predicate ~pred '~pred)
-    `(->Predicate (~pred ~@args) '(~pred ~@args))))
-
-(defn- derive-matcher [matcher-or-pred]
-  (cond
-    (matcher? matcher-or-pred)
-    matcher-or-pred
-
-    ;; Ideally we would capture the syntactical form of the pred, because
-    ;; currently anonymous function info gets lost. Note that doing so would
-    ;; require macro magic, so a work-around is to use `pred->matcher`.
-    (helpers/extended-fn? matcher-or-pred)
-    (->Predicate matcher-or-pred (str matcher-or-pred))
-
-    :else
-    (throw (ex-info "Unable to derive matcher" {:input matcher-or-pred}))))
-
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher-or-pred]]
-                                  [key (match (derive-matcher matcher-or-pred)
+                                  [key (match matcher-or-pred
                                               (get actual key))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
@@ -133,7 +111,7 @@
       [:mismatch (model/->Mismatch expected actual)]
       ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
       ;; the `:equals` needs to be dynamically determined
-      (let [matcher-fns     (concat (map #(partial match (derive-matcher %)) expected)
+      (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
             actual-elements (concat actual (repeat nil))
@@ -165,7 +143,7 @@
     (or subset? (empty? elements))
     (let [[first-element & rest-elements] elements
           matching-matcher (helpers/find-first
-                             #(match? (match (derive-matcher %) first-element))
+                             #(match? (match % first-element))
                              matchers)]
       (if (nil? matching-matcher)
         false
