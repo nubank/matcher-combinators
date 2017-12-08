@@ -3,10 +3,26 @@
             [matcher-combinators.core :as core]
             [clojure.test :refer :all]))
 
-(deftest matchers)
+(def example-matcher {:username string?
+                      :account  {:id        integer?
+                                 :open-date "25-02-1997"}})
+
+(def example-actual {:username "barbara"
+                     :device   "android"
+                     :account  {:id         1
+                                :open-date  "25-02-1997"
+                                :extra-data 'blah}})
 
 (deftest basic-matching
+  (is (match? example-matcher example-actual)
+      "In 'match?', the matcher argument comes first")
+  (is (match? (core/equals-map example-matcher)
+              (dissoc example-actual :device))
+      "wrapping the matcher in 'equals-map' means the top level of 'actual'
+      must have the exact same key/values")
   (is (match? 1 1))
   (is (match? (core/equals-seq [1 odd?]) [1 3]))
-  (is (match? {:a {:b odd?}} {:a {:b 1}}))
-  (is (match? {:a {:b 1}} {:a {:b 1}})))
+  (is (match? {:a {:b odd?}}
+              {:a {:b 1}})
+      "Predicates can be used in matchers")
+  (is (match? {:a {:b 1}} {:a {:b 1 :c 2}})))

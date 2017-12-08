@@ -1,6 +1,7 @@
 (ns matcher-combinators.test
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.printer :as printer]
+            [matcher-combinators.parser]
             [clojure.string :as str]
             [clojure.test :as clojure.test]))
 
