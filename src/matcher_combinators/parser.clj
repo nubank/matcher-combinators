@@ -12,15 +12,12 @@
                           (match [this# actual#]
                                 (core/match (~matcher-builder this#) actual#)))) types)))
 
-(extend-type clojure.lang.IFn
+(extend-type clojure.lang.Fn
   core/Matcher
   (match [this actual]
-    (cond
-      (vector? this) (core/match (core/equals-seq this) actual)
-      (map? this)    (core/match (core/contains-map this) actual)
-      :else          (if (this actual)
-                       [:match actual]
-                       [:mismatch (model/->FailedPredicate (str this) actual)]))))
+    (if (this actual)
+      [:match actual]
+      [:mismatch (model/->FailedPredicate (str this) actual)])))
 
 (mimic-matcher core/equals-value
                Long
@@ -38,4 +35,6 @@
                BigInteger
                BigInt
                Character)
-(mimic-matcher core/contains-map clojure.lang.IRecord)
+
+(mimic-matcher core/contains-map IPersistentMap)
+(mimic-matcher core/equals-seq IPersistentVector)
