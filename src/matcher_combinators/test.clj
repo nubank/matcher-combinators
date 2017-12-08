@@ -20,9 +20,9 @@
 ;; this logic when not reporting a `:fail` or `:error`.
 (defn with-file+line-info [report]
   (->> (.getStackTrace (Thread/currentThread))
-      (drop-while core-or-this-class-name?)
-      stacktrace-file-and-line
-      (merge report)))
+       (drop-while core-or-this-class-name?)
+       stacktrace-file-and-line
+       (merge report)))
 
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [[matcher# actual#] (list ~@(rest form))]
