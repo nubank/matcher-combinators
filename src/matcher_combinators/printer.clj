@@ -3,7 +3,7 @@
   (:require [clojure.pprint :as pprint]
             [matcher-combinators.model :as model]
             [colorize.core :as colorize])
-  (:import [matcher_combinators.model Mismatch Missing Unexpected]))
+  (:import [matcher_combinators.model Mismatch Missing Unexpected FailedPredicate]))
 
 (defrecord ColorTag [color expression])
 
@@ -17,6 +17,9 @@
 
 (defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))
+
+(defmethod markup-expression FailedPredicate [failed-predicate]
+  (list 'predicate (->ColorTag :yellow (:form failed-predicate)) (->ColorTag :red (:actual failed-predicate))))
 
 (defmethod markup-expression :default [expression]
   expression)
@@ -32,8 +35,11 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
-(defn print [expression]
+(defn pretty-print [expr]
+  (pprint/with-pprint-dispatch
+    print-diff-dispatch
+    (pprint/pprint expr)))
+
+(defn as-string [expr]
   (with-out-str
-    (pprint/with-pprint-dispatch
-      print-diff-dispatch
-      (pprint/pprint expression))))
+    (pretty-print expr)))

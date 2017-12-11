@@ -1,5 +1,6 @@
 (ns matcher-combinators.parser
-  (:require [matcher-combinators.core :as core])
+  (:require [matcher-combinators.core :as core]
+            [matcher-combinators.model :as model])
   (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap IPersistentVector]
            [java.util UUID Date]
            [java.time LocalDate LocalDateTime YearMonth]))
@@ -10,6 +11,13 @@
      ~@(mapcat (fn [t] `(~t
                           (match [this# actual#]
                                 (core/match (~matcher-builder this#) actual#)))) types)))
+
+(extend-type clojure.lang.Fn
+  core/Matcher
+  (match [this actual]
+    (if (this actual)
+      [:match actual]
+      [:mismatch (model/->FailedPredicate (str this) actual)])))
 
 (mimic-matcher core/equals-value
                Long
@@ -28,5 +36,5 @@
                BigInt
                Character)
 
-(mimic-matcher core/equals-map IPersistentMap)
-(mimic-matcher core/equals-sequence IPersistentVector)
+(mimic-matcher core/contains-map IPersistentMap)
+(mimic-matcher core/equals-seq IPersistentVector)
