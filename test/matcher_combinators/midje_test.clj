@@ -97,7 +97,7 @@
 
 (midje/unfinished f)
 (let [short-list (ch/match (m/equals-seq [midje/anything midje/anything midje/anything]))]
-  (fact "using matchers on the left side of the arrow"
+  (fact "using matchers in provided statements"
     (f [1 2 3]) => 1
     (provided
       (f short-list) => 1)))
