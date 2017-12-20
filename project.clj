@@ -1,6 +1,6 @@
-(defproject matcher-combinators "0.1.0-SNAPSHOT"
+(defproject nubank/matcher-combinators "0.1.0-SNAPSHOT"
   :description "Library for creating matcher combinator to compare nested data structures"
-  :url "https://github.com/rafaeldff/matcher-combinators"
+  :url "https://github.com/nubank/matcher-combinators"
   :license {:name "Apache License, Version 2.0"}
 
   :repositories [["central" {:url "https://repo1.maven.org/maven2/" :snapshots false}]
