@@ -3,7 +3,6 @@
             [midje.experimental :refer [for-all]]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.model :as model]
-            [matcher-combinators.core :as core]
             [clojure.test.check.generators :as gen]
             [colorize.core :as colorize]
             [clojure.pprint :as pprint]))

@@ -8,8 +8,8 @@
 
   :plugins [[lein-midje "3.2.1"]
             [lein-ancient "0.6.14"]]
-  :dependencies [[org.clojure/clojure "1.9.0-RC2"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]]
   :profiles {:dev {:dependencies [[colorize "0.1.1" :exclusions [org.clojure/clojure]]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
-                                  [midje "1.9.0" :exclusions [org.clojure/clojure]]]}})
+                                  [midje "1.9.1" :exclusions [org.clojure/clojure]]]}})

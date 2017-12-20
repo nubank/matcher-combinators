@@ -1,6 +1,7 @@
 (ns matcher-combinators.test-test
   (:require [matcher-combinators.test]
             [matcher-combinators.core :as core]
+            [matcher-combinators.matchers :as m]
             [clojure.test :refer :all]))
 
 (def example-matcher {:username string?
@@ -16,12 +17,12 @@
 (deftest basic-matching
   (is (match? example-matcher example-actual)
       "In 'match?', the matcher argument comes first")
-  (is (match? (core/equals-map example-matcher)
+  (is (match? (m/equals-map example-matcher)
               (dissoc example-actual :device))
       "wrapping the matcher in 'equals-map' means the top level of 'actual'
       must have the exact same key/values")
   (is (match? 1 1))
-  (is (match? (core/equals-seq [1 odd?]) [1 3]))
+  (is (match? (m/equals-seq [1 odd?]) [1 3]))
   (is (match? {:a {:b odd?}}
               {:a {:b 1}})
       "Predicates can be used in matchers")
