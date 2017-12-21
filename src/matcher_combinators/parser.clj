@@ -1,5 +1,6 @@
 (ns matcher-combinators.parser
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model])
   (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap IPersistentVector]
            [java.util UUID Date]
@@ -19,7 +20,7 @@
       [:match actual]
       [:mismatch (model/->FailedPredicate (str this) actual)])))
 
-(mimic-matcher core/equals-value
+(mimic-matcher matchers/equals-value
                Long
                String
                Symbol
@@ -36,5 +37,5 @@
                BigInt
                Character)
 
-(mimic-matcher core/contains-map IPersistentMap)
-(mimic-matcher core/equals-seq IPersistentVector)
+(mimic-matcher matchers/contains-map IPersistentMap)
+(mimic-matcher matchers/equals-seq IPersistentVector)

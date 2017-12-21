@@ -2,7 +2,8 @@
   (:require [midje.sweet :refer :all :exclude [exactly]]
             [midje.experimental :refer [for-all]]
             [matcher-combinators.parser]
-            [matcher-combinators.core :refer :all]
+            [matcher-combinators.matchers :refer :all]
+            [matcher-combinators.core :as core]
             [clojure.test.check.generators :as gen]
             [matcher-combinators.model :as model]))
 
@@ -35,20 +36,20 @@
 (facts "scalar values act as equals-value matchers"
   (for-all [i gen-scalar]
     {:num-tests 50}
-    (match i i) => (match (equals-value i) i))
+    (core/match i i) => (core/match (equals-value i) i))
 
   (for-all [[i j] gen-scalar-pair]
     {:num-tests 50}
-    (match i j) => (match (equals-value i) j)))
+    (core/match i j) => (core/match (equals-value i) j)))
 
 (fact "maps act as equals-map matchers"
   (fact
-    (= (match (equals-map {:a (equals-value 10)}) {:a 10})
-       (match (equals-map {:a 10}) {:a 10}))
+    (= (core/match (equals-map {:a (equals-value 10)}) {:a 10})
+       (core/match (equals-map {:a 10}) {:a 10}))
     => truthy))
 
 (fact "vectors act as equals-seq matchers"
   (fact
-    (= (match (equals-seq [10]) [10])
-       (match (equals-seq [(equals-value 10)]) [10]))
+    (= (core/match (equals-seq [10]) [10])
+       (core/match (equals-seq [(equals-value 10)]) [10]))
     => truthy))

@@ -1,6 +1,5 @@
 (ns matcher-combinators.core
-  (:require [clojure.set :as set]
-            [matcher-combinators.helpers :as helpers]
+  (:require [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
@@ -38,12 +37,6 @@
      (nil? actual)        [:mismatch (model/->Missing expected)]
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
-
-(defn equals-value
-  "Matcher that will match when the given value is exactly the same as the
-  `expected`."
-  [expected]
-  (->Value expected))
 
 (defrecord Predicate [func form]
   Matcher
@@ -83,12 +76,6 @@
   (match [_this actual]
     (match-map expected actual identity true)))
 
-(defn contains-map
-  "Matcher that will match when the map contains some of the same key/values as
-  the `expected` map."
-  [expected]
-  (->ContainsMap expected))
-
 (defrecord EqualsMap [expected]
   Matcher
   (select? [_this select-fn candidate]
@@ -97,14 +84,6 @@
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
     (match-map expected actual model/->Unexpected false)))
-
-(defn equals-map
-  "Matcher that will match when:
-    1. the keys of the `expected` map are equal to the given map's keys
-    2. the value matchers of `expected` map matches the given map's values"
-  [expected]
-  (assert (map? expected))
-  (->EqualsMap expected))
 
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
@@ -129,14 +108,6 @@
   Matcher
   (match [_this actual]
     (sequence-match expected actual false)))
-
-(defn equals-seq
-  "Matcher that will match when the `expected` list's matchers match the given list.
-
-  Similar to midje's `(just expected)`"
-  [expected]
-  (assert (vector? expected))
-  (->EqualsSequence expected))
 
 (defn- matches-in-any-order? [matchers elements subset?]
   (if (empty? matchers)
@@ -203,43 +174,12 @@
       [:mismatch (model/->Mismatch expected actual)]
       (selecting-match select-fn expected actual))))
 
-(defn in-any-order
-  "Matcher that will match when the given a list that is the same as the
-  `expected` list but with elements in a different order.
-
-  `select-fn`: optional argument used to anchoring specific substructures to
-               clarify mismatch output
-
-  Similar to Midje's `(just expected :in-any-order)`"
-  ([expected]
-   (->InAnyOrder expected))
-  ([select-fn expected]
-   (->SelectingInAnyOrder select-fn expected)))
-
 (defrecord SubSeq [expected]
   Matcher
   (match [_this actual]
     (sequence-match expected actual true)))
 
-(defn sublist
-  "Matcher that will match when provided a (ordered) prefix of the `expected`
-  list.
-
-  Similar to Midje's `(contains expected)`"
-  [expected]
-  (assert (vector? expected))
-  (->SubSeq expected))
-
 (defrecord SubSet [expected]
   Matcher
   (match [_this actual]
     (match-any-order expected actual true)))
-
-(defn subset
-  "Order-agnostic matcher that will match when provided a subset of the
-  `expected` list.
-
-  Similar to Midje's `(contains expected :in-any-order :gaps-ok)`"
-  [expected]
-  (assert (vector? expected))
-  (->SubSet expected))
