@@ -24,7 +24,7 @@
 (defn equals-seq
   "Matcher that will match when the `expected` list's matchers match the given list.
 
-  Similar to midje's `(just expected)`"
+  Similar to Midje's `(just expected)`"
   [expected]
   (assert (vector? expected))
   (core/->EqualsSequence expected))

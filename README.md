@@ -54,10 +54,22 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
 
 ### built-in matchers
 
-- `subset`:
-- `sublist`:
-- `equals-map`:
-- `contains-map`:
-- `equals-seq`:
-- `in-any-order`:
-- `equals-value`:
+- `equals-value`: matches when the given value is exactly the same as the `expected`.
+- `equals-map`: matches when:
+      1. the keys of the `expected` map are equal to the given map's keys
+      2. the value matchers of `expected` map matches the given map's values
+- `equals-seq`: matches when the `expected` list's matchers match the given list. Similar to Midje's `(just expected)`
+- `subset`: order-agnostic matcher that will match when provided a subset of the `expected` list. Similar to Midje's `(contains expected :in-any-order :gaps-ok)`
+- `sublist`: matches when provided a (ordered) prefix of the `expected` list.  Similar to Midje's `(contains expected)`
+- `in-any-order`: matches when the given a list that is the same as the `expected` list but with elements in a different order.  Similar to Midje's `(just expected :in-any-order)`
+- `contains-map`: matches when the map contains some of the same key/values as the `expected` map.
+
+## Tests
+
+The project contains both Midje and `clojure.test` tests.
+
+Midje is capable of running both types of tests:
+
+```
+lein midje
+```
