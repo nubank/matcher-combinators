@@ -82,6 +82,7 @@
       [5 1 4 2] => (ch/match (m/subset [1 5]))
       [5 1 4 2] => (ch/match (m/subset [5 1 4 2]))
       [5 1 4 2] => (ch/match (m/subset [1 5 2 4]))
+      [5 1 4 2] => (ch/match (m/subset [odd? even?]))
       [5 1 4 2] =not=> (ch/match (m/subset [5 1 4 2 6])))
 
 (fact "Find optimal in-any-order matching just like midje"

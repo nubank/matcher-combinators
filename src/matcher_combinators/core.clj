@@ -121,15 +121,22 @@
         (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (helpers/find-first (fn [matchers] (matches-in-any-order? matchers elements subset?))
-              (helpers/permutations matchers)))
+  (helpers/find-first
+    (fn [elements] (matches-in-any-order? matchers elements subset?))
+    (helpers/permutations elements)))
+
+(defn- incorrect-matcher->element-count?
+  [subset? matcher-count element-count]
+  (if subset?
+    (> matcher-count element-count)
+    (not (= matcher-count element-count))))
 
 (defn- match-any-order [expected actual subset?]
   (cond
     (not (sequential? actual))
     [:mismatch (model/->Mismatch expected actual)]
 
-    (and (not subset?) (not (= (count expected) (count actual))))
+    (incorrect-matcher->element-count? subset? (count expected) (count actual))
     ;; for size mismatch, is there a more detailed mismatch model to use?
     [:mismatch (model/->Mismatch expected actual)]
 

@@ -1,6 +1,6 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly]]
-            [matcher-combinators.core :refer :all]
+            [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.model :as model]))
 
@@ -253,3 +253,14 @@
 
 
 (future-fact "on contains-elements sequence matcher")
+
+(let [matchers [(core/->Predicate odd? 'odd?)
+                (core/->Predicate even? 'even?)]]
+  (fact "subset will recur on matchers"
+    (#'core/matches-in-any-order? matchers [5 4 1 2] true) => truthy
+    (#'core/matches-in-any-order? matchers [5 1 3 2] true) => falsey)
+  (fact "mismatch if there are more matchers than actual elements"
+    (#'core/match-any-order matchers [5] false)
+    => [:mismatch (model/->Mismatch matchers [5])]
+    (#'core/match-any-order matchers [5] true)
+    => [:mismatch (model/->Mismatch matchers [5])]))
