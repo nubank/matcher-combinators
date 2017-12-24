@@ -101,3 +101,9 @@
     (f [1 2 3]) => 1
     (provided
       (f short-list) => 1)))
+
+(fact "match-any-order subset"
+  [5 4 1 2 3] => (ch/match (m/subset [odd? even? odd?])))
+
+(fact
+  [5 1 4 2] => (ch/match (m/subset [odd? even?])))
