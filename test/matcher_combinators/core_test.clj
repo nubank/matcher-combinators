@@ -264,3 +264,19 @@
     => [:mismatch (model/->Mismatch matchers [5])]
     (#'core/match-any-order matchers [5] true)
     => [:mismatch (model/->Mismatch matchers [5])]))
+
+(fact "repro bug"
+  (core/match
+    (in-any-order :a
+                    [{:a {:id 1} :b 42}
+                     {:a {:id 2} :b 1337}])
+    [{:a {:id 1} :b 42}
+     {:a {:id 2} :b 1337}])
+  => [:match [{:a {:id 1} :b 42}
+              {:a {:id 2} :b 1337}]])
+
+
+(fact "what about lists?"
+  (matcher-combinators.core/match
+    '(1 2 3)
+    '(1 2 3)))
