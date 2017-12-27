@@ -45,13 +45,15 @@
 (fact "maps act as equals-map matchers"
   (fact
     (= (core/match (equals-map {:a (equals-value 10)}) {:a 10})
-       (core/match (equals-map {:a 10}) {:a 10}))
+       (core/match (equals-map {:a 10}) {:a 10})
+       (core/match {:a 10} {:a 10}))
     => truthy))
 
 (fact "vectors act as equals-seq matchers"
   (fact
-    (= (core/match (equals-seq [10]) [10])
-       (core/match (equals-seq [(equals-value 10)]) [10]))
+    (= (core/match (equals-seq [(equals-value 10)]) [10])
+       (core/match (equals-seq [10]) [10])
+       (core/match [10] [10]))
     => truthy))
 
 (fact "lists also act as equals-seq matchers"
