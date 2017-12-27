@@ -53,3 +53,9 @@
     (= (core/match (equals-seq [10]) [10])
        (core/match (equals-seq [(equals-value 10)]) [10]))
     => truthy))
+
+(fact "lists also act as equals-seq matchers"
+  (fact
+    (= (core/match (equals-seq [(equals-value 10)]) [10])
+       (core/match (equals-seq '(10)) [10])
+       (core/match '(10) [10])) => truthy))

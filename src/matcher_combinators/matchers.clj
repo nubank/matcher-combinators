@@ -26,7 +26,7 @@
 
   Similar to Midje's `(just expected)`"
   [expected]
-  (assert (vector? expected))
+  (assert (sequential? expected))
   (core/->EqualsSequence expected))
 
 (defn in-any-order
