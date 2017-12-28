@@ -264,3 +264,22 @@
     => [:mismatch (model/->Mismatch matchers [5])]
     (#'core/match-any-order matchers [5] true)
     => [:mismatch (model/->Mismatch matchers [5])]))
+
+(future-fact "reproducing select? bug"
+  (fact "the bug"
+    (core/match
+      (in-any-order :a [(contains-map {:a (equals-map {:id (equals-value 1)}) :b (equals-value 42)})
+                        (contains-map {:a (equals-map {:id (equals-value 2)}) :b (equals-value 1337)})])
+      [{:a {:id 1} :b 42}
+       {:a {:id 2} :b 1337}])
+    => [:match [{:a {:id 1} :b 42}
+                {:a {:id 2} :b 1337}]])
+
+  (fact "similar, but works"
+    (core/match
+      (in-any-order :a [(contains-map {:a (equals-value 1) :b (equals-value 42)})
+                        (contains-map {:a (equals-value 2) :b (equals-value 1337)})])
+      [{:a 1 :b 42}
+       {:a 2 :b 1337}])
+    => [:match [{:a 1 :b 42}
+                {:a 2 :b 1337}]]))
