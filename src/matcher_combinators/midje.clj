@@ -16,7 +16,7 @@
         true
         (checking/as-data-laden-falsehood {:notes [(printer/as-string result)]})))))
 
-(defmacro match [matcher-form]
+(defmacro ^{:midje/checker true} match [matcher-form]
   `(checkers.defining/as-checker
      (fn [actual#]
        (let [matcher# ~matcher-form]

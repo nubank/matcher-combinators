@@ -1,8 +1,9 @@
 (ns matcher-combinators.midje-test
-  (:require [midje.sweet :as midje :refer [fact facts =>]]
+  (:require [midje.sweet :as midje :refer [fact facts => falsey]]
             [matcher-combinators.midje :as ch]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.core :as c]))
+            [matcher-combinators.core :as c]
+            [midje.emission.api :as emission]))
 
 (fact "sequence matching"
   [] => (ch/match [])
@@ -97,8 +98,22 @@
                                       (midje/as-checker odd?)])))
 
 (midje/unfinished f)
-(let [short-list (ch/match (m/equals-seq [midje/anything midje/anything midje/anything]))]
-  (fact "using matchers in provided statements"
+(let [short-list (ch/match (m/equals-seq [int? int? int?]))]
+  (fact "using defined matchers in provided statements"
     (f [1 2 3]) => 1
     (provided
-      (f short-list) => 1)))
+      (f short-list) => 1))
+
+  (fact "using inline matchers in provided statements"
+    (fact "succeeding"
+      (f [1 2 3]) => 1
+      (provided
+        (f (ch/match (m/equals-seq [int? int? int?]))) => 1))
+
+    (fact "a match failure will fail the test"
+      (emission/silently
+        (fact "will fail"
+          (f [1 2 :not-this]) => 1
+          (provided
+            (f (ch/match (m/equals-seq [int? int? int?]))) => 1)))
+      => falsey)))
