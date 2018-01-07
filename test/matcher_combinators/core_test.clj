@@ -254,8 +254,7 @@
 
 (future-fact "on contains-elements sequence matcher")
 
-(let [matchers [(core/->Predicate odd? 'odd?)
-                (core/->Predicate even? 'even?)]]
+(let [matchers [odd? even?]]
   (fact "subset will recur on matchers"
     (#'core/matches-in-any-order? matchers [5 4 1 2] true) => truthy
     (#'core/matches-in-any-order? matchers [5 1 3 2] true) => falsey)
