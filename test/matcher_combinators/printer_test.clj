@@ -66,18 +66,24 @@
 
 (midje.config/with-augmented-config {:partial-prerequisites true}
   (facts "On printing"
-    (fact "When an expression can be marked up, will use color tags to as-string in color"
-      (printer/as-string ..markupable..)
-      => (str "(foo " (colorize/red "bar") ")" "\n")
-      (provided
-        (printer/markup-expression ..markupable..)
-        => (list 'foo (printer/->ColorTag :red 'bar))))
+         (fact "When an expression can be marked up, will use color tags to as-string in color"
+               (printer/as-string ..markupable..)
+               => (str "(foo " (colorize/red "bar") ")" "\n")
+               (provided
+                (printer/markup-expression ..markupable..)
+                => (list 'foo (printer/->ColorTag :red 'bar))))
 
-    (fact "When printing a regular expression, just pprint it"
-      (printer/as-string {:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000]
-                      :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]})
-      => "{:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000],\n :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]}\n"
+         (fact "When printing a regular expression, just pprint it"
+               (printer/as-string {:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000]
+                                   :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]})
+               => "{:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000],\n :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]}\n"
 
-      (for-all [exp any]
-        {:num-tests 100}
-        (printer/as-string exp) => (with-out-str (pprint/pprint exp))))))
+               (for-all [exp any]
+                        {:num-tests 100}
+                        (printer/as-string exp) => (with-out-str (pprint/pprint exp)))))
+
+  (fact "when the var *text-cues-mode* is bound to true, include text cues in the output"
+        (against-background (colorize/ansi anything) => "")
+        (printer/with-text-cues
+          (printer/as-string (model/->Mismatch 1 2))
+          => "(mismatch +  1 -  2)\n")))

@@ -5,7 +5,10 @@
             [colorize.core :as colorize])
   (:import [matcher_combinators.model Mismatch Missing Unexpected FailedPredicate]))
 
-(def ^:dynamic *text-cue-mode* false)
+(def ^:dynamic *text-cues-mode*
+  "When set to true, printing functions include textual symbols as alternative cues for contextual colors
+  (may be useful for visually impaired people)."
+  false)
 
 (defrecord ColorTag [color expression])
 
@@ -27,14 +30,14 @@
   expression)
 
 (def ^:private text-cues-map
-  "Map colors to text symbols that can provide a similar context for visually impaired programmers."
+  "Map colors to textual symbols that can provide a similar context for visually impaired programmers."
   {:red    "-"
    :yellow "+"})
 
 (defn- write-text-cue-for
   "Writes the text cue that corresponds to the color in question to *out*."
   [in-color]
-  (when *text-cue-mode*
+  (when *text-cues-mode*
     (pprint/write-out
      (-> (:color in-color) text-cues-map (str "  ") symbol))))
 
@@ -58,3 +61,9 @@
 (defn as-string [expr]
   (with-out-str
     (pretty-print expr)))
+
+(defmacro with-text-cues
+  "Evaluates the forms in a context where the var *text-cues-mode* is bound to true."
+  [& forms]
+  `(binding [*text-cues-mode* true]
+     ~@forms))
