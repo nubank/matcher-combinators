@@ -38,13 +38,6 @@
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
-(defrecord Predicate [func form]
-  Matcher
-  (match [_this actual]
-    (if (func actual)
-      [:match actual]
-      [:mismatch (model/->FailedPredicate form actual)])))
-
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher-or-pred]]
                                   [key (match matcher-or-pred
