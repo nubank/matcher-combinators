@@ -117,3 +117,45 @@
           (provided
             (f (ch/match (m/equals-seq [int? int? int?]))) => 1)))
       => falsey)))
+
+
+(def now (java.time.LocalDateTime/now))
+(def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
+(def an-id (java.util.UUID/fromString an-id-string))
+(def another-id (java.util.UUID/fromString "8f488446-374e-4975-9670-35ca0a633da1"))
+(def response-time (java.time.LocalDateTime/now))
+
+(def nested-map
+ {:id {:type :user-id
+       :value an-id-string}
+ :input {:id {:type :user-id
+              :value an-id-string}
+         :timestamp now
+         :trigger "blabla"}
+ :model "sampa_v3"
+ :output {:sampa-score 123.4M
+          :user-id another-id
+          :w-alpha -0.123}
+ :response-time response-time
+ :version "1.33.7"})
+
+(fact "match nested maps with UUID, LocalDateTime, BigDecimal, and Double values"
+  nested-map
+  => (ch/match {:id {:type :user-id
+                     :value an-id-string}
+                :input {:id {:type keyword?
+                             :value an-id-string}
+                        :timestamp now}
+                :model "sampa_v3"
+                :output {:sampa-score 123.4M
+                         :user-id another-id
+                         :w-alpha -0.123}
+                :response-time response-time
+                :version string?}))
+
+(def an-object (Object.))
+(fact "Objects aren't matchers, so matching on them shouldn't work and produce
+       an informative error"
+  an-object => (ch/match (m/equals-value an-object))
+  an-object =not=> (ch/match an-object)
+  (Object.) =not=> (ch/match (Object.)))

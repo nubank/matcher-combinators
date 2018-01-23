@@ -16,9 +16,9 @@
         true
         (checking/as-data-laden-falsehood {:notes [(printer/as-string result)]})))))
 
-
 (checkers.defining/defchecker match [matcher]
   (checkers.defining/checker [actual]
     (if (core/matcher? matcher)
       (check-match matcher actual)
-      (ex-info "Input wasn't a matcher" {:input matcher}))))
+      (checking/as-data-laden-falsehood
+        {:notes [(str "Input wasn't a matcher: " matcher)]}))))

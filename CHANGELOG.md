@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.1.5-SNAPSHOT]
+- Interpret Double as `matcher-combinators.matchers/equals-value` in parser.
+- Make Midje checker fail correctly when passed a non-matcher
+
 ## [0.1.4-SNAPSHOT]
 - Don't define `matcher-combinators.midje/matcher` as a macro; it isn't needed
 
