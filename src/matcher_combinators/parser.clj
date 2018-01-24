@@ -22,6 +22,7 @@
 
 (mimic-matcher matchers/equals-value
                Long
+               Double
                String
                Symbol
                Keyword
