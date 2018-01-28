@@ -148,6 +148,10 @@
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
         => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
 
+      (facts "in-any-order for list of same value/matchers"
+        (match (in-any-order [(equals-value 2) (equals-value 2)]) [2 2])
+        => [:match [2 2]])
+
       (facts "when the given sequence contains elements not matched by any
              matcher, marks the whole sequence as a mismatch"
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
@@ -258,6 +262,9 @@
   (fact "subset will recur on matchers"
     (#'core/matches-in-any-order? matchers [5 4 1 2] true) => truthy
     (#'core/matches-in-any-order? matchers [5 1 3 2] true) => falsey)
+  (fact "works well with identical matchers"
+    (#'core/matches-in-any-order? [(equals-value 2) (equals-value 2)] [2 2] false)
+    => truthy)
   (fact "mismatch if there are more matchers than actual elements"
     (#'core/match-any-order matchers [5] false)
     => [:mismatch (model/->Mismatch matchers [5])]

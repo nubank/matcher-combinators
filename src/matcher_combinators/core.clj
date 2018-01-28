@@ -111,7 +111,9 @@
                              matchers)]
       (if (nil? matching-matcher)
         false
-        (recur (remove #{matching-matcher} matchers) rest-elements subset?)))))
+        (recur (helpers/remove-first #{matching-matcher} matchers)
+               rest-elements
+               subset?)))))
 
 (defn- match-all-permutations [matchers elements subset?]
   (helpers/find-first
