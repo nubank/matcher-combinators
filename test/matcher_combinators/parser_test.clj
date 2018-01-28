@@ -61,3 +61,8 @@
     (= (core/match (equals-seq [(equals-value 10)]) [10])
        (core/match (equals-seq '(10)) [10])
        (core/match '(10) [10])) => truthy))
+
+(fact "`nil` is parsed as an equals-value"
+  (fact
+    (= (core/match (equals-value nil) nil)
+       (core/match nil nil)) => truthy))
