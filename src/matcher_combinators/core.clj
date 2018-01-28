@@ -39,9 +39,8 @@
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
-  (let [entry-results      (map (fn [[key matcher-or-pred]]
-                                  [key (match matcher-or-pred
-                                              (get actual key))])
+  (let [entry-results      (map (fn [[key matcher]]
+                                  [key (match matcher (get actual key))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
                                    (when-not (find expected key)
