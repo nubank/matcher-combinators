@@ -33,7 +33,7 @@
   (match [_this actual]
    (cond
      (and (nil? expected)
-          (nil? actual))  true
+          (nil? actual))  [:match nil]
      (nil? actual)        [:mismatch (model/->Missing expected)]
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
