@@ -153,6 +153,10 @@
                 :response-time response-time
                 :version string?}))
 
+(fact "matchers can use `nil` inside them"
+  {:a nil} => (ch/match {:a nil})
+  {:a 1} =not=> (ch/match {:a nil}))
+
 (def an-object (Object.))
 (fact "Objects aren't matchers, so matching on them shouldn't work and produce
        an informative error"

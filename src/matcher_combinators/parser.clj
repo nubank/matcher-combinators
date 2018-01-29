@@ -21,6 +21,7 @@
       [:mismatch (model/->FailedPredicate (str this) actual)])))
 
 (mimic-matcher matchers/equals-value
+               nil
                Long
                Double
                String
