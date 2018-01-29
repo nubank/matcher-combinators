@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.1.6-SNAPSHOT]
+- Fix issue where `in-any-order` operating over a list with several identical matchers failed
+
 ## [0.1.5-SNAPSHOT]
 - Interpret Double as `matcher-combinators.matchers/equals-value` in parser.
 - Make Midje checker fail correctly when passed a non-matcher
@@ -12,10 +15,10 @@ All notable changes to this project will be documented in this file. This change
 - Allow inline use of `match` inside of `midje` `provided` forms
 
 ## [0.1.2-SNAPSHOT]
-- update parser to interpret lists as equals-seq matcher-combinators
+- Update parser to interpret lists as equals-seq matcher-combinators
 
 ## [0.1.1-SNAPSHOT]
-- fix `subset` issue where order of elements effected behavior
+- Fix `subset` issue where order of elements effected behavior
 
 ## [0.1.0-SNAPSHOT]
 - Project init

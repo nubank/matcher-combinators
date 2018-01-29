@@ -148,6 +148,10 @@
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
         => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
 
+      (facts "in-any-order for list of same value/matchers"
+        (match (in-any-order [(equals-value 2) (equals-value 2)]) [2 2])
+        => [:match [2 2]])
+
       (facts "when the given sequence contains elements not matched by any
              matcher, marks the whole sequence as a mismatch"
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
@@ -254,10 +258,27 @@
 
 (future-fact "on contains-elements sequence matcher")
 
-(let [matchers [odd? even?]]
+;; Since the parser namespace needs to be loaded to interpret functions as
+;; matchers, and we don't want to load the parser namespce, we need to manually
+;; wrap functions in a predicate matcher
+(defrecord PredMatcher [expected]
+  core/Matcher
+  (match [this actual]
+    (if (expected actual)
+      [:match actual]
+      [:mismatch (model/->FailedPredicate (str this) actual)])))
+
+(defn- pred-matcher [expected]
+  (assert ifn? expected)
+  (->PredMatcher expected))
+
+(let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
   (fact "subset will recur on matchers"
     (#'core/matches-in-any-order? matchers [5 4 1 2] true) => truthy
     (#'core/matches-in-any-order? matchers [5 1 3 2] true) => falsey)
+  (fact "works well with identical matchers"
+    (#'core/matches-in-any-order? [(equals-value 2) (equals-value 2)] [2 2] false)
+    => truthy)
   (fact "mismatch if there are more matchers than actual elements"
     (#'core/match-any-order matchers [5] false)
     => [:mismatch (model/->Mismatch matchers [5])]

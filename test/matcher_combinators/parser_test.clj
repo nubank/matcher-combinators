@@ -18,6 +18,7 @@
 (def gen-scalar (gen/one-of [gen/int
                              gen/string
                              gen/symbol
+                             gen/double
                              gen/symbol-ns
                              gen/keyword
                              gen/boolean
