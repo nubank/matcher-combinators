@@ -163,3 +163,12 @@
   an-object => (ch/match (m/equals-value an-object))
   an-object =not=> (ch/match an-object)
   (Object.) =not=> (ch/match (Object.)))
+
+(def a-nested-map nested-map)
+(def b-nested-map (assoc-in nested-map [:model] "curitiba"))
+
+(fact
+  [a-nested-map a-nested-map]
+  => (ch/match
+       (m/in-any-order
+         [a-nested-map b-nested-map])))

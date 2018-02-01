@@ -101,23 +101,37 @@
   (match [_this actual]
     (sequence-match expected actual false)))
 
-(defn- matches-in-any-order? [matchers elements subset?]
+(defn- matches-in-any-order? [matchers elements subset? acc]
   (if (empty? matchers)
-    (or subset? (empty? elements))
+    [(or subset? (empty? elements)) []]
     (let [[first-element & rest-elements] elements
           matching-matcher (helpers/find-first
                              #(match? (match % first-element))
                              matchers)]
       (if (nil? matching-matcher)
-        false
+        [false (concat acc matchers)]
         (recur (helpers/remove-first #{matching-matcher} matchers)
                rest-elements
-               subset?)))))
+               subset?
+               (conj acc matching-matcher))))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (helpers/find-first
-    (fn [elements] (matches-in-any-order? matchers elements subset?))
-    (helpers/permutations elements)))
+  (let [perms (helpers/permutations elements)
+        result (reduce
+                 (fn [acc elements]
+                   (let [[res matched-matchers] (matches-in-any-order?
+                                                  matchers elements subset? [])]
+                     (cond
+                       res                         (reduced true)
+                       (> (count matched-matchers)
+                          (count acc))              matched-matchers
+
+                       :else                        acc)))
+                 []
+                 perms)]
+    (if (boolean? result)
+      [true []]
+      [false result])))
 
 (defn- incorrect-matcher->element-count?
   [subset? matcher-count element-count]
@@ -134,11 +148,11 @@
     ;; for size mismatch, is there a more detailed mismatch model to use?
     [:mismatch (model/->Mismatch expected actual)]
 
-    (match-all-permutations expected actual subset?)
-    [:match actual]
-
     :else
-    [:mismatch (model/->Mismatch expected actual)]))
+    (let [[res matched-matchers] (match-all-permutations expected actual subset?)]
+      (if res
+        [:match actual]
+        (match (->EqualsSequence matched-matchers) actual)))))
 
 (defrecord InAnyOrder [expected]
   Matcher
