@@ -198,6 +198,17 @@
       [[1 5] 21])
     => [:mismatch [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]])
 
+  (fact "sequence type is preserved in mismatch output"
+    (-> (equals-seq [(equals-seq [(equals-value 1)])])
+        (match [[2]])
+        second)
+    => #(instance? (class (vector)) %)
+
+    (-> (equals-seq [(equals-seq [(equals-value 1)])])
+        (match (list [2]))
+        second)
+    => #(instance? (class (list 'placeholder)) %))
+
   (fact "nesting in-any-order matchers"
     (match
       (in-any-order [(equals-map {:id (equals-value 1) :a (equals-value 1)})
