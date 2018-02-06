@@ -24,8 +24,6 @@
   Matcher
   (match [_this actual]
    (cond
-     (and (nil? expected)
-          (nil? actual))  [:match nil]
      (= ::missing actual) [:mismatch (model/->Missing expected)]
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
@@ -38,7 +36,7 @@
                                    (when-not (find expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
-    (if (and (every? (comp match? value) entry-results)
+    (if (and (every? (comp match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
       [:match actual]
       [:mismatch (->> entry-results
