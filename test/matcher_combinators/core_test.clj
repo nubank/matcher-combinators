@@ -58,8 +58,6 @@
       (match (equals-map {:a (equals-value 42)}) {:b 42})
       => [:mismatch {:b (model/->Unexpected 42), :a (model/->Missing 42)}])))
 
-(def in-any-order-selecting (partial in-any-order :id))
-
 (facts "on sequence matchers"
   (tabular
     (facts "on common behaviors among all sequence matchers"
@@ -104,8 +102,7 @@
 
     ?sequence-matcher
     equals-seq
-    in-any-order
-    in-any-order-selecting)
+    in-any-order)
 
   (facts "on the equals-seq matcher"
     (fact "on element mismatches, marks each mismatch"
@@ -140,8 +137,7 @@
             [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
           => [:match [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]]))
       ?in-any-order-matcher
-      in-any-order
-      in-any-order-selecting)
+      in-any-order)
 
     (facts "the 1-argument arity has a simple all-or-nothing behavior:"
       (facts "in case of element mismatches, marks the whole sequence as a mismatch"
@@ -160,26 +156,7 @@
       (fact "when there are matchers not matched by any input elements, marks
             the whole sequence as a mismatch"
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
-        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1])]))
-
-    (facts "the 2-argument arity will look for an element to match by id"
-      (fact "when the given sequence contains elements not matched by their
-            selected matcher, marks them as Mismatches"
-        (match (in-any-order :id [(equals-map {:id (equals-value 2) :a (equals-value 2)})
-                                  (equals-map {:id (equals-value 1) :a (equals-value 1)})])
-               [{:id 1 :a 1} {:id 2 :a 200}])
-        => [:mismatch [{:id 1 :a 1} {:id 2 :a (model/->Mismatch 2 200)}]]
-
-        (match
-          (in-any-order :id [(equals-map {:id (equals-value 1) :a (equals-value 1)})
-                             (equals-map {:id (equals-value 2) :a (equals-value 2)})])
-          [{:id 1 :a 100} {:id 2 :a 200}])
-        => [:mismatch [{:id 1 :a (model/->Mismatch 1 100)} {:id 2 :a (model/->Mismatch 2 200)}]])
-
-      (fact "when there are matchers not matched by any input elements, append
-            their values as Missing elements"
-        (match (in-any-order :id [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
-        => [:mismatch [1 2 (model/->Missing 3)]]))))
+        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1])]))))
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals-seq matchers"
@@ -239,25 +216,6 @@
   => [:mismatch [{:a (model/->Mismatch 42 43) :b 1337} 20]])
 
 
-(facts "on selecting matchers for a value"
-  (select? (equals-value 10) :id 10) => truthy
-  (select? (equals-value 10) :id 11) => falsey
-
-  (select? (equals-value 10) :whatever 10) => truthy
-  (select? (equals-value 10) :whatever 11) => falsey
-
-  (select? (equals-map {:id (equals-value 10)}) :id {:id 10}) => truthy
-  (select? (equals-map {:id (equals-value 10)}) :id {:id 20}) => falsey
-  (select? (equals-map {:id (equals-value 10)}) :xx {:id 10}) => falsey
-
-  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 42})   => truthy
-  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 20 :a 42})   => falsey
-  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :xx {:id 10 :a 42})   => falsey
-  (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 1337}) => truthy)
-
-
-(future-fact "on contains-elements sequence matcher")
-
 ;; Since the parser namespace needs to be loaded to interpret functions as
 ;; matchers, and we don't want to load the parser namespce, we need to manually
 ;; wrap functions in a predicate matcher
@@ -284,22 +242,3 @@
     => [:mismatch (model/->Mismatch matchers [5])]
     (#'core/match-any-order matchers [5] true)
     => [:mismatch (model/->Mismatch matchers [5])]))
-
-(future-fact "reproducing select? bug"
-  (fact "the bug"
-    (core/match
-      (in-any-order :a [(contains-map {:a (equals-map {:id (equals-value 1)}) :b (equals-value 42)})
-                        (contains-map {:a (equals-map {:id (equals-value 2)}) :b (equals-value 1337)})])
-      [{:a {:id 1} :b 42}
-       {:a {:id 2} :b 1337}])
-    => [:match [{:a {:id 1} :b 42}
-                {:a {:id 2} :b 1337}]])
-
-  (fact "similar, but works"
-    (core/match
-      (in-any-order :a [(contains-map {:a (equals-value 1) :b (equals-value 42)})
-                        (contains-map {:a (equals-value 2) :b (equals-value 1337)})])
-      [{:a 1 :b 42}
-       {:a 2 :b 1337}])
-    => [:match [{:a 1 :b 42}
-                {:a 2 :b 1337}]]))
