@@ -6,9 +6,7 @@
 
 (facts "on the leaf values matcher: v"
   (match (equals-value 42) 42) => [:match 42]
-  (match (equals-value 42) 43) => [:mismatch (model/->Mismatch 42 43)]
-  (fact "value missing"
-    (match (equals-value 42) nil) => [:mismatch (model/->Missing 42)]))
+  (match (equals-value 42) 43) => [:mismatch (model/->Mismatch 42 43)])
 
 (fact "on map matchers"
   (tabular
@@ -116,6 +114,10 @@
       (match (equals-seq [(equals-value 1) (equals-value 2)]) [1 2 3])
       => [:mismatch [1 2 (model/->Unexpected 3)]])
 
+    (fact "Mismatch plays well with nil"
+      (match (equals-seq [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2 nil])
+      => [:mismatch [1 2 (model/->Mismatch 3 nil)]])
+
     (fact "when there are more matchers then actual elements, append the expected values marked as Missing"
       (match (equals-seq [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
       => [:mismatch [1 2 (model/->Missing 3)]]))
@@ -140,23 +142,17 @@
       in-any-order)
 
     (facts "the 1-argument arity has a simple all-or-nothing behavior:"
-      (facts "in case of element mismatches, marks the whole sequence as a mismatch"
-        (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
-        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
-
-      (facts "in-any-order for list of same value/matchers"
+      (fact "in-any-order for list of same value/matchers"
         (match (in-any-order [(equals-value 2) (equals-value 2)]) [2 2])
         => [:match [2 2]])
 
-      (facts "when the given sequence contains elements not matched by any
-             matcher, marks the whole sequence as a mismatch"
+      (fact "when there the matcher and list count differ, mark everything as mismatch"
         (match (in-any-order [(equals-value 1) (equals-value 2)]) [1 2 3])
-        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])])
+        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1 2 3])]
 
-      (fact "when there are matchers not matched by any input elements, marks
-            the whole sequence as a mismatch"
-        (match (in-any-order [(equals-value 1) (equals-value 2)]) [1])
-        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2)] [1])]))))
+        (match (in-any-order [(equals-value 1) (equals-value 2) (equals-value 3)]) [1 2])
+        => [:mismatch (model/->Mismatch [(equals-value 1) (equals-value 2) (equals-value 3)]
+                                        [1 2])]))))
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals-seq matchers"
@@ -174,6 +170,17 @@
       (equals-seq [(equals-seq [(equals-value 1) (equals-value 2)]) (equals-value 20)])
       [[1 5] 21])
     => [:mismatch [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]])
+
+  (fact "sequence type is preserved in mismatch output"
+    (-> (equals-seq [(equals-seq [(equals-value 1)])])
+        (match [[2]])
+        second)
+    => #(instance? (class (vector)) %)
+
+    (-> (equals-seq [(equals-seq [(equals-value 1)])])
+        (match (list [2]))
+        second)
+    => #(instance? (class (list 'placeholder)) %))
 
   (fact "nesting in-any-order matchers"
     (match
