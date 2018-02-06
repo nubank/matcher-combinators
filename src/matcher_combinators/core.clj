@@ -12,6 +12,10 @@
 
 (extend-type nil
   Matcher
+  (match [_ actual]
+    (if (nil? actual)
+      [:match nil]
+      [:mismatch (model/->Mismatch nil actual)]))
   (select? [_ _ _] false))
 
 (defn match? [match-result]

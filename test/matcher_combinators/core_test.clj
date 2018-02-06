@@ -250,13 +250,12 @@
   (select? (equals-map {:id (equals-value 10)}) :id {:id 20}) => falsey
   (select? (equals-map {:id (equals-value 10)}) :xx {:id 10}) => falsey
 
+  (select? nil :foo {:foo 1}) => falsey
   (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 42})   => truthy
   (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 20 :a 42})   => falsey
   (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :xx {:id 10 :a 42})   => falsey
   (select? (equals-map {:id (equals-value 10) :a (equals-value 42)}) :id {:id 10 :a 1337}) => truthy)
 
-
-(future-fact "on contains-elements sequence matcher")
 
 ;; Since the parser namespace needs to be loaded to interpret functions as
 ;; matchers, and we don't want to load the parser namespce, we need to manually
