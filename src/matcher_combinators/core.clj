@@ -97,7 +97,7 @@
                               (max (count actual) (count expected)))
             match-results   (take match-size match-results')]
         (if (some mismatch? match-results)
-          [:mismatch (map value match-results)]
+          [:mismatch (into (empty actual) (map value match-results))]
           [:match actual]))))
 
 (defrecord EqualsSequence [expected]
