@@ -38,13 +38,13 @@
    (cond
      (and (nil? expected)
           (nil? actual))  [:match nil]
-     (nil? actual)        [:mismatch (model/->Missing expected)]
+     (= ::missing actual) [:mismatch (model/->Missing expected)]
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher]]
-                                  [key (match matcher (get actual key))])
+                                  [key (match matcher (get actual key ::missing))])
                                 expected)
         unexpected-entries (keep (fn [[key val]]
                                    (when-not (find expected key)
@@ -89,7 +89,7 @@
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
-            actual-elements (concat actual (repeat nil))
+            actual-elements (concat actual (repeat ::missing))
             match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
                                  matcher-fns actual-elements)
             match-size      (if subseq?
