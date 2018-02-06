@@ -5,8 +5,8 @@
 (defprotocol Matcher
   "For matching expected and actual values, providing helpful mismatch info on
   unsucessful matches"
-  (match   [this actual]
-           "determine if a concrete `actual` value satisfies this matcher"))
+  (match [this actual]
+         "determine if a concrete `actual` value satisfies this matcher"))
 
 (defn match? [match-result]
   (= :match (first match-result)))
@@ -64,8 +64,6 @@
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
-      ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
-      ;; the `:equals` needs to be dynamically determined
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
