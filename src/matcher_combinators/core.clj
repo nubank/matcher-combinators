@@ -103,37 +103,36 @@
   (match [_this actual]
     (sequence-match expected actual false)))
 
-(defn- matches-in-any-order? [matchers elements subset? acc]
-  (if (empty? matchers)
+(defn- matches-in-any-order? [unmatched elements subset? matching]
+  (if (empty? unmatched)
     [(or subset? (empty? elements)) []]
-    (let [[first-element & rest-elements] elements
-          matching-matcher (helpers/find-first
-                             #(match? (match % first-element))
-                             matchers)]
+    (let [[elem & rest-elements] elements
+          matching-matcher       (helpers/find-first
+                                   #(match? (match % elem))
+                                   unmatched)]
       (if (nil? matching-matcher)
-        [false (concat acc matchers)]
-        (recur (helpers/remove-first #{matching-matcher} matchers)
+        [false (concat matching unmatched)]
+        (recur (helpers/remove-first #{matching-matcher} unmatched)
                rest-elements
                subset?
-               (conj acc matching-matcher))))))
+               (conj matching matching-matcher))))))
+
+(defn- matched-or-best-matchers [matchers subset?]
+  (fn [best-matchers elements]
+    (let [[matched? matching] (matches-in-any-order? matchers elements subset? [])]
+      (cond
+        matched?                    (reduced true)
+        (> (count matching)
+           (count best-matchers))   matching
+        :else                       best-matchers))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (let [perms (helpers/permutations elements)
-        result (reduce
-                 (fn [acc elements]
-                   (let [[res matched-matchers] (matches-in-any-order?
-                                                  matchers elements subset? [])]
-                     (cond
-                       res                         (reduced true)
-                       (> (count matched-matchers)
-                          (count acc))              matched-matchers
-
-                       :else                        acc)))
-                 []
-                 perms)]
+  (let [perms           (helpers/permutations elements)
+        find-best-match (matched-or-best-matchers matchers subset?)
+        result          (reduce find-best-match [] perms)]
     (if (boolean? result)
-      [true []]
-      [false result])))
+      [:match elements]
+      (match (->EqualsSequence result) elements))))
 
 (defn- incorrect-matcher->element-count?
   [subset? matcher-count element-count]
@@ -151,10 +150,7 @@
     [:mismatch (model/->Mismatch expected actual)]
 
     :else
-    (let [[res matched-matchers] (match-all-permutations expected actual subset?)]
-      (if res
-        [:match actual]
-        (match (->EqualsSequence matched-matchers) actual)))))
+    (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
   Matcher
