@@ -11,7 +11,7 @@
      core/Matcher
      ~@(mapcat (fn [t] `(~t
                           (match [this# actual#]
-                                (core/match (~matcher-builder this#) actual#)))) types)))
+                                 (core/match (~matcher-builder this#) actual#)))) types)))
 
 (extend-type clojure.lang.Fn
   core/Matcher
@@ -21,7 +21,6 @@
       [:mismatch (model/->FailedPredicate (str this) actual)])))
 
 (mimic-matcher matchers/equals-value
-               nil
                Long
                Double
                String

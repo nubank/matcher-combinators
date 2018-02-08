@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. This change
 ## [0.1.6-SNAPSHOT]
 - Fix issue where `in-any-order` operating over a list with several identical matchers failed
 - Extend `nil` to be interpreted as `equals-value` by parser
+- Include needed dependencies outside of `:dev` profile
+- Make mismatch output preserve sequence type
 
 ## [0.1.5-SNAPSHOT]
 - Interpret Double as `matcher-combinators.matchers/equals-value` in parser.
