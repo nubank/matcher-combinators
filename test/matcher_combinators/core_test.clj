@@ -280,8 +280,8 @@
 
 (let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
   (fact "subset will recur on matchers"
-    (#'core/matches-in-any-order? matchers [5 4 1 2] true []) => (contains [truthy vector?])
-    (#'core/matches-in-any-order? matchers [5 1 3 2] true []) => (contains [falsey vector?]))
+    (#'core/matches-in-any-order? matchers [5 4 1 2] true []) => (contains [truthy sequential?])
+    (#'core/matches-in-any-order? matchers [5 1 3 2] true []) => (contains [falsey sequential?]))
   (fact "works well with identical matchers"
     (#'core/matches-in-any-order? [(equals-value 2) (equals-value 2)] [2 2] false [])
     => (contains [truthy vector?]))

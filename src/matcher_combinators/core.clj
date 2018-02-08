@@ -84,8 +84,6 @@
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
-      ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
-      ;; the `:equals` needs to be dynamically determined
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
