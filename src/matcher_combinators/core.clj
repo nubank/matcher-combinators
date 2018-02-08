@@ -121,15 +121,15 @@
   (fn [best-matchers elements]
     (let [[matched? matching] (matches-in-any-order? matchers elements subset? [])]
       (cond
-        matched?                    (reduced true)
+        matched?                  (reduced true)
         (> (count matching)
-           (count best-matchers))   matching
-        :else                       best-matchers))))
+           (count best-matchers)) matching
+        :else                     best-matchers))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (let [perms           (helpers/permutations elements)
-        find-best-match (matched-or-best-matchers matchers subset?)
-        result          (reduce find-best-match [] perms)]
+  (let [elem-permutations (helpers/permutations elements)
+        find-best-match   (matched-or-best-matchers matchers subset?)
+        result            (reduce find-best-match [] elem-permutations)]
     (if (boolean? result)
       [:match elements]
       (match (->EqualsSequence result) elements))))
