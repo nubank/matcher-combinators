@@ -105,34 +105,48 @@
 
 (defn- matches-in-any-order? [unmatched elements subset? matching]
   (if (empty? unmatched)
-    [(or subset? (empty? elements)) []]
+    {:matched? (or subset? (empty? elements))
+     :unmatched []
+     :matched   matching}
     (let [[elem & rest-elements] elements
           matching-matcher       (helpers/find-first
                                    #(match? (match % elem))
                                    unmatched)]
       (if (nil? matching-matcher)
-        [false (concat matching unmatched)]
+        {:matched?  false
+         :unmatched unmatched
+         :matched   matching}
         (recur (helpers/remove-first #{matching-matcher} unmatched)
                rest-elements
                subset?
                (conj matching matching-matcher))))))
 
 (defn- matched-or-best-matchers [matchers subset?]
-  (fn [best-matchers elements]
-    (let [[matched? matching] (matches-in-any-order? matchers elements subset? [])]
+  (fn [{:keys [best-matched] :as best} elements]
+    (let [{:keys [matched?
+                  unmatched
+                  matched]} (matches-in-any-order? matchers elements subset? [])]
       (cond
-        matched?                  (reduced true)
-        (> (count matching)
-           (count best-matchers)) matching
-        :else                     best-matchers))))
+        matched?                 (reduced true)
+        (> (count matched)
+           (count best-matched)) {:best-matched   matched
+                                  :best-unmatched unmatched
+                                  :elements       elements}
+        :else                    best))))
 
 (defn- match-all-permutations [matchers elements subset?]
   (let [elem-permutations (helpers/permutations elements)
         find-best-match   (matched-or-best-matchers matchers subset?)
-        result            (reduce find-best-match [] elem-permutations)]
+        result            (reduce find-best-match
+                                  {:best-matched   []
+                                   :best-unmatched matchers
+                                   :elements       elements}
+                                  elem-permutations)]
     (if (boolean? result)
       [:match elements]
-      (match (->EqualsSequence result) elements))))
+      (match (->EqualsSequence (concat (:best-matched result)
+                                       (:best-unmatched result)))
+             (:elements result)))))
 
 (defn- incorrect-matcher->element-count?
   [subset? matcher-count element-count]
