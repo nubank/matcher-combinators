@@ -12,7 +12,7 @@ __Note:__ currently in alpha; function names and namespaces are subject to chang
 
 Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: a comprehensive yet extensible way to assert that the data fits a particular structure seems to be lacking.
 
-This library address that by providing composable matcher combinators that can be used as building blocks to effectively test functions that evaluate to nested data-structures.
+This library address this issue by providing composable matcher combinators that can be used as building blocks to effectively test functions that evaluate to nested data-structures.
 
 ## Features
 
@@ -35,7 +35,7 @@ For example:
 (fact "matching a map exactly"
   {:a {:bb 1} :c 2} => (match (m/equals-map {:a {:bb 1} :c 2})))
 
-(fact "loosely matching a map exactly"
+(fact "loosely matching a map"
   ;; by default a map is interpreted as a `contains-map` matcher
   {:headers {:type "txt"} :body "hello world!"} => (match {:body string?}))
 ```
