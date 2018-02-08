@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [0.1.7-SNAPSHOT]
+## [0.1.7]
 - Adapt `in-any-order` to print diff for element ordering that leads to most direct matches
 
 ## [0.1.6-SNAPSHOT]
