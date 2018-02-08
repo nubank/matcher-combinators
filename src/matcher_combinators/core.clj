@@ -122,30 +122,30 @@
                (conj matching matching-matcher))))))
 
 (defn- matched-or-best-matchers [matchers subset?]
-  (fn [{:keys [best-matched] :as best} elements]
+  (fn [best elements]
     (let [{:keys [matched?
                   unmatched
                   matched]} (matches-in-any-order? matchers elements subset? [])]
       (cond
-        matched?                 (reduced true)
+        matched?                    (reduced true)
         (> (count matched)
-           (count best-matched)) {:best-matched   matched
-                                  :best-unmatched unmatched
-                                  :elements       elements}
-        :else                    best))))
+           (count (:matched best))) {:matched   matched
+                                     :unmatched unmatched
+                                     :elements  elements}
+        :else                       best))))
 
 (defn- match-all-permutations [matchers elements subset?]
   (let [elem-permutations (helpers/permutations elements)
         find-best-match   (matched-or-best-matchers matchers subset?)
         result            (reduce find-best-match
-                                  {:best-matched   []
-                                   :best-unmatched matchers
-                                   :elements       elements}
+                                  {:matched   []
+                                   :unmatched matchers
+                                   :elements  elements}
                                   elem-permutations)]
     (if (boolean? result)
       [:match elements]
-      (match (->EqualsSequence (concat (:best-matched result)
-                                       (:best-unmatched result)))
+      (match (->EqualsSequence (concat (:matched result)
+                                       (:unmatched result)))
              (:elements result)))))
 
 (defn- incorrect-matcher->element-count?
