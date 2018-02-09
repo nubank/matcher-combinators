@@ -18,7 +18,6 @@
     1. the keys of the `expected` map are equal to the given map's keys
     2. the value matchers of `expected` map matches the given map's values"
   [expected]
-  (assert (map? expected))
   (core/->EqualsMap expected))
 
 (defn equals-seq
@@ -26,7 +25,6 @@
 
   Similar to Midje's `(just expected)`"
   [expected]
-  (assert (sequential? expected))
   (core/->EqualsSequence expected))
 
 (defn in-any-order
@@ -42,7 +40,6 @@
 
   Similar to Midje's `(contains expected)`"
   [expected]
-  (assert (vector? expected))
   (core/->SubSeq expected))
 
 (defn subset
@@ -51,5 +48,4 @@
 
   Similar to Midje's `(contains expected :in-any-order :gaps-ok)`"
   [expected]
-  (assert (vector? expected))
   (core/->SubSet expected))

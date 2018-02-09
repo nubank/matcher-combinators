@@ -28,6 +28,22 @@
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
+(defn- validate-input
+  [expected actual pred matcher-name type]
+    (cond
+      (not (pred expected))
+      [:mismatch (model/->InvalidMatcherType
+                   (str "provided: " expected)
+                   (str matcher-name
+                        " should be called with 'expected' argument of type: "
+                        type))]
+
+      (not (pred actual))
+      [:mismatch (model/->Mismatch expected actual)]
+
+      :else
+      nil))
+
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher]]
                                   [key (match matcher (get actual key ::missing))])
@@ -44,20 +60,19 @@
                       (concat unexpected-entries)
                       (into actual))])))
 
-(defn- match-map [expected actual unexpected-handler matcher-type]
-  (if-not (map? actual)
-    [:mismatch (model/->Mismatch expected actual)]
-    (compare-maps expected actual unexpected-handler matcher-type)))
-
 (defrecord ContainsMap [expected]
   Matcher
   (match [_this actual]
-    (match-map expected actual identity true)))
+    (if-let [validation-issue (validate-input expected actual map? 'contains-map 'map)]
+      validation-issue
+      (compare-maps expected actual identity true))))
 
 (defrecord EqualsMap [expected]
   Matcher
   (match [_this actual]
-    (match-map expected actual model/->Unexpected false)))
+    (if-let [validation-issue (validate-input expected actual map? 'equals-map 'map)]
+      validation-issue
+      (compare-maps expected actual model/->Unexpected false))))
 
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
@@ -79,25 +94,54 @@
 (defrecord EqualsSequence [expected]
   Matcher
   (match [_this actual]
-    (sequence-match expected actual false)))
+    (if-let [validation-issue (validate-input expected actual sequential? 'equals-seq 'sequential)]
+      validation-issue
+      (sequence-match expected actual false))))
 
-(defn- matches-in-any-order? [matchers elements subset?]
-  (if (empty? matchers)
-    (or subset? (empty? elements))
-    (let [[first-element & rest-elements] elements
-          matching-matcher (helpers/find-first
-                             #(match? (match % first-element))
-                             matchers)]
+(defn- matches-in-any-order? [unmatched elements subset? matching]
+  (if (empty? unmatched)
+    {:matched? (or subset? (empty? elements))
+     :unmatched []
+     :matched   matching}
+    (let [[elem & rest-elements] elements
+          matching-matcher       (helpers/find-first
+                                   #(match? (match % elem))
+                                   unmatched)]
       (if (nil? matching-matcher)
-        false
-        (recur (helpers/remove-first #{matching-matcher} matchers)
+        {:matched?  false
+         :unmatched unmatched
+         :matched   matching}
+        (recur (helpers/remove-first #{matching-matcher} unmatched)
                rest-elements
-               subset?)))))
+               subset?
+               (conj matching matching-matcher))))))
+
+(defn- matched-or-best-matchers [matchers subset?]
+  (fn [best elements]
+    (let [{:keys [matched?
+                  unmatched
+                  matched]} (matches-in-any-order? matchers elements subset? [])]
+      (cond
+        matched?                    (reduced true)
+        (> (count matched)
+           (count (:matched best))) {:matched   matched
+                                     :unmatched unmatched
+                                     :elements  elements}
+        :else                       best))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (helpers/find-first
-    (fn [elements] (matches-in-any-order? matchers elements subset?))
-    (helpers/permutations elements)))
+  (let [elem-permutations (helpers/permutations elements)
+        find-best-match   (matched-or-best-matchers matchers subset?)
+        result            (reduce find-best-match
+                                  {:matched   []
+                                   :unmatched matchers
+                                   :elements  elements}
+                                  elem-permutations)]
+    (if (boolean? result)
+      [:match elements]
+      (match (->EqualsSequence (concat (:matched result)
+                                       (:unmatched result)))
+             (:elements result)))))
 
 (defn- incorrect-matcher->element-count?
   [subset? matcher-count element-count]
@@ -114,23 +158,26 @@
     ;; for size mismatch, is there a more detailed mismatch model to use?
     [:mismatch (model/->Mismatch expected actual)]
 
-    (match-all-permutations expected actual subset?)
-    [:match actual]
-
     :else
-    [:mismatch (model/->Mismatch expected actual)]))
+    (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
   Matcher
   (match [_this actual]
-    (match-any-order expected actual false)))
+    (if-let [validation-issue (validate-input expected actual sequential? 'in-any-order 'sequential)]
+      validation-issue
+      (match-any-order expected actual false))))
 
 (defrecord SubSeq [expected]
   Matcher
   (match [_this actual]
-    (sequence-match expected actual true)))
+    (if-let [validation-issue (validate-input expected actual sequential? 'sublist 'sequential)]
+      validation-issue
+      (sequence-match expected actual true))))
 
 (defrecord SubSet [expected]
   Matcher
   (match [_this actual]
-    (match-any-order expected actual true)))
+    (if-let [validation-issue (validate-input expected actual sequential? 'subset 'sequential)]
+      validation-issue
+      (match-any-order expected actual true))))
