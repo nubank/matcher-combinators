@@ -280,11 +280,19 @@
 
 (let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
   (fact "subset will recur on matchers"
-    (#'core/matches-in-any-order? matchers [5 4 1 2] true) => truthy
-    (#'core/matches-in-any-order? matchers [5 1 3 2] true) => falsey)
+    (#'core/matches-in-any-order? matchers [5 4 1 2] true [])
+    => (contains {:matched?  true
+                  :unmatched empty?
+                  :matched   vector?})
+    (#'core/matches-in-any-order? matchers [5 1 3 2] true [])
+    => (contains {:matched?  false
+                  :unmatched (just [anything])
+                  :matched   (just [anything])}))
   (fact "works well with identical matchers"
-    (#'core/matches-in-any-order? [(equals-value 2) (equals-value 2)] [2 2] false)
-    => truthy)
+    (#'core/matches-in-any-order? [(equals-value 2) (equals-value 2)] [2 2] false [])
+    => (contains {:matched?  true
+                  :unmatched empty?
+                  :matched   (just [anything anything])}))
   (fact "mismatch if there are more matchers than actual elements"
     (#'core/match-any-order matchers [5] false)
     => [:mismatch (model/->Mismatch matchers [5])]

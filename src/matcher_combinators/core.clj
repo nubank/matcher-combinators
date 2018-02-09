@@ -99,8 +99,6 @@
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
-      ;; TODO PLM: if we want to pass down matcher types between maps/vectors,
-      ;; the `:equals` needs to be dynamically determined
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
                                               [:mismatch (model/->Unexpected extra-element)])))
@@ -122,23 +120,50 @@
       validation-issue
       (sequence-match expected actual false))))
 
-(defn- matches-in-any-order? [matchers elements subset?]
-  (if (empty? matchers)
-    (or subset? (empty? elements))
-    (let [[first-element & rest-elements] elements
-          matching-matcher (helpers/find-first
-                             #(match? (match % first-element))
-                             matchers)]
+(defn- matches-in-any-order? [unmatched elements subset? matching]
+  (if (empty? unmatched)
+    {:matched? (or subset? (empty? elements))
+     :unmatched []
+     :matched   matching}
+    (let [[elem & rest-elements] elements
+          matching-matcher       (helpers/find-first
+                                   #(match? (match % elem))
+                                   unmatched)]
       (if (nil? matching-matcher)
-        false
-        (recur (helpers/remove-first #{matching-matcher} matchers)
+        {:matched?  false
+         :unmatched unmatched
+         :matched   matching}
+        (recur (helpers/remove-first #{matching-matcher} unmatched)
                rest-elements
-               subset?)))))
+               subset?
+               (conj matching matching-matcher))))))
+
+(defn- matched-or-best-matchers [matchers subset?]
+  (fn [best elements]
+    (let [{:keys [matched?
+                  unmatched
+                  matched]} (matches-in-any-order? matchers elements subset? [])]
+      (cond
+        matched?                    (reduced true)
+        (> (count matched)
+           (count (:matched best))) {:matched   matched
+                                     :unmatched unmatched
+                                     :elements  elements}
+        :else                       best))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (helpers/find-first
-    (fn [elements] (matches-in-any-order? matchers elements subset?))
-    (helpers/permutations elements)))
+  (let [elem-permutations (helpers/permutations elements)
+        find-best-match   (matched-or-best-matchers matchers subset?)
+        result            (reduce find-best-match
+                                  {:matched   []
+                                   :unmatched matchers
+                                   :elements  elements}
+                                  elem-permutations)]
+    (if (boolean? result)
+      [:match elements]
+      (match (->EqualsSequence (concat (:matched result)
+                                       (:unmatched result)))
+             (:elements result)))))
 
 (defn- incorrect-matcher->element-count?
   [subset? matcher-count element-count]
@@ -155,11 +180,8 @@
     ;; for size mismatch, is there a more detailed mismatch model to use?
     [:mismatch (model/->Mismatch expected actual)]
 
-    (match-all-permutations expected actual subset?)
-    [:match actual]
-
     :else
-    [:mismatch (model/->Mismatch expected actual)]))
+    (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
   Matcher
