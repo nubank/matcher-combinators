@@ -309,3 +309,19 @@
        {:a 2 :b 1337}])
     => [:match [{:a 1 :b 42}
                 {:a 2 :b 1337}]]))
+
+(tabular
+  (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
+    (core/match (?matcher 1) 1)
+    => (just [:mismatch
+              (contains {:expected-type-msg
+                         #(clojure.string/starts-with? % (-> ?matcher var meta :name str))
+
+                         :provided
+                         "provided: 1"})]))
+  ?matcher
+  equals-seq
+  sublist
+  subset
+  equals-map
+  contains-map)

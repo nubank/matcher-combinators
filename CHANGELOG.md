@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.1.7]
+- When matcher is provided with incorrect input, cause matcher to fail, but don't raise exception
+
 ## [0.1.6-SNAPSHOT]
 - Fix issue where `in-any-order` operating over a list with several identical matchers failed
 - Extend `nil` to be interpreted as `equals-value` by parser
