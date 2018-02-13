@@ -33,7 +33,7 @@ For example:
          '[matcher-combinators.matchers :as m]
          '[matcher-combinators.midje :refer [match]])
 (fact "matching a map exactly"
-  {:a {:bb 1} :c 2} => (match (m/equals-map {:a {:bb 1} :c 2})))
+  {:a {:bb 1} :c 2} => (match (m/equals {:a {:bb 1} :c 2})))
 
 (fact "loosely matching a map"
   ;; by default a map is interpreted as a `contains-map` matcher

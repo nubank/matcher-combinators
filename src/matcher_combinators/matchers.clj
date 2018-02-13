@@ -1,31 +1,35 @@
 (ns matcher-combinators.matchers
   (:require [matcher-combinators.core :as core]))
 
-(defn equals-value
+(defn equals
   "Matcher that will match when the given value is exactly the same as the
   `expected`."
   [expected]
-  (core/->Value expected))
+  (cond
+    (sequential? expected) (core/->EqualsSeq expected)
+    (set? expected)        (core/->EqualsSet expected)
+    (map? expected)        (core/->EqualsMap expected)
+    :else                  (core/->Value expected)))
 
-(defn contains-map
+(defn equals-set
+  ""
+  [expected]
+  (core/->EqualsSet expected))
+
+(defn contains
   "Matcher that will match when the map contains some of the same key/values as
   the `expected` map."
   [expected]
-  (core/->ContainsMap expected))
+  (cond
+    (sequential? expected) (core/->ContainsSeq expected)
+    (set? expected)        (core/->ContainsSet expected)
+    (map? expected)        (core/->ContainsMap expected)
+    :else                  (core/->InvalidType expected "contains" "seq, set, map")))
 
-(defn equals-map
-  "Matcher that will match when:
-    1. the keys of the `expected` map are equal to the given map's keys
-    2. the value matchers of `expected` map matches the given map's values"
+(defn contains-set
+  ""
   [expected]
-  (core/->EqualsMap expected))
-
-(defn equals-seq
-  "Matcher that will match when the `expected` list's matchers match the given list.
-
-  Similar to Midje's `(just expected)`"
-  [expected]
-  (core/->EqualsSequence expected))
+  (core/->ContainsSet expected))
 
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
@@ -40,18 +44,10 @@
   ([select-fn expected]
    (core/->SelectingInAnyOrder select-fn expected)))
 
-(defn sublist
+(defn prefix-seq
   "Matcher that will match when provided a (ordered) prefix of the `expected`
   list.
 
   Similar to Midje's `(contains expected)`"
   [expected]
-  (core/->SubSeq expected))
-
-(defn subset
-  "Order-agnostic matcher that will match when provided a subset of the
-  `expected` list.
-
-  Similar to Midje's `(contains expected :in-any-order :gaps-ok)`"
-  [expected]
-  (core/->SubSet expected))
+  (core/->PrefixSeq expected))

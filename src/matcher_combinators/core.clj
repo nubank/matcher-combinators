@@ -43,20 +43,31 @@
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
 (defn- validate-input
-  [expected actual pred matcher-name type]
-    (cond
-      (not (pred expected))
-      [:mismatch (model/->InvalidMatcherType
-                   (str "provided: " expected)
-                   (str matcher-name
-                        " should be called with 'expected' argument of type: "
-                        type))]
+  ([expected actual pred matcher-name type]
+   (validate-input expected actual pred pred matcher-name type))
+  ([expected actual expected-pred actual-pred matcher-name type]
+   (cond
+     (not (expected-pred expected))
+     [:mismatch (model/->InvalidMatcherType
+                  (str "provided: " expected)
+                  (str matcher-name
+                       " should be called with 'expected' argument of type: "
+                       type))]
 
-      (not (pred actual))
-      [:mismatch (model/->Mismatch expected actual)]
+     (not (actual-pred actual))
+     [:mismatch (model/->Mismatch expected actual)]
 
-      :else
-      nil))
+     :else
+     nil)))
+
+(defrecord InvalidType [provided matcher-name type-msg]
+  Matcher
+  (match [_this _actual]
+    [:mismatch (model/->InvalidMatcherType
+                 (str "provided: " provided)
+                 (str matcher-name
+                      " should be called with 'expected' argument of type: "
+                      type-msg))]))
 
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher]]
@@ -81,7 +92,7 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (if-let [validation-issue (validate-input expected actual map? 'contains-map 'map)]
+    (if-let [validation-issue (validate-input expected actual map? 'contains 'map)]
       validation-issue
       (compare-maps expected actual identity true))))
 
@@ -92,7 +103,7 @@
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (if-let [validation-issue (validate-input expected actual map? 'equals-map 'map)]
+    (if-let [validation-issue (validate-input expected actual map? 'equals 'map)]
       validation-issue
       (compare-maps expected actual model/->Unexpected false))))
 
@@ -113,10 +124,11 @@
           [:mismatch (into (empty actual) (map value match-results))]
           [:match actual]))))
 
-(defrecord EqualsSequence [expected]
+(defrecord EqualsSeq [expected]
   Matcher
   (match [_this actual]
-    (if-let [validation-issue (validate-input expected actual sequential? 'equals-seq 'sequential)]
+    (if-let [validation-issue (validate-input
+                                expected actual sequential? 'equals 'sequential)]
       validation-issue
       (sequence-match expected actual false))))
 
@@ -161,8 +173,8 @@
                                   elem-permutations)]
     (if (boolean? result)
       [:match elements]
-      (match (->EqualsSequence (concat (:matched result)
-                                       (:unmatched result)))
+      (match (->EqualsSeq (concat (:matched result)
+                                  (:unmatched result)))
              (:elements result)))))
 
 (defn- incorrect-matcher->element-count?
@@ -187,6 +199,14 @@
   Matcher
   (match [_this actual]
     (if-let [validation-issue (validate-input expected actual sequential? 'in-any-order 'sequential)]
+      validation-issue
+      (match-any-order expected actual false))))
+
+(defrecord EqualsSet [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [validation-issue (validate-input
+                                expected actual #(or (set? %) (sequential? %)) set? 'equals 'set)]
       validation-issue
       (match-any-order expected actual false))))
 
@@ -220,16 +240,24 @@
       validation-issue
       (selecting-match select-fn expected actual))))
 
-(defrecord SubSeq [expected]
+(defrecord PrefixSeq [expected]
   Matcher
   (match [_this actual]
-    (if-let [validation-issue (validate-input expected actual sequential? 'sublist 'sequential)]
+    (if-let [validation-issue (validate-input expected actual sequential? 'prefix-seq  'sequential)]
       validation-issue
       (sequence-match expected actual true))))
 
-(defrecord SubSet [expected]
+(defrecord ContainsSeq [expected]
   Matcher
   (match [_this actual]
-    (if-let [validation-issue (validate-input expected actual sequential? 'subset 'sequential)]
+    (if-let [validation-issue (validate-input expected actual sequential? 'contains 'sequential)]
+      validation-issue
+      (match-any-order expected actual true))))
+
+(defrecord ContainsSet [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [validation-issue (validate-input
+                                expected actual #(or (set? %) (sequential? %)) set? 'contains 'set)]
       validation-issue
       (match-any-order expected actual true))))
