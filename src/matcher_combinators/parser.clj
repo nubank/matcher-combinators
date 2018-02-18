@@ -38,6 +38,6 @@
                BigInt
                Character)
 
-(mimic-matcher matchers/contains IPersistentMap)
+(mimic-matcher matchers/embeds IPersistentMap)
 (mimic-matcher matchers/equals IPersistentVector)
 (mimic-matcher matchers/equals IPersistentList)

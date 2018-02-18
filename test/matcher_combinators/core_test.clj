@@ -44,7 +44,7 @@
         "a1"
         [[:a 1]]))
     ?map-matcher
-    contains
+    embeds
     equals)
 
   (facts "on the equals matcher for maps"
@@ -216,22 +216,22 @@
       [{:id 1 :a 1} {:id 2 :a 2}])
     => [:match [{:id 1 :a 1} {:id 2 :a 2}]])
 
-  (facts "nesting contains for maps"
+  (facts "nesting embeds for maps"
     (match
-      (contains {:a (equals 42) :m (contains {:x (equals "foo")})})
+      (embeds {:a (equals 42) :m (embeds {:x (equals "foo")})})
       {:a 42 :m {:x "foo"}})
     => [:match {:a 42 :m {:x "foo"}}]
 
 
-    (match (contains {:a (equals 42)
-                      :m (contains {:x (equals "foo")})})
+    (match (embeds {:a (equals 42)
+                    :m (embeds {:x (equals "foo")})})
            {:a 42
             :m {:x "bar"}})
     => [:mismatch {:a 42
                    :m {:x (model/->Mismatch "foo" "bar")}}]
 
-    (match (contains {:a (equals 42)
-                      :m (contains {:x (equals "foo")})})
+    (match (embeds {:a (equals 42)
+                    :m (embeds {:x (equals "foo")})})
            {:a 43
             :m {:x "bar"}})
     => [:mismatch {:a (model/->Mismatch 42 43)
@@ -306,8 +306,8 @@
 (future-fact "reproducing select? bug"
   (fact "the bug"
     (core/match
-      (in-any-order :a [(contains {:a (equals {:id (equals 1)}) :b (equals 42)})
-                        (contains {:a (equals {:id (equals 2)}) :b (equals 1337)})])
+      (in-any-order :a [(embeds {:a (equals {:id (equals 1)}) :b (equals 42)})
+                        (embeds {:a (equals {:id (equals 2)}) :b (equals 1337)})])
       [{:a {:id 1} :b 42}
        {:a {:id 2} :b 1337}])
     => [:match [{:a {:id 1} :b 42}
@@ -315,8 +315,8 @@
 
   (fact "similar, but works"
     (core/match
-      (in-any-order :a [(contains {:a (equals 1) :b (equals 42)})
-                        (contains {:a (equals 2) :b (equals 1337)})])
+      (in-any-order :a [(embeds {:a (equals 1) :b (equals 42)})
+                        (embeds {:a (equals 2) :b (equals 1337)})])
       [{:a 1 :b 42}
        {:a 2 :b 1337}])
     => [:match [{:a 1 :b 42}
@@ -333,54 +333,54 @@
                                "provided: 1"})]))
   ?matcher
   prefix-seq
-  contains)
+  embeds )
 
 (def pred-set #{(pred-matcher odd?) (pred-matcher pos?)})
 (def pred-seq [(pred-matcher odd?) (pred-matcher pos?)])
 
-(fact "contains/equals-set matches"
-  (core/match (contains pred-set) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (contains-set pred-seq) #{1 3}) => (just [:match (just #{1 3})])
+(fact "embeds /equals-set matches"
+  (core/match (embeds pred-set) #{1 3}) => (just [:match (just #{1 3})])
+  (core/match (embeds-set pred-seq) #{1 3}) => (just [:match (just #{1 3})])
   (core/match (equals pred-set) #{1 3}) => (just [:match (just #{1 3})])
   (core/match (equals-set pred-seq) #{1 3}) => (just [:match (just #{1 3})]))
 
-(fact "contains/equals mismatches due to type"
+(fact "embeds /equals mismatches due to type"
   (core/match (equals pred-seq) #{1 3})
   => (just [:mismatch (just {:actual   #{1 3}
                              :expected anything})])
   (core/match (equals pred-set) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
-  (core/match (contains pred-seq) #{1 3})
+  (core/match (embeds pred-seq) #{1 3})
   => (just [:mismatch (just {:actual   #{1 3}
                              :expected anything})])
-  (core/match (contains pred-set) [1 3])
+  (core/match (embeds pred-set) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
-  (core/match (contains 1) [1])
-  => (just [:mismatch (just {:expected-type-msg #"^contains*"
+  (core/match (embeds 1) [1])
+  => (just [:mismatch (just {:expected-type-msg #"^embeds *"
                              :provided          #"^provided: 1"})]))
 
-(fact "contains/equals-set mismatches due to type"
-  (core/match (contains-set pred-seq) [1 3])
+(fact "embeds /equals-set mismatches due to type"
+  (core/match (embeds-set pred-seq) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
   (core/match (equals-set pred-seq) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
-  (core/match (contains-set 1) [1 3])
-  => (just [:mismatch (just {:expected-type-msg #"^contains-set*"
+  (core/match (embeds-set 1) [1 3])
+  => (just [:mismatch (just {:expected-type-msg #"^embeds-set*"
                              :provided          #"^provided: 1"})])
   (core/match (equals-set 1) [1 3])
   => (just [:mismatch (just {:expected-type-msg #"^equals-set*"
                              :provided          #"^provided: 1"})]))
 
-(fact "contains/equals-set mismatches due to content"
-  (core/match (contains-set pred-set) #{1 -2})
+(fact "embeds /equals-set mismatches due to content"
+  (core/match (embeds-set pred-set) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})])
 
-  (core/match (contains-set pred-seq) #{1 -2})
+  (core/match (embeds-set pred-seq) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})])
 

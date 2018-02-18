@@ -18,22 +18,22 @@
   [expected]
   (core/->EqualsSet expected true))
 
-(defn contains
+(defn embeds
   "Matcher that will match when the map contains some of the same key/values as
   the `expected` map."
   [expected]
   (cond
-    (sequential? expected) (core/->ContainsSeq expected)
-    (set? expected)        (core/->ContainsSet expected false)
-    (map? expected)        (core/->ContainsMap expected)
-    :else                  (core/->InvalidType expected "contains" "seq, set, map")))
+    (sequential? expected) (core/->EmbedsSeq expected)
+    (set? expected)        (core/->EmbedsSet expected false)
+    (map? expected)        (core/->EmbedsMap expected)
+    :else                  (core/->InvalidType expected "embeds" "seq, set, map")))
 
-(defn contains-set
-  "Matches a set in the way `(contains some-set)` would, but accepts sequences
+(defn embeds-set
+  "Matches a set in the way `(embeds some-set)` would, but accepts sequences
   as the expected matcher argument, allowing one to use matchers with the same
   submatcher appearing more than once."
   [expected]
-  (core/->ContainsSet expected true))
+  (core/->EmbedsSet expected true))
 
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
@@ -52,6 +52,6 @@
   "Matcher that will match when provided a (ordered) prefix of the `expected`
   list.
 
-  Similar to Midje's `(contains expected)`"
+  Similar to Midje's `(embeds expected)`"
   [expected]
   (core/->PrefixSeq expected))

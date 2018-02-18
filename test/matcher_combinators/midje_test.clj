@@ -79,12 +79,12 @@
       [5 1 4 2] =not=> (ch/match (m/prefix-seq [5 1 4 2 6]))
       [5 1 4 2] =not=> (ch/match (m/prefix-seq [1 5])))
 
-(fact [5 1 4 2] => (ch/match (m/contains [5 1]))
-      [5 1 4 2] => (ch/match (m/contains [1 5]))
-      [5 1 4 2] => (ch/match (m/contains [5 1 4 2]))
-      [5 1 4 2] => (ch/match (m/contains [1 5 2 4]))
-      [5 1 4 2] => (ch/match (m/contains [odd? even?]))
-      [5 1 4 2] =not=> (ch/match (m/contains [5 1 4 2 6])))
+(fact [5 1 4 2] => (ch/match (m/embeds [5 1]))
+      [5 1 4 2] => (ch/match (m/embeds [1 5]))
+      [5 1 4 2] => (ch/match (m/embeds [5 1 4 2]))
+      [5 1 4 2] => (ch/match (m/embeds [1 5 2 4]))
+      [5 1 4 2] => (ch/match (m/embeds [odd? even?]))
+      [5 1 4 2] =not=> (ch/match (m/embeds [5 1 4 2 6])))
 
 (fact "Find optimal in-any-order matching just like midje"
   [1 3] => (midje/just [odd? 1] :in-any-order)

@@ -85,14 +85,14 @@
                       (concat unexpected-entries)
                       (into actual))])))
 
-(defrecord ContainsMap [expected]
+(defrecord EmbedsMap [expected]
   Matcher
   (select? [this select-fn candidate]
     (let [selected-matcher (select-fn expected)
           selected-value   (select-fn candidate)]
       (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
-    (if-let [issue (validate-input expected actual map? 'contains "map")]
+    (if-let [issue (validate-input expected actual map? 'embeds "map")]
       issue
       (compare-maps expected actual identity true))))
 
@@ -263,15 +263,15 @@
       issue
       (sequence-match expected actual true))))
 
-(defrecord ContainsSeq [expected]
+(defrecord EmbedsSeq [expected]
   Matcher
   (match [_this actual]
     (if-let [issue (validate-input
-                     expected actual sequential? 'contains "sequential")]
+                     expected actual sequential? 'embeds "sequential")]
       issue
       (match-any-order expected actual true))))
 
-(defrecord ContainsSet [expected accept-seq?]
+(defrecord EmbedsSet [expected accept-seq?]
   Matcher
   (match [_this actual]
     (if-let [issue (if accept-seq?
@@ -279,12 +279,12 @@
                                      actual
                                      #(or (set? %) (sequential? %))
                                      set?
-                                     'contains-set
+                                     'embeds-set
                                      "set or sequential")
                      (validate-input expected
                                      actual
                                      set?
-                                     'contains
+                                     'embeds
                                      "set"))]
       issue
       (let [[matching? result-payload] (match-any-order

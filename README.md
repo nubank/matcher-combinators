@@ -36,7 +36,7 @@ For example:
   {:a {:bb 1} :c 2} => (match (m/equals {:a {:bb 1} :c 2})))
 
 (fact "loosely matching a map"
-  ;; by default a map is interpreted as a `contains-map` matcher
+  ;; by default a map is interpreted as a `embeds` matcher
   {:headers {:type "txt"} :body "hello world!"} => (match {:body string?}))
 ```
 
@@ -71,9 +71,9 @@ For example:
 ### default matchers
 
 If a data-structure isn't wrapped in a specific matcher-combinator the default interpretation is:
-- map: `contains-map`
-- vector: `equals-seq`
-- number, date, and other base data-structure: `equals-value`
+- map: `embds`
+- vector: `equals`
+- number, date, and other base data-structure: `equals`
 
 ### built-in matchers
 
