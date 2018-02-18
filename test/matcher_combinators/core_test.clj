@@ -1,5 +1,6 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly contains] :as sweet]
+            [clojure.string :as str]
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.model :as model]))
@@ -326,10 +327,67 @@
     (core/match (?matcher 1) 1)
     => (just [:mismatch
               (sweet/contains {:expected-type-msg
-                               #(clojure.string/starts-with? % (-> ?matcher var meta :name str))
+                               #(str/starts-with? % (-> ?matcher var meta :name str))
 
                                :provided
                                "provided: 1"})]))
   ?matcher
   prefix-seq
   contains)
+
+(def pred-set #{(pred-matcher odd?) (pred-matcher pos?)})
+(def pred-seq [(pred-matcher odd?) (pred-matcher pos?)])
+
+(fact "contains/equals-set matches"
+  (core/match (contains pred-set) #{1 3}) => (just [:match (just #{1 3})])
+  (core/match (contains-set pred-seq) #{1 3}) => (just [:match (just #{1 3})])
+  (core/match (equals pred-set) #{1 3}) => (just [:match (just #{1 3})])
+  (core/match (equals-set pred-seq) #{1 3}) => (just [:match (just #{1 3})]))
+
+(fact "contains/equals mismatches due to type"
+  (core/match (equals pred-seq) #{1 3})
+  => (just [:mismatch (just {:actual   #{1 3}
+                             :expected anything})])
+  (core/match (equals pred-set) [1 3])
+  => (just [:mismatch (just {:actual   [1 3]
+                             :expected anything})])
+  (core/match (contains pred-seq) #{1 3})
+  => (just [:mismatch (just {:actual   #{1 3}
+                             :expected anything})])
+  (core/match (contains pred-set) [1 3])
+  => (just [:mismatch (just {:actual   [1 3]
+                             :expected anything})])
+  (core/match (contains 1) [1])
+  => (just [:mismatch (just {:expected-type-msg #"^contains*"
+                             :provided          #"^provided: 1"})]))
+
+(fact "contains/equals-set mismatches due to type"
+  (core/match (contains-set pred-seq) [1 3])
+  => (just [:mismatch (just {:actual   [1 3]
+                             :expected anything})])
+  (core/match (equals-set pred-seq) [1 3])
+  => (just [:mismatch (just {:actual   [1 3]
+                             :expected anything})])
+  (core/match (contains-set 1) [1 3])
+  => (just [:mismatch (just {:expected-type-msg #"^contains-set*"
+                             :provided          #"^provided: 1"})])
+  (core/match (equals-set 1) [1 3])
+  => (just [:mismatch (just {:expected-type-msg #"^equals-set*"
+                             :provided          #"^provided: 1"})]))
+
+(fact "contains/equals-set mismatches due to content"
+  (core/match (contains-set pred-set) #{1 -2})
+  => (just [:mismatch (just #{1 (just {:actual -2
+                                       :form   anything})})])
+
+  (core/match (contains-set pred-seq) #{1 -2})
+  => (just [:mismatch (just #{1 (just {:actual -2
+                                       :form   anything})})])
+
+  (core/match (equals pred-set) #{1 -2})
+  => (just [:mismatch (just #{1 (just {:actual -2
+                                       :form   anything})})])
+
+  (core/match (equals-set pred-seq) #{1 -2})
+  => (just [:mismatch (just #{1 (just {:actual -2
+                                       :form   anything})})]))

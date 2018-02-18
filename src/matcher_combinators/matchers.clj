@@ -7,14 +7,16 @@
   [expected]
   (cond
     (sequential? expected) (core/->EqualsSeq expected)
-    (set? expected)        (core/->EqualsSet expected)
+    (set? expected)        (core/->EqualsSet expected false)
     (map? expected)        (core/->EqualsMap expected)
     :else                  (core/->Value expected)))
 
 (defn equals-set
-  ""
+  "Matches a set in the way `(equals some-set)` would, but accepts sequences as
+  the expected matcher argument, allowing one to use matchers with the same
+  submatcher appearing more than once."
   [expected]
-  (core/->EqualsSet expected))
+  (core/->EqualsSet expected true))
 
 (defn contains
   "Matcher that will match when the map contains some of the same key/values as
@@ -22,14 +24,16 @@
   [expected]
   (cond
     (sequential? expected) (core/->ContainsSeq expected)
-    (set? expected)        (core/->ContainsSet expected)
+    (set? expected)        (core/->ContainsSet expected false)
     (map? expected)        (core/->ContainsMap expected)
     :else                  (core/->InvalidType expected "contains" "seq, set, map")))
 
 (defn contains-set
-  ""
+  "Matches a set in the way `(contains some-set)` would, but accepts sequences
+  as the expected matcher argument, allowing one to use matchers with the same
+  submatcher appearing more than once."
   [expected]
-  (core/->ContainsSet expected))
+  (core/->ContainsSet expected true))
 
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
