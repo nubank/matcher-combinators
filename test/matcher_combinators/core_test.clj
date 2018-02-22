@@ -332,17 +332,17 @@
                                :provided
                                "provided: 1"})]))
   ?matcher
-  prefix-seq
+  prefix
   embeds )
 
 (def pred-set #{(pred-matcher odd?) (pred-matcher pos?)})
 (def pred-seq [(pred-matcher odd?) (pred-matcher pos?)])
 
-(fact "embeds /equals-set matches"
+(fact "embeds /set-equals matches"
   (core/match (embeds pred-set) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (embeds-set pred-seq) #{1 3}) => (just [:match (just #{1 3})])
+  (core/match (set-embeds pred-seq) #{1 3}) => (just [:match (just #{1 3})])
   (core/match (equals pred-set) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (equals-set pred-seq) #{1 3}) => (just [:match (just #{1 3})]))
+  (core/match (set-equals pred-seq) #{1 3}) => (just [:match (just #{1 3})]))
 
 (fact "embeds /equals mismatches due to type"
   (core/match (equals pred-seq) #{1 3})
@@ -361,26 +361,26 @@
   => (just [:mismatch (just {:expected-type-msg #"^embeds *"
                              :provided          #"^provided: 1"})]))
 
-(fact "embeds /equals-set mismatches due to type"
-  (core/match (embeds-set pred-seq) [1 3])
+(fact "embeds /set-equals mismatches due to type"
+  (core/match (set-embeds pred-seq) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
-  (core/match (equals-set pred-seq) [1 3])
+  (core/match (set-equals pred-seq) [1 3])
   => (just [:mismatch (just {:actual   [1 3]
                              :expected anything})])
-  (core/match (embeds-set 1) [1 3])
-  => (just [:mismatch (just {:expected-type-msg #"^embeds-set*"
+  (core/match (set-embeds 1) [1 3])
+  => (just [:mismatch (just {:expected-type-msg #"^set-embeds*"
                              :provided          #"^provided: 1"})])
-  (core/match (equals-set 1) [1 3])
-  => (just [:mismatch (just {:expected-type-msg #"^equals-set*"
+  (core/match (set-equals 1) [1 3])
+  => (just [:mismatch (just {:expected-type-msg #"^set-equals*"
                              :provided          #"^provided: 1"})]))
 
-(fact "embeds /equals-set mismatches due to content"
-  (core/match (embeds-set pred-set) #{1 -2})
+(fact "embeds /set-equals mismatches due to content"
+  (core/match (set-embeds pred-set) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})])
 
-  (core/match (embeds-set pred-seq) #{1 -2})
+  (core/match (set-embeds pred-seq) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})])
 
@@ -388,6 +388,6 @@
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})])
 
-  (core/match (equals-set pred-seq) #{1 -2})
+  (core/match (set-equals pred-seq) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})]))

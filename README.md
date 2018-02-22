@@ -63,7 +63,7 @@ For example:
 (deftest basic-sequence-matching
   ;; by default a vector is interpreted as a `equals-seq` matcher
   (is (match? [1 odd?] [1 3]))
-  (is (match? (m/sublist [1 odd?]) [1 1 2 3])))
+  (is (match? (m/prefix [1 odd?]) [1 1 2 3])))
 ```
 
 ## Matchers
@@ -71,21 +71,32 @@ For example:
 ### default matchers
 
 If a data-structure isn't wrapped in a specific matcher-combinator the default interpretation is:
-- map: `embds`
+- map: `embeds`
 - vector: `equals`
 - number, date, and other base data-structure: `equals`
 
 ### built-in matchers
 
-- `equals-value`: matches when the given value is exactly the same as the `expected`.
-- `equals-map`: matches when:
+- `equals` operates over base values, maps, sequences, and sets
+
+  - base values (string, int, function, etc.): matches when the given value is exactly the same as the `expected`.
+  - map: matches when
       1. the keys of the `expected` map are equal to the given map's keys
       2. the value matchers of `expected` map matches the given map's values
-- `equals-seq`: matches when the `expected` list's matchers match the given list. Similar to midje's `(just expected)`
-- `subset`: order-agnostic matcher that will match when provided a subset of the `expected` list. Similar to midje's `(contains expected :in-any-order :gaps-ok)`
-- `sublist`: matches when provided a (ordered) prefix of the `expected` list.  Similar to midje's `(contains expected)`
-- `in-any-order`: matches when the given a list that is the same as the `expected` list but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
-- `contains-map`: matches when the map contains some of the same key/values as the `expected` map.
+  - sequence: matches when the `expected` sequences's matchers match the given sequence. Similar to midje's `(just expected)`
+  - set: matches when all the elements in the given set can be matched with a matcher in `expected` set and each matcher is used exactly once.
+- `embeds` operates over maps, sequences, and sets
+  - map: matches when the map contains some of the same key/values as the `expected` map.
+  - sequence: order-agnostic matcher that will match when provided a subset of the `expected` sequence. Similar to midje's `(contains expected :in-any-order :gaps-ok)`
+  - set: matches when all the matchers in the `expected` set can be matched with an element in the provided set. There may be more elements in the provided set than there are matchers.
+- `prefix` operates over sequences
+
+  matches when provided a (ordered) prefix of the `expected` sequence. Similar to midje's `(contains expected)`
+- `in-any-order` operates over sequences
+
+  matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
+
+- `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
 
 ## Running tests
 

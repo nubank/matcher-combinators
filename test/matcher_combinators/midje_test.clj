@@ -74,10 +74,10 @@
   (seq #{3 8 1}) => (ch/match (m/in-any-order [(midje/as-checker odd?) 3 (midje/as-checker even?)]))))
 
 (fact [5 1 4 2] => (midje/contains [1 2 5] :gaps-ok :in-any-order))
-(fact [5 1 4 2] => (ch/match (m/prefix-seq [5 1]))
-      [5 1 4 2] => (ch/match (m/prefix-seq [5 1 4 2]))
-      [5 1 4 2] =not=> (ch/match (m/prefix-seq [5 1 4 2 6]))
-      [5 1 4 2] =not=> (ch/match (m/prefix-seq [1 5])))
+(fact [5 1 4 2] => (ch/match (m/prefix [5 1]))
+      [5 1 4 2] => (ch/match (m/prefix [5 1 4 2]))
+      [5 1 4 2] =not=> (ch/match (m/prefix [5 1 4 2 6]))
+      [5 1 4 2] =not=> (ch/match (m/prefix [1 5])))
 
 (fact [5 1 4 2] => (ch/match (m/embeds [5 1]))
       [5 1 4 2] => (ch/match (m/embeds [1 5]))

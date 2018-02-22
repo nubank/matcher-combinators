@@ -203,7 +203,7 @@
       issue
       (match-any-order expected actual false))))
 
-(defrecord EqualsSet [expected accept-seq?]
+(defrecord SetEquals [expected accept-seq?]
   Matcher
   (match [_this actual]
     (if-let [issue (if accept-seq?
@@ -211,7 +211,7 @@
                                      actual
                                      #(or (set? %) (sequential? %))
                                      set?
-                                     'equals-set
+                                     'set-equals
                                      "set or sequential")
                      (validate-input expected
                                      actual
@@ -255,11 +255,11 @@
       issue
       (selecting-match select-fn expected actual))))
 
-(defrecord PrefixSeq [expected]
+(defrecord Prefix [expected]
   Matcher
   (match [_this actual]
     (if-let [issue (validate-input
-                     expected actual sequential? 'prefix-seq  "sequential")]
+                     expected actual sequential? 'prefix "sequential")]
       issue
       (sequence-match expected actual true))))
 
@@ -271,7 +271,7 @@
       issue
       (match-any-order expected actual true))))
 
-(defrecord EmbedsSet [expected accept-seq?]
+(defrecord SetEmbeds [expected accept-seq?]
   Matcher
   (match [_this actual]
     (if-let [issue (if accept-seq?
@@ -279,7 +279,7 @@
                                      actual
                                      #(or (set? %) (sequential? %))
                                      set?
-                                     'embeds-set
+                                     'set-embeds
                                      "set or sequential")
                      (validate-input expected
                                      actual

@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file. This change
 - _BREAKING_:
   - rename `equals-map`, `equals-seq`, and `equals-value` to all be `equals`
     and do dispatch based on type
-  - rename `sublist` to `prefix-seq`
+  - rename `sublist` to `prefix`
   - rename `subset` sequence matcher to be `embeds`
   - rename `contains-map` to `embeds` and make it do dispatch based on type
-- implement matchers for sets: `equals` and `embeds` as well as `equals-set`
-  and `embeds-set` which allow one to use sequences to match sets, skirting the
+- implement matchers for sets: `equals` and `embeds` as well as `set-equals`
+  and `set-embeds` which allow one to use sequences to match sets, skirting the
   issue that a set matcher of form `#{odd? odd?}` will reduce to `#{odd?}`.
 
 
