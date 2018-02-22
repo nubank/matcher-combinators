@@ -134,7 +134,7 @@
                   unmatched
                   matched]} (matches-in-any-order? matchers elements subset? [])]
       (cond
-        matched?                    (reduced true)
+        matched?                    (reduced ::match-found)
         (> (count matched)
            (count (:matched best))) {:matched   matched
                                      :unmatched unmatched
@@ -149,7 +149,7 @@
                                    :unmatched matchers
                                    :elements  elements}
                                   elem-permutations)]
-    (if (boolean? result)
+    (if (= ::match-found result)
       [:match elements]
       (match (->EqualsSeq (concat (:matched result)
                                   (:unmatched result)))

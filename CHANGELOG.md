@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.2.1]
+- stop using `boolean?` which is only in clojure 1.9
+
 ## [0.2.0]
 - _BREAKING_:
   - rename `equals-map`, `equals-seq`, and `equals-value` to all be `equals`
