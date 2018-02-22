@@ -1,5 +1,5 @@
 (ns matcher-combinators.parser-test
-  (:require [midje.sweet :refer :all :exclude [exactly]]
+  (:require [midje.sweet :refer :all :exclude [exactly contains]]
             [midje.experimental :refer [for-all]]
             [matcher-combinators.parser]
             [matcher-combinators.matchers :refer :all]
@@ -34,36 +34,36 @@
   (gen-distinct-pair gen-scalar))
 
 
-(facts "scalar values act as equals-value matchers"
+(facts "scalar values act as equals matchers"
   (for-all [i gen-scalar]
     {:num-tests 50}
-    (core/match i i) => (core/match (equals-value i) i))
+    (core/match i i) => (core/match (equals i) i))
 
   (for-all [[i j] gen-scalar-pair]
     {:num-tests 50}
-    (core/match i j) => (core/match (equals-value i) j)))
+    (core/match i j) => (core/match (equals i) j)))
 
-(fact "maps act as equals-map matchers"
+(fact "maps act as equals matcher"
   (fact
-    (= (core/match (equals-map {:a (equals-value 10)}) {:a 10})
-       (core/match (equals-map {:a 10}) {:a 10})
+    (= (core/match (equals {:a (equals 10)}) {:a 10})
+       (core/match (equals {:a 10}) {:a 10})
        (core/match {:a 10} {:a 10}))
     => truthy))
 
-(fact "vectors act as equals-seq matchers"
+(fact "vectors act as equals matchers"
   (fact
-    (= (core/match (equals-seq [(equals-value 10)]) [10])
-       (core/match (equals-seq [10]) [10])
+    (= (core/match (equals [(equals 10)]) [10])
+       (core/match (equals [10]) [10])
        (core/match [10] [10]))
     => truthy))
 
-(fact "lists also act as equals-seq matchers"
+(fact "lists also act as equals matchers"
   (fact
-    (= (core/match (equals-seq [(equals-value 10)]) [10])
-       (core/match (equals-seq '(10)) [10])
+    (= (core/match (equals [(equals 10)]) [10])
+       (core/match (equals '(10)) [10])
        (core/match '(10) [10])) => truthy))
 
-(fact "`nil` is parsed as an equals-value"
+(fact "`nil` is parsed as an equals"
   (fact
-    (= (core/match (equals-value nil) nil)
+    (= (core/match (equals nil) nil)
        (core/match nil nil)) => truthy))

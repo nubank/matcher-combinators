@@ -20,7 +20,7 @@
       [:match actual]
       [:mismatch (model/->FailedPredicate (str this) actual)])))
 
-(mimic-matcher matchers/equals-value
+(mimic-matcher matchers/equals
                Long
                Double
                String
@@ -38,6 +38,6 @@
                BigInt
                Character)
 
-(mimic-matcher matchers/contains-map IPersistentMap)
-(mimic-matcher matchers/equals-seq IPersistentVector)
-(mimic-matcher matchers/equals-seq IPersistentList)
+(mimic-matcher matchers/embeds IPersistentMap)
+(mimic-matcher matchers/equals IPersistentVector)
+(mimic-matcher matchers/equals IPersistentList)

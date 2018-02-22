@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.2.0]
+- _BREAKING_:
+  - rename `equals-map`, `equals-seq`, and `equals-value` to all be `equals`
+    and do dispatch based on type
+  - rename `sublist` to `prefix`
+  - rename `subset` sequence matcher to be `embeds`
+  - rename `contains-map` to `embeds` and make it do dispatch based on type
+- implement matchers for sets: `equals` and `embeds` as well as `set-equals`
+  and `set-embeds` which allow one to use sequences to match sets, skirting the
+  issue that a set matcher of form `#{odd? odd?}` will reduce to `#{odd?}`.
+
+
 ## [0.1.7]
 - Adapt `in-any-order` to print diff for element ordering that leads to most direct matches
 - When matcher is provided with incorrect input, cause matcher to fail, but don't raise exception

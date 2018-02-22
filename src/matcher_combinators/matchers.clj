@@ -1,31 +1,39 @@
 (ns matcher-combinators.matchers
   (:require [matcher-combinators.core :as core]))
 
-(defn equals-value
+(defn equals
   "Matcher that will match when the given value is exactly the same as the
   `expected`."
   [expected]
-  (core/->Value expected))
+  (cond
+    (sequential? expected) (core/->EqualsSeq expected)
+    (set? expected)        (core/->SetEquals expected false)
+    (map? expected)        (core/->EqualsMap expected)
+    :else                  (core/->Value expected)))
 
-(defn contains-map
+(defn set-equals
+  "Matches a set in the way `(equals some-set)` would, but accepts sequences as
+  the expected matcher argument, allowing one to use matchers with the same
+  submatcher appearing more than once."
+  [expected]
+  (core/->SetEquals expected true))
+
+(defn embeds
   "Matcher that will match when the map contains some of the same key/values as
   the `expected` map."
   [expected]
-  (core/->ContainsMap expected))
+  (cond
+    (sequential? expected) (core/->EmbedsSeq expected)
+    (set? expected)        (core/->SetEmbeds expected false)
+    (map? expected)        (core/->EmbedsMap expected)
+    :else                  (core/->InvalidType expected "embeds" "seq, set, map")))
 
-(defn equals-map
-  "Matcher that will match when:
-    1. the keys of the `expected` map are equal to the given map's keys
-    2. the value matchers of `expected` map matches the given map's values"
+(defn set-embeds
+  "Matches a set in the way `(embeds some-set)` would, but accepts sequences
+  as the expected matcher argument, allowing one to use matchers with the same
+  submatcher appearing more than once."
   [expected]
-  (core/->EqualsMap expected))
-
-(defn equals-seq
-  "Matcher that will match when the `expected` list's matchers match the given list.
-
-  Similar to Midje's `(just expected)`"
-  [expected]
-  (core/->EqualsSequence expected))
+  (core/->SetEmbeds expected true))
 
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
@@ -40,18 +48,10 @@
   ([select-fn expected]
    (core/->SelectingInAnyOrder select-fn expected)))
 
-(defn sublist
+(defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`
   list.
 
-  Similar to Midje's `(contains expected)`"
+  Similar to Midje's `(embeds expected)`"
   [expected]
-  (core/->SubSeq expected))
-
-(defn subset
-  "Order-agnostic matcher that will match when provided a subset of the
-  `expected` list.
-
-  Similar to Midje's `(contains expected :in-any-order :gaps-ok)`"
-  [expected]
-  (core/->SubSet expected))
+  (core/->Prefix expected))
