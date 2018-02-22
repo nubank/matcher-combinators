@@ -5,18 +5,8 @@
 (defprotocol Matcher
   "For matching expected and actual values, providing helpful mismatch info on
   unsucessful matches"
-  (select? [this select-fn candidate]
-           "useful for anchoring specific substructures for `in-any-order` matchers")
-  (match   [this actual]
-           "determine if a concrete `actual` value satisfies this matcher"))
-
-(extend-type nil
-  Matcher
-  (match [_ actual]
-    (if (nil? actual)
-      [:match nil]
-      [:mismatch (model/->Mismatch nil actual)]))
-  (select? [_ _ _] false))
+  (match [this actual]
+         "determine if a concrete `actual` value satisfies this matcher"))
 
 (defn match? [match-result]
   (= :match (first match-result)))
@@ -32,12 +22,8 @@
 
 (defrecord Value [expected]
   Matcher
-  (select? [_this _select-fn candidate]
-    (= expected candidate))
   (match [_this actual]
    (cond
-     (and (nil? expected)
-          (nil? actual))  [:match nil]
      (= ::missing actual) [:mismatch (model/->Missing expected)]
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
@@ -77,7 +63,7 @@
                                    (when-not (find expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
-    (if (and (every? (comp match? value) entry-results)
+    (if (and (every? (comp match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
       [:match actual]
       [:mismatch (->> entry-results
@@ -87,10 +73,6 @@
 
 (defrecord EmbedsMap [expected]
   Matcher
-  (select? [this select-fn candidate]
-    (let [selected-matcher (select-fn expected)
-          selected-value   (select-fn candidate)]
-      (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
     (if-let [issue (validate-input expected actual map? 'embeds "map")]
       issue
@@ -98,10 +80,6 @@
 
 (defrecord EqualsMap [expected]
   Matcher
-  (select? [_this select-fn candidate]
-    (let [selected-matcher (select-fn expected)
-          selected-value   (select-fn candidate)]
-      (select? selected-matcher select-fn selected-value)))
   (match [_this actual]
     (if-let [issue (validate-input expected actual map? 'equals "map")]
       issue
@@ -222,38 +200,6 @@
       (let [[matching? result-payload] (match-any-order
                                          (seq expected) (seq actual) false)]
         [matching? (into #{} result-payload)]))))
-
-(defn- base-selecting-match [matchers matching? matched-elements]
-  (if (empty? matchers)
-    [matching? (reverse matched-elements)]
-    [:mismatch (concat (reverse matched-elements)
-                       (map #(value (match % nil)) matchers))]))
-
-(defn- selecting-match [select-fn all-matchers all-elements]
-  (loop [elements         all-elements
-         matchers         all-matchers
-         matching?        :match
-         matched-elements []]
-    (if (empty? elements)
-      (base-selecting-match matchers matching? matched-elements)
-      (let [[element & rest-elements]  elements
-            selected-matcher           (helpers/find-first
-                                         #(select? % select-fn element) matchers)
-            [match-result match-value] (if selected-matcher
-                                         (match selected-matcher element)
-                                         [:mismatch (model/->Unexpected element)])]
-        (recur rest-elements
-               (remove #{selected-matcher} matchers)
-               (if (= :mismatch matching?) :mismatch match-result)
-               (cons match-value matched-elements))))))
-
-(defrecord SelectingInAnyOrder [select-fn expected]
-  Matcher
-  (match [_this actual]
-    (if-let [issue (validate-input
-                     expected actual sequential? 'in-any-order "sequential")]
-      issue
-      (selecting-match select-fn expected actual))))
 
 (defrecord Prefix [expected]
   Matcher

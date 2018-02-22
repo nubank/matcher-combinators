@@ -39,14 +39,8 @@
   "Matcher that will match when the given a list that is the same as the
   `expected` list but with elements in a different order.
 
-  `select-fn`: optional argument used to anchoring specific substructures to
-               clarify mismatch output
-
   Similar to Midje's `(just expected :in-any-order)`"
-  ([expected]
-   (core/->InAnyOrder expected))
-  ([select-fn expected]
-   (core/->SelectingInAnyOrder select-fn expected)))
+  [expected] (core/->InAnyOrder expected))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`

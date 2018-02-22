@@ -57,8 +57,6 @@
       (match (equals {:a (equals 42)}) {:b 42})
       => [:mismatch {:b (model/->Unexpected 42), :a (model/->Missing 42)}])))
 
-(def in-any-order-selecting (partial in-any-order :id))
-
 (facts "on sequence matchers"
   (tabular
     (facts "on common behaviors among all sequence matchers"
@@ -106,8 +104,7 @@
 
     ?sequence-matcher
     equals
-    in-any-order
-    in-any-order-selecting)
+    in-any-order)
 
   (facts "on the equals matcher for sequences"
     (fact "on element mismatches, marks each mismatch"
@@ -146,8 +143,7 @@
             [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
           => [:match [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]]))
       ?in-any-order-matcher
-      in-any-order
-      in-any-order-selecting)
+      in-any-order)
 
     (facts "the 1-argument arity has a simple all-or-nothing behavior:"
       (fact "in-any-order for list of same value/matchers"
@@ -160,26 +156,7 @@
 
         (match (in-any-order [(equals 1) (equals 2) (equals 3)]) [1 2])
         => [:mismatch (model/->Mismatch [(equals 1) (equals 2) (equals 3)]
-                                        [1 2])]))
-
-    (facts "the 2-argument arity will look for an element to match by id"
-      (fact "when the given sequence contains elements not matched by their
-            selected matcher, marks them as Mismatches"
-        (match (in-any-order :id [(equals {:id (equals 2) :a (equals 2)})
-                                  (equals {:id (equals 1) :a (equals 1)})])
-               [{:id 1 :a 1} {:id 2 :a 200}])
-        => [:mismatch [{:id 1 :a 1} {:id 2 :a (model/->Mismatch 2 200)}]]
-
-        (match
-          (in-any-order :id [(equals {:id (equals 1) :a (equals 1)})
-                             (equals {:id (equals 2) :a (equals 2)})])
-          [{:id 1 :a 100} {:id 2 :a 200}])
-        => [:mismatch [{:id 1 :a (model/->Mismatch 1 100)} {:id 2 :a (model/->Mismatch 2 200)}]])
-
-      (future-fact "when there are matchers not matched by any input elements, append
-                    their values as Missing elements"
-        (match (in-any-order :id [(equals 1) (equals 2) (equals 3)]) [1 2])
-        => [:mismatch [1 2 (model/->Missing 3)]]))))
+                                        [1 2])]))))
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
@@ -250,24 +227,6 @@
   => [:mismatch [{:a (model/->Mismatch 42 43) :b 1337} 20]])
 
 
-(facts "on selecting matchers for a value"
-  (select? (equals 10) :id 10) => truthy
-  (select? (equals 10) :id 11) => falsey
-
-  (select? (equals 10) :whatever 10) => truthy
-  (select? (equals 10) :whatever 11) => falsey
-
-  (select? (equals {:id (equals 10)}) :id {:id 10}) => truthy
-  (select? (equals {:id (equals 10)}) :id {:id 20}) => falsey
-  (select? (equals {:id (equals 10)}) :xx {:id 10}) => falsey
-
-  (select? nil :foo {:foo 1}) => falsey
-  (select? (equals {:id (equals 10) :a (equals 42)}) :id {:id 10 :a 42})   => truthy
-  (select? (equals {:id (equals 10) :a (equals 42)}) :id {:id 20 :a 42})   => falsey
-  (select? (equals {:id (equals 10) :a (equals 42)}) :xx {:id 10 :a 42})   => falsey
-  (select? (equals {:id (equals 10) :a (equals 42)}) :id {:id 10 :a 1337}) => truthy)
-
-
 ;; Since the parser namespace needs to be loaded to interpret functions as
 ;; matchers, and we don't want to load the parser namespce, we need to manually
 ;; wrap functions in a predicate matcher
@@ -302,25 +261,6 @@
     => [:mismatch (model/->Mismatch matchers [5])]
     (#'core/match-any-order matchers [5] true)
     => [:mismatch (model/->Mismatch matchers [5])]))
-
-(future-fact "reproducing select? bug"
-  (fact "the bug"
-    (core/match
-      (in-any-order :a [(embeds {:a (equals {:id (equals 1)}) :b (equals 42)})
-                        (embeds {:a (equals {:id (equals 2)}) :b (equals 1337)})])
-      [{:a {:id 1} :b 42}
-       {:a {:id 2} :b 1337}])
-    => [:match [{:a {:id 1} :b 42}
-                {:a {:id 2} :b 1337}]])
-
-  (fact "similar, but works"
-    (core/match
-      (in-any-order :a [(embeds {:a (equals 1) :b (equals 42)})
-                        (embeds {:a (equals 2) :b (equals 1337)})])
-      [{:a 1 :b 42}
-       {:a 2 :b 1337}])
-    => [:match [{:a 1 :b 42}
-                {:a 2 :b 1337}]]))
 
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
