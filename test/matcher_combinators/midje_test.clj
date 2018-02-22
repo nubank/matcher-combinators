@@ -97,8 +97,15 @@
   [1 2] => (ch/match (m/in-any-order [(midje/as-checker even?)
                                       (midje/as-checker odd?)])))
 
+;; for clojure 1.8 support
+(defn is-int? [x]
+  (or (instance? Long x)
+      (instance? Integer x)
+      (instance? Short x)
+      (instance? Byte x)))
+
 (midje/unfinished f)
-(let [short-list (ch/match (m/equals [int? int? int?]))]
+(let [short-list (ch/match (m/equals [is-int? is-int? is-int?]))]
   (fact "using defined matchers in provided statements"
     (f [1 2 3]) => 1
     (provided
@@ -108,14 +115,14 @@
     (fact "succeeding"
       (f [1 2 3]) => 1
       (provided
-        (f (ch/match (m/equals [int? int? int?]))) => 1))
+        (f (ch/match (m/equals [is-int? is-int? is-int?]))) => 1))
 
     (fact "a match failure will fail the test"
       (emission/silently
         (fact "will fail"
           (f [1 2 :not-this]) => 1
           (provided
-            (f (ch/match (m/equals [int? int? int?]))) => 1)))
+            (f (ch/match (m/equals [is-int? is-int? is-int?]))) => 1)))
       => falsey)))
 
 
