@@ -20,6 +20,14 @@ This library address this issue by providing composable matcher combinators that
 - Integrates with clojure.test and midje
 - Good readability by providing default interpretations of core clojure data-structures as matcher combinators
 
+| Midje checkers | Matcher combinators |
+| ------- | ----- |
+| ![midje checkers](doc/images/midje_check.png) | ![matcher combinators check](doc/images/matcher_check.png) |
+
+| Midje checkers failure output | Matcher combinators failure output |
+| ------- | ----- |
+| ![midje checker failure output](doc/images/midje_failure.png) | ![matcher combinators failure output](doc/images/matcher_output.png) |
+
 ## Usage
 
 ### Midje:
