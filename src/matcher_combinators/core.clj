@@ -198,7 +198,7 @@
                                      "set"))]
       issue
       (let [[matching? result-payload] (match-any-order
-                                         (seq expected) (seq actual) false)]
+                                         (into [] expected) (into [] actual) false)]
         [matching? (into #{} result-payload)]))))
 
 (defrecord Prefix [expected]
@@ -234,5 +234,5 @@
                                      "set"))]
       issue
       (let [[matching? result-payload] (match-any-order
-                                         (seq expected) (seq actual) true)]
+                                         (into [] expected) (into [] actual) true)]
         [matching? (into #{} result-payload)]))))

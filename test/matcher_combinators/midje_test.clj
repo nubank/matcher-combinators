@@ -102,7 +102,9 @@
     #{1 2 3} => (ch/match #{1 2 3})
     #{1 2 3} => (ch/match (m/equals #{1 2 3}))
     #{1 2 3} =not=> (ch/match (m/equals #{1 2}))
-    #{1 2 3} => (ch/match (m/embeds #{1 2})))
+    #{1 2 3} => (ch/match (m/embeds #{1 2}))
+    #{} => (ch/match #{})
+    #{} => (ch/match (m/equals #{})))
 
   (fact "why `equals` isn't always sufficient with sets"
     #{1 3} =not=> (ch/match (set [odd? odd?]))
