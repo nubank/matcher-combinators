@@ -6,7 +6,7 @@ Alpha version:
 
 [![Current Version](https://img.shields.io/clojars/v/nubank/matcher-combinators.svg)](https://clojars.org/nubank/matcher-combinators)
 
-__Note:__ currently in alpha; function names and namespaces are subject to change. When you encounter bugs, please file an issue with reproduction steps and we'll look into them as soon as possible.
+__Note:__ currently in beta, we would appreciate it if you took the time to file issues for any bugs you may.
 
 ## Motivation
 
