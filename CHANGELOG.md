@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.2.2]
+- implement default matcher parser for sets
+
 ## [0.2.1]
 - stop using `boolean?` which is only in clojure 1.9
 

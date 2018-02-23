@@ -97,6 +97,20 @@
   [1 2] => (ch/match (m/in-any-order [(midje/as-checker even?)
                                       (midje/as-checker odd?)])))
 
+(facts "match sets"
+  (fact "simple cases"
+    #{1 2 3} => (ch/match #{1 2 3})
+    #{1 2 3} => (ch/match (m/equals #{1 2 3}))
+    #{1 2 3} =not=> (ch/match (m/equals #{1 2}))
+    #{1 2 3} => (ch/match (m/embeds #{1 2})))
+
+  (fact "why `equals` isn't always sufficient with sets"
+    #{1 3} =not=> (ch/match (set [odd? odd?]))
+    #{1} => (ch/match (m/equals (set [odd? odd?])))
+
+    #{1 3} => (ch/match (m/set-equals [odd? odd?]))
+    #{1 2} =not=> (ch/match (m/set-equals [odd? odd?]))))
+
 ;; for clojure 1.8 support
 (defn is-int? [x]
   (or (instance? Long x)
