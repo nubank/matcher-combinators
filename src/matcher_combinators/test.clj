@@ -1,5 +1,6 @@
 (ns matcher-combinators.test
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.parser :as parser]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [clojure.string :as str]
@@ -41,6 +42,29 @@
                 :expected '~form
                 :actual   (list '~'not (list 'match? matcher# actual#))
                 :markup   (second result#)}))))
+       (clojure.test/do-report
+         {:type     :fail
+          :message  ~msg
+          :expected '~form
+          :actual   (str "The second argument of match? isn't a matcher")}))))
+
+(defmethod clojure.test/assert-expr 'equals-match? [msg form]
+  `(let [[matcher# actual#] (list ~@(rest form))]
+     (if (core/matcher? matcher#)
+       (with-redefs [parser/map-dispatch (fn [exp] (core/->EqualsMap exp))]
+         (let [result# (core/match matcher# actual#)]
+           (clojure.test/do-report
+             (if (core/match? result#)
+               {:type     :pass
+                :message  ~msg
+                :expected '~form
+                :actual   (list 'match? matcher# actual#)}
+               (with-file+line-info
+                 {:type     :mismatch
+                  :message  ~msg
+                  :expected '~form
+                  :actual   (list '~'not (list 'match? matcher# actual#))
+                  :markup   (second result#)})))))
        (clojure.test/do-report
          {:type     :fail
           :message  ~msg

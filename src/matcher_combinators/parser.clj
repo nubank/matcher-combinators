@@ -39,7 +39,10 @@
                BigInt
                Character)
 
-(mimic-matcher matchers/embeds IPersistentMap)
+(defn- map-dispatch [expected]
+  (core/->EmbedsMap expected))
+
+(mimic-matcher map-dispatch IPersistentMap)
 (mimic-matcher matchers/equals IPersistentVector)
 (mimic-matcher matchers/equals IPersistentList)
 (mimic-matcher matchers/equals IPersistentSet)

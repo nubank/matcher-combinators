@@ -1,6 +1,6 @@
 (ns matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.parser]
+            [matcher-combinators.parser :as parser]
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
             [midje.util.exceptions :as exception]
@@ -22,3 +22,11 @@
       (check-match matcher actual)
       (checking/as-data-laden-falsehood
         {:notes [(str "Input wasn't a matcher: " matcher)]}))))
+
+(checkers.defining/defchecker equals-match [matcher]
+  (checkers.defining/checker [actual]
+    (with-redefs [parser/map-dispatch (fn [exp] (core/->EqualsMap exp))]
+      (if (core/matcher? matcher)
+        (check-match matcher actual)
+        (checking/as-data-laden-falsehood
+          {:notes [(str "Input wasn't a matcher: " matcher)]})))))

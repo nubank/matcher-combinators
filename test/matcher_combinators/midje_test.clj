@@ -186,3 +186,6 @@
   an-object => (ch/match (m/equals an-object))
   an-object =not=> (ch/match an-object)
   (Object.) =not=> (ch/match (Object.)))
+
+(fact
+  {:a 1 :b 2} =not=> (ch/equals-match {:a 1}))
