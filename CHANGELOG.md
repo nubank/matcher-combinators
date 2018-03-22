@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.2.4]
+- fix issue when matching in the presence of midje metaconstants
+
 ## [0.2.3]
 - fix issue matching empty sets
 
