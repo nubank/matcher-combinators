@@ -1,11 +1,13 @@
 (ns matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.model :as model]
             [matcher-combinators.parser]
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
             [midje.util.exceptions :as exception]
+            [midje.util.thread-safe-var-nesting :as thread-safe-var-nesting]
             [midje.checking.checkers.defining :as checkers.defining])
-  (:import [matcher_combinators.core Matcher]))
+  (:import [midje.data.metaconstant Metaconstant]))
 
 (defn check-match [matcher actual]
   (if (exception/captured-throwable? actual)
@@ -22,3 +24,16 @@
       (check-match matcher actual)
       (checking/as-data-laden-falsehood
         {:notes [(str "Input wasn't a matcher: " matcher)]}))))
+
+(extend-protocol core/Matcher
+  Metaconstant
+  (match [this actual]
+    (if (and (or (symbol? actual)
+                 (= (type actual) Metaconstant)
+                 (= actual thread-safe-var-nesting/unbound-marker))
+             (.equals this actual))
+      [:match actual]
+      (if (and (keyword? actual)
+               (= ::core/missing actual))
+        [:mismatch (model/->Missing this)]
+        [:mismatch (model/->Mismatch this actual)]))))
