@@ -1,8 +1,9 @@
 (ns matcher-combinators.midje-test
   (:require [midje.sweet :as midje :refer [fact facts => falsey]]
-            [matcher-combinators.midje :as ch]
-            [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
+            [matcher-combinators.matchers :as m]
+            [matcher-combinators.midje :as ch]
+            [matcher-combinators.model :as model]
             [midje.emission.api :as emission]))
 
 (fact "sequence matching"
@@ -186,6 +187,25 @@
   an-object => (ch/match (m/equals an-object))
   an-object =not=> (ch/match an-object)
   (Object.) =not=> (ch/match (Object.)))
+
+(defn x [a] a)
+(defn f [b] (x b))
+
+(fact "matching midje's metaconstants"
+  (c/match {:a ..b..} (f ..a..)) => [:match {:a ..b..}]
+  (provided (x ..a..) => {:a ..b..})
+
+  (c/match {:c ..c..} (f ..a..)) => [:mismatch {:a ..b..
+                                                :c (model/->Missing ..c..)}]
+  (provided (x ..a..) => {:a ..b..})
+
+  (c/match {:a ..c..} (f ..a..)) => [:mismatch {:a (model/->Mismatch ..c.. ..b..)}]
+  (provided (x ..a..) => {:a ..b..}))
+
+(fact
+  (f ..a..) => (ch/match {:a ..b..})
+  (provided
+    (x ..a..) => {:a ..b..}))
 
 (fact
   {:a 1 :b 2} =not=> (ch/equals-match {:a 1}))
