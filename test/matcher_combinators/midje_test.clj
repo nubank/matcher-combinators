@@ -71,8 +71,11 @@
  (fact "midje set checker example"
     #{3 8 1} => (midje/just [odd? 3 even?]))
  (fact "to match sets, you need to turn it into a list"
-  #{3 8 1} =not=> (ch/match (m/equals [(midje/as-checker odd?) 3 (midje/as-checker even?)]))
-  (seq #{3 8 1}) => (ch/match (m/in-any-order [(midje/as-checker odd?) 3 (midje/as-checker even?)]))))
+  #{3 8 1} =not=> (ch/match
+                    (m/equals [(midje/as-checker odd?) 3 (midje/as-checker even?)]))
+  (seq #{3 8 1}) => (ch/match
+                      (m/in-any-order
+                        [(midje/as-checker odd?) 3 (midje/as-checker even?)]))))
 
 (fact [5 1 4 2] => (midje/contains [1 2 5] :gaps-ok :in-any-order))
 (fact [5 1 4 2] => (ch/match (m/prefix [5 1]))
@@ -208,4 +211,9 @@
     (x ..a..) => {:a ..b..}))
 
 (fact
-  {:a 1 :b 2} =not=> (ch/equals-match {:a 1}))
+  {:a 1 :b 2} =not=> (ch/match-equals {:a 1})
+  {:a 1 :b 2} => (ch/match-equals {:a 1 :b 2}))
+
+(fact
+  1 => (ch/match-roughly 0.1 0.95)
+  1 =not=> (ch/match-roughly 0.1 0.89))

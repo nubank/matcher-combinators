@@ -28,6 +28,19 @@
      (= expected actual)  [:match actual]
      :else                [:mismatch (model/->Mismatch expected actual)])))
 
+(defn- roughly? [expected actual delta]
+ (and (number? actual)
+      (>= expected (-' actual delta))
+      (<= expected (+' actual delta))))
+
+(defrecord Roughly [expected delta]
+  Matcher
+  (match [_this actual]
+   (cond
+     (= ::missing actual)             [:mismatch (model/->Missing expected)]
+     (roughly? expected actual delta) [:match actual]
+     :else                            [:mismatch (model/->Mismatch expected actual)])))
+
 (defn- validate-input
   ([expected actual pred matcher-name type]
    (validate-input expected actual pred pred matcher-name type))

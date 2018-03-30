@@ -20,10 +20,33 @@
       [:match actual]
       [:mismatch (model/->FailedPredicate (str this) actual)])))
 
-(mimic-matcher matchers/equals
-               nil
+(defn- map-dispatch [expected]
+  (core/->EmbedsMap expected))
+
+(defn- number-dispatch [expected]
+  (core/->Value expected))
+
+(defn- seq-dispatch [expected]
+  (core/->EqualsSeq expected))
+
+(defn- set-dispatch [expected]
+  (core/->SetEquals expected false))
+
+(def type-map
+  {:number #'number-dispatch
+   :map    #'map-dispatch
+   :seq    #'seq-dispatch
+   :set    #'set-dispatch})
+
+(mimic-matcher number-dispatch
                Long
                Double
+               BigDecimal
+               BigInteger
+               BigInt)
+
+(mimic-matcher matchers/equals
+               nil
                String
                Symbol
                Keyword
@@ -34,15 +57,9 @@
                LocalDateTime
                YearMonth
                Ratio
-               BigDecimal
-               BigInteger
-               BigInt
                Character)
 
-(defn- map-dispatch [expected]
-  (core/->EmbedsMap expected))
-
 (mimic-matcher map-dispatch IPersistentMap)
-(mimic-matcher matchers/equals IPersistentVector)
-(mimic-matcher matchers/equals IPersistentList)
-(mimic-matcher matchers/equals IPersistentSet)
+(mimic-matcher seq-dispatch IPersistentVector)
+(mimic-matcher seq-dispatch IPersistentList)
+(mimic-matcher set-dispatch IPersistentSet)

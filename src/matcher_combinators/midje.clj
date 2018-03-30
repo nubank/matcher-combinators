@@ -25,13 +25,28 @@
       (checking/as-data-laden-falsehood
         {:notes [(str "Input wasn't a matcher: " matcher)]}))))
 
-(checkers.defining/defchecker equals-match [matcher]
-  (checkers.defining/checker [actual]
-    (with-redefs [parser/map-dispatch (fn [exp] (core/->EqualsMap exp))]
-      (if (core/matcher? matcher)
-        (check-match matcher actual)
-        (checking/as-data-laden-falsehood
-          {:notes [(str "Input wasn't a matcher: " matcher)]})))))
+(defn var->qualified-ref [datatype]
+  (symbol (str
+            (-> parser/type-map datatype meta :ns ns-name)
+            "/"
+            (-> parser/type-map datatype meta :name))))
+
+(defmacro match-with [type->matcher expected-matcher]
+  (let [dispatch-vars+matcher-targets (mapcat
+                                        (fn [[k v]] [(var->qualified-ref k) v])
+                                        type->matcher)]
+    `(checkers.defining/checker [actual#]
+       (with-redefs [~@dispatch-vars+matcher-targets]
+          (if (core/matcher? ~expected-matcher)
+            (check-match ~expected-matcher actual#)
+            (checking/as-data-laden-falsehood
+              {:notes [(str "Input wasn't a matcher: " ~expected-matcher)]}))))))
+
+(checkers.defining/defchecker match-equals [matcher]
+  (match-with {:map (fn [exp] (core/->EqualsMap exp))} matcher))
+
+(checkers.defining/defchecker match-roughly [delta matcher]
+  (match-with {:number (fn [exp] (core/->Roughly delta exp))} matcher))
 
 (extend-protocol core/Matcher
   Metaconstant

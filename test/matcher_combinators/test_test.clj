@@ -28,7 +28,7 @@
       "Predicates can be used in matchers")
   (is (match? {:a {:b 1}} {:a {:b 1 :c 2}})))
 
-(deftest equals-matching
-  (is (equals-match? {:a 1}
+#_(deftest equals-matching
+  (is (match-equals? {:a 1}
                      {:a 1 :b 2})
       "matcher where every default parser is `equals`"))
