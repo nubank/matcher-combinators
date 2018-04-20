@@ -2,11 +2,9 @@
 
 Library for creating matcher combinator to compare nested data structures
 
-Alpha version:
+current version:
 
 [![Current Version](https://img.shields.io/clojars/v/nubank/matcher-combinators.svg)](https://clojars.org/nubank/matcher-combinators)
-
-__Note:__ currently in beta, we would appreciate it if you took the time to file issues for any bugs you may find.
 
 ## Motivation
 
