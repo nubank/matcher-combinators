@@ -10,7 +10,7 @@ current version:
 
 Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: a comprehensive yet extensible way to assert that the data fits a particular structure seems to be lacking.
 
-This library address this issue by providing composable matcher combinators that can be used as building blocks to effectively test functions that evaluate to nested data-structures.
+This library addresses this issue by providing composable matcher combinators that can be used as building blocks to effectively test functions that evaluate to nested data-structures.
 
 ## Features
 
@@ -39,11 +39,10 @@ For example:
          '[matcher-combinators.matchers :as m]
          '[matcher-combinators.midje :refer [match]])
 (fact "matching a map exactly"
-  {:a {:bb 1} :c 2} => (match (m/equals {:a {:bb 1} :c 2})))
-
-(fact "loosely matching a map"
-  ;; by default a map is interpreted as a `embeds` matcher
-  {:headers {:type "txt"} :body "hello world!"} => (match {:body string?}))
+  {:a {:bb 1 :cc 2} :d 3} => (match (m/equals {:a (m/embeds {:bb 1}) :d 3}))
+  ;; but when a map isn't immediately wrapped, it is interpreted as an `embeds` matcher
+  ;; so you can write the previous check as:
+  {:a {:bb 1 :cc 2} :d 3} => (match (m/equals {:a {:bb 1} :d 3})))
 ```
 
 Note that you can also use the `match` checker to match arguments within midje's `provided` construct:
@@ -67,7 +66,7 @@ For example:
          '[matcher-combinators.test] ;; needed for defining `match?`
          '[matcher-combinators.matchers :as m])
 (deftest basic-sequence-matching
-  ;; by default a vector is interpreted as a `equals-seq` matcher
+  ;; by default a sequentials are interpreted as a `equals` matcher
   (is (match? [1 odd?] [1 3]))
   (is (match? (m/prefix [1 odd?]) [1 1 2 3])))
 ```
@@ -78,7 +77,8 @@ For example:
 
 If a data-structure isn't wrapped in a specific matcher-combinator the default interpretation is:
 - map: `embeds`
-- vector: `equals`
+- sequential: `equals`
+- set: `equals`
 - number, date, and other base data-structure: `equals`
 
 ### built-in matchers
@@ -103,6 +103,12 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
+
+### building new matchers
+
+You can extend your data-types to work with `matcher-combinators` by implemented the [`Matcher` protocol](https://github.com/nubank/matcher-combinators/blob/066da1a07ab620a6c63bbb0ce8e1b6b3a4ccd956/src/matcher_combinators/core.clj#L5-L9).
+
+An example of this in the wild can be seen in the `abracad` library [here](https://github.com/nubank/abracad/blob/b52e6a7114461f50bdacc2cf09a1de08f707b9f3/test/abracad/custom_types_test.clj#L15-L20).
 
 ## Running tests
 
