@@ -350,3 +350,23 @@
   (core/match (set-equals pred-seq) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})]))
+
+(def even-odd-set #{(pred-matcher #(and (odd? %) (pos? %)))
+                    (pred-matcher even?)})
+(def even-odd-seq (into [] even-odd-set))
+(fact "Order agnostic checks show fine-grained mismatch details"
+  (core/match (equals even-odd-set) #{1 2 -3})
+  => (just [:mismatch #{1 2 (model/->Unexpected -3)}])
+
+  (core/match (in-any-order even-odd-seq) [1 2 -3])
+  => (just [:mismatch (just [1 2 (model/->Unexpected -3)]
+                            :in-any-order)])
+
+  (core/match (in-any-order even-odd-seq) [1])
+  => (just [:mismatch (just [1 (just (model/->Missing anything))]
+                            :in-any-order)])
+
+  (core/match (equals even-odd-set) #{1})
+  => (just [:mismatch (just #{1 (just (model/->Missing anything))}
+                            :in-any-order)]))
+
