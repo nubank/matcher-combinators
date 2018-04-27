@@ -16,9 +16,7 @@
 (extend-type clojure.lang.Fn
   core/Matcher
   (match [this actual]
-    (if (this actual)
-      [:match actual]
-      [:mismatch (model/->FailedPredicate (str this) actual)])))
+    (core/match-pred this actual)))
 
 (mimic-matcher matchers/equals
                nil
