@@ -15,9 +15,17 @@
 (def gen-big-int
   (gen/fmap #(* 1N %) gen/int))
 
-(def gen-scalar (gen/one-of [gen/int
+(def gen-java-integer
+  (gen/fmap #(Integer. %) gen/int))
+
+(def gen-float
+  (gen/fmap #(float %) gen/double))
+
+(def gen-scalar (gen/one-of [gen-java-integer
+                             gen/int ;; really a Long
                              gen/string
                              gen/symbol
+                             gen-float
                              gen/double
                              gen/symbol-ns
                              gen/keyword
