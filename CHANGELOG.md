@@ -1,9 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.2.6]
+- namespace the custom `:mismatch` directive for `clojure.test` reporting
+
 ## [0.2.5]
 - add default parser for Integer and Float
-- namespace the custom `:mismatch` directive for `clojure.test` reporting
 - make mismatches for sets and the `prefix` matcher more informative
 
 ## [0.2.4]
