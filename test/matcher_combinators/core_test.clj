@@ -279,7 +279,9 @@
     => (just [:mismatch (just [(just (model/->Missing anything)) 5]
                               :in-any-order)])
     (#'core/match-any-order matchers [5] true)
-    => [:mismatch (model/->Mismatch matchers [5])]))
+    => (just [:mismatch (just [5 (just (model/->Missing anything))]
+                              :in-any-order)])))
+
 
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"

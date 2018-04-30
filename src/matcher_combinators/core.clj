@@ -159,24 +159,9 @@
                                   (:unmatched result)))
              (:elements result)))))
 
-(defn- incorrect-matcher->element-count?
-  [subset? matcher-count element-count]
-  (if subset?
-    (> matcher-count element-count)
-    (not (= matcher-count element-count))))
-
 (defn- match-any-order [expected actual subset?]
-  (cond
-    (not (sequential? actual))
+  (if (not (sequential? actual))
     [:mismatch (model/->Mismatch expected actual)]
-
-    (and (not subset?) (not (= (count expected) (count actual))))
-    (match-all-permutations expected actual subset?)
-
-    (incorrect-matcher->element-count? subset? (count expected) (count actual))
-    [:mismatch (model/->Mismatch expected actual)]
-
-    :else
     (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
