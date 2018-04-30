@@ -22,7 +22,9 @@
 
 (mimic-matcher matchers/equals
                nil
+               Integer
                Long
+               Float
                Double
                String
                Symbol
