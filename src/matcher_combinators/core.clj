@@ -110,10 +110,14 @@
       issue
       (sequence-match expected actual false))))
 
+(defn- matched-successfully? [unmatched elements subset?]
+  (or (and subset? (empty? unmatched))
+      (and (not subset?) (empty? unmatched) (empty? elements))))
+
 (defn- matches-in-any-order? [unmatched elements subset? matching]
-  (if (empty? unmatched)
-    {:matched? (or subset? (empty? elements))
-     :unmatched []
+  (if (or (empty? unmatched) (empty? elements))
+    {:matched?  (matched-successfully? unmatched elements subset?)
+     :unmatched unmatched
      :matched   matching}
     (let [[elem & rest-elements] elements
           matching-matcher       (helpers/find-first
@@ -155,22 +159,9 @@
                                   (:unmatched result)))
              (:elements result)))))
 
-(defn- incorrect-matcher->element-count?
-  [subset? matcher-count element-count]
-  (if subset?
-    (> matcher-count element-count)
-    (not (= matcher-count element-count))))
-
 (defn- match-any-order [expected actual subset?]
-  (cond
-    (not (sequential? actual))
+  (if (not (sequential? actual))
     [:mismatch (model/->Mismatch expected actual)]
-
-    (incorrect-matcher->element-count? subset? (count expected) (count actual))
-    ;; for size mismatch, is there a more detailed mismatch model to use?
-    [:mismatch (model/->Mismatch expected actual)]
-
-    :else
     (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
@@ -236,3 +227,14 @@
       (let [[matching? result-payload] (match-any-order
                                          (into [] expected) (into [] actual) true)]
         [matching? (into #{} result-payload)]))))
+
+(defn match-pred [func actual]
+  (cond
+    (= actual ::missing)
+    [:mismatch (model/->Missing func)]
+
+    (func actual)
+    [:match actual]
+
+    :else
+    [:mismatch (model/->FailedPredicate (str func) actual)]))

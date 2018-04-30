@@ -150,13 +150,14 @@
         (match (in-any-order [(equals 2) (equals 2)]) [2 2])
         => [:match [2 2]])
 
-      (fact "when there the matcher and list count differ, mark everything as mismatch"
+      (fact "when there the matcher and list count differ, mark specific mismatches"
         (match (in-any-order [(equals 1) (equals 2)]) [1 2 3])
-        => [:mismatch (model/->Mismatch [(equals 1) (equals 2)] [1 2 3])]
+        => (just [:mismatch (just [1 2 (model/->Unexpected 3)]
+                                  :in-any-order)])
 
         (match (in-any-order [(equals 1) (equals 2) (equals 3)]) [1 2])
-        => [:mismatch (model/->Mismatch [(equals 1) (equals 2) (equals 3)]
-                                        [1 2])]))))
+        => (just [:mismatch (just [1 2 (model/->Missing 3)]
+                                  :in-any-order)])))))
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
@@ -233,15 +234,32 @@
 (defrecord PredMatcher [expected]
   core/Matcher
   (match [this actual]
-    (if (expected actual)
-      [:match actual]
-      [:mismatch (model/->FailedPredicate (str this) actual)])))
+    (core/match-pred expected actual)))
 
 (defn- pred-matcher [expected]
   (assert ifn? expected)
   (->PredMatcher expected))
 
+(fact
+  (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])
+  => [:match [1 2]]
+  (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1])
+  => (just [:mismatch (just [1 anything])]))
+
 (let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
+  (fact "no matching when there are more matchers than elements"
+    (#'core/matches-in-any-order? matchers [] true [])
+    => (sweet/contains {:matched?  false
+                        :unmatched (just [anything anything])
+                        :matched   empty?})
+    (#'core/matches-in-any-order? matchers [1] false [])
+    => (sweet/contains {:matched?  false
+                        :unmatched (just [anything])
+                        :matched   (just [anything])})
+    (#'core/matches-in-any-order? matchers [1] true [])
+    => (sweet/contains {:matched?  false
+                        :unmatched (just [anything])
+                        :matched   (just [anything])}))
   (fact "subset will recur on matchers"
     (#'core/matches-in-any-order? matchers [5 4 1 2] true [])
     => (sweet/contains {:matched?  true
@@ -258,9 +276,12 @@
                         :matched   (just [anything anything])}))
   (fact "mismatch if there are more matchers than actual elements"
     (#'core/match-any-order matchers [5] false)
-    => [:mismatch (model/->Mismatch matchers [5])]
+    => (just [:mismatch (just [(just (model/->Missing anything)) 5]
+                              :in-any-order)])
     (#'core/match-any-order matchers [5] true)
-    => [:mismatch (model/->Mismatch matchers [5])]))
+    => (just [:mismatch (just [5 (just (model/->Missing anything))]
+                              :in-any-order)])))
+
 
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
@@ -273,7 +294,7 @@
                                "provided: 1"})]))
   ?matcher
   prefix
-  embeds )
+  embeds)
 
 (def pred-set #{(pred-matcher odd?) (pred-matcher pos?)})
 (def pred-seq [(pred-matcher odd?) (pred-matcher pos?)])
@@ -331,3 +352,23 @@
   (core/match (set-equals pred-seq) #{1 -2})
   => (just [:mismatch (just #{1 (just {:actual -2
                                        :form   anything})})]))
+
+(def even-odd-set #{(pred-matcher #(and (odd? %) (pos? %)))
+                    (pred-matcher even?)})
+(def even-odd-seq (into [] even-odd-set))
+(fact "Order agnostic checks show fine-grained mismatch details"
+  (core/match (equals even-odd-set) #{1 2 -3})
+  => (just [:mismatch #{1 2 (model/->Unexpected -3)}])
+
+  (core/match (in-any-order even-odd-seq) [1 2 -3])
+  => (just [:mismatch (just [1 2 (model/->Unexpected -3)]
+                            :in-any-order)])
+
+  (core/match (in-any-order even-odd-seq) [1])
+  => (just [:mismatch (just [1 (just (model/->Missing anything))]
+                            :in-any-order)])
+
+  (core/match (equals even-odd-set) #{1})
+  => (just [:mismatch (just #{1 (just (model/->Missing anything))}
+                            :in-any-order)]))
+

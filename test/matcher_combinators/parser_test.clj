@@ -19,7 +19,7 @@
   (gen/fmap #(Integer. %) gen/int))
 
 (def gen-float
-  (gen/fmap #(float %) gen/double))
+  (gen/fmap #(float %) gen/int))
 
 (def gen-scalar (gen/one-of [gen-java-integer
                              gen/int ;; really a Long
