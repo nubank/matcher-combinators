@@ -36,7 +36,7 @@
               :expected '~form
               :actual   (list 'match? matcher# actual#)}
              (with-file+line-info
-               {:type     :mismatch
+               {:type     :matcher-combinators/mismatch
                 :message  ~msg
                 :expected '~form
                 :actual   (list '~'not (list 'match? matcher# actual#))
@@ -47,7 +47,7 @@
           :expected '~form
           :actual   (str "The second argument of match? isn't a matcher")}))))
 
-(defmethod clojure.test/report :mismatch [m]
+(defmethod clojure.test/report :matcher-combinators/mismatch [m]
   (clojure.test/with-test-out
     (clojure.test/inc-report-counter :fail)
     (println "\nFAIL in" (clojure.test/testing-vars-str m))
