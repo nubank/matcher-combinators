@@ -33,6 +33,9 @@
    (validate-input expected actual pred pred matcher-name type))
   ([expected actual expected-pred actual-pred matcher-name type]
    (cond
+     (= actual ::missing)
+     [:mismatch (model/->Missing expected)]
+
      (not (expected-pred expected))
      [:mismatch (model/->InvalidMatcherType
                   (str "provided: " expected)

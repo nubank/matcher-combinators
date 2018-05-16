@@ -124,7 +124,10 @@
 
     (fact "when there are more matchers then actual elements, append the expected values marked as Missing"
       (match (equals [(equals 1) (equals 2) (equals 3)]) [1 2])
-      => [:mismatch [1 2 (model/->Missing 3)]]))
+      => [:mismatch [1 2 (model/->Missing 3)]]
+
+      (match (equals [(equals {:a (equals 1)}) (equals {:b (equals 2)})]) [{:a 1}])
+      => [:mismatch [{:a 1} (model/->Missing {:b (equals 2)})]]))
 
   (facts "on the in-any-order sequence matcher"
     (tabular
