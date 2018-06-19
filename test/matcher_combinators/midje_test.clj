@@ -206,3 +206,15 @@
   (f ..a..) => (ch/match {:a ..b..})
   (provided
     (x ..a..) => {:a ..b..}))
+
+
+(fact "in-any-order minimal mismatch test"
+  (c/match (m/in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+           [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => [:mismatch [{:a "1" :x (model/->Mismatch "12" "12=")}
+                 {:a "2" :x (model/->Mismatch "14" "14=")}]]
+
+  (c/match (m/in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+           [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => [:mismatch [{:a "2" :x (model/->Mismatch "14" "14=")}
+                 {:a "1" :x (model/->Mismatch "12" "12=")}]])
