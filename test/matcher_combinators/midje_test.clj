@@ -13,6 +13,15 @@
   [[[1]]] => (ch/match [[[1]]])
   [[[1]]] => (ch/match [[[odd?]]]))
 
+(fact "match core clojure sequence types"
+  (cons 1 '()) => (ch/match [1])
+  (repeat 1 1) => (ch/match [1])
+  (take 1 '(1)) => (ch/match [1])
+
+  [1] => (ch/match (cons 1 '()))
+  [1] => (ch/match (repeat 1 1))
+  [1] => (ch/match (take 1 '(1))))
+
 (fact "map matching"
   {:a {:bb 1} :c 2} => (ch/match (m/equals {:a {:bb 1} :c 2}))
   {:a {:bb 1} :c 2} => (ch/match (m/equals {:a {:bb odd?} :c 2})))
