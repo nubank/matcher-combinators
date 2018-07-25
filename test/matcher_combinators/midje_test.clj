@@ -38,7 +38,6 @@
     {:a {:bb 1} :c 2} => (ch/match {:a {:bb odd?}}))
   (fact "but if you want to check exact functions use `equals` which
         works like midje's 'exactly'"
-    {:a {:bb odd?} :c 2} =not=> (ch/match (m/equals {:a {:bb odd?} :c 2}))
     {:a {:bb odd?} :c 2} => (ch/match (m/equals {:a {:bb (m/equals odd?)} :c 2}))
     {:a {:bb odd?} :c 2} => (ch/match (m/equals {:a {:bb (midje/exactly odd?)} :c 2}))))
 
@@ -52,7 +51,6 @@
   (->Point {:a [1 2]} {:b 2}) => (ch/match {:x {:a (m/in-any-order [2 1])}})
   (->Point {:a 1 :c 3} {:b 2}) =not=> (ch/match {:x {:a 1 :c 6}}))
 
-;; TODO PLM: do we want to allow this?:
 (fact "matching maps with records"
   {:x 1 :y 2} => (ch/match (m/equals (->Point 1 2)))
   {:a {:x 1 :y 2}} => (ch/match {:a (->Point 1 2)})
