@@ -114,6 +114,11 @@
       (match (equals [(equals 1) (equals 2)]) [1 3])
       => [:mismatch [1 (model/->Mismatch 2 3)]])
 
+    (fact "mismatch reports elements in correct order"
+      (match (equals [(equals 1) (equals 2) (equals 3)])
+             (list 1 2 4))
+      => [:mismatch [1 2 (model/->Mismatch 3 4)]])
+
     (fact "when there are more elements than expected matchers, mark each extra element as Unexpected"
       (match (equals [(equals 1) (equals 2)]) [1 2 3])
       => [:mismatch [1 2 (model/->Unexpected 3)]])
