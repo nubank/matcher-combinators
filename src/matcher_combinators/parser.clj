@@ -2,7 +2,9 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model])
-  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap IPersistentVector IPersistentList IPersistentSet]
+  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
+            IPersistentVector IPersistentList IPersistentSet
+            LazySeq Repeat Cons]
            [java.util UUID Date]
            [java.time LocalDate LocalDateTime YearMonth]))
 
@@ -43,3 +45,6 @@
 (mimic-matcher matchers/equals IPersistentVector)
 (mimic-matcher matchers/equals IPersistentList)
 (mimic-matcher matchers/equals IPersistentSet)
+(mimic-matcher matchers/equals Cons)
+(mimic-matcher matchers/equals Repeat)
+(mimic-matcher matchers/equals LazySeq)

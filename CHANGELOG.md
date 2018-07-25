@@ -2,7 +2,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [0.2.8]
-- fix issue where sequence mismatch was reported in reverse order
+- fix issue where sequence mismatch was reported in reverse order (#39)
+- fix issue matching core clojure sequence types like Repeat (#26)
 
 ## [0.2.7]
 - fix issue where a 'missing' was showing as a 'mismatch'
