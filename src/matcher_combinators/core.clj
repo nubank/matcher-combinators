@@ -88,6 +88,12 @@
       issue
       (compare-maps expected actual model/->Unexpected false))))
 
+(defn- type-preserving-mismatch [base-list values]
+  (let [lst (into base-list values)]
+    (if (vector? base-list)
+      lst
+      (reverse lst))))
+
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
       [:mismatch (model/->Mismatch expected actual)]
@@ -102,7 +108,7 @@
                               (max (count actual) (count expected)))
             match-results   (take match-size match-results')]
         (if (some mismatch? match-results)
-          [:mismatch (into (empty actual) (map value match-results))]
+          [:mismatch (type-preserving-mismatch (empty actual) (map value match-results))]
           [:match actual]))))
 
 (defrecord EqualsSeq [expected]
