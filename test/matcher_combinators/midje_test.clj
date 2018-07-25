@@ -22,7 +22,6 @@
   [1] => (ch/match (repeat 1 1))
   [1] => (ch/match (take 1 '(1))))
 
-
 (fact "map matching"
   {:a {:bb 1} :c 2} => (ch/match (m/equals {:a {:bb 1} :c 2}))
   {:a {:bb 1} :c 2} => (ch/match (m/equals {:a {:bb odd?} :c 2})))
