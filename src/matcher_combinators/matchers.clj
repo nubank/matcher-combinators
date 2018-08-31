@@ -49,3 +49,8 @@
   Similar to Midje's `(embeds expected)`"
   [expected]
   (core/->Prefix expected))
+
+(defn regex
+  "Matcher that will match when given value matches the `expected` regular expression."
+  [expected]
+  (core/->Regex expected))
