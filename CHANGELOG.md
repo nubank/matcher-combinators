@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [0.3.0]
-- regexes are now interpreted as mastchers
+- regexes are now interpreted as matchers
 
 ## [0.2.8]
 - fix issue where sequence mismatch was reported in reverse order (#39)
