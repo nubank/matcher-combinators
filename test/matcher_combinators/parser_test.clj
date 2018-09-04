@@ -75,3 +75,12 @@
   (fact
     (= (core/match (equals nil) nil)
        (core/match nil nil)) => truthy))
+
+(fact "regex patterns can be used as matchers"
+  (fact
+    (core/match #"^pref" "prefix") => [:match "pref"])
+
+  (future-fact
+      (core/match #"^ref" "prefix")
+    => [:mismatch {:expected #"^ref"
+                   :actual   "prefix"}]))
