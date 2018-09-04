@@ -48,3 +48,10 @@
 (mimic-matcher matchers/equals Cons)
 (mimic-matcher matchers/equals Repeat)
 (mimic-matcher matchers/equals LazySeq)
+
+(extend-type java.util.regex.Pattern
+  core/Matcher
+  (match [this actual]
+    (if-let [match (re-find this actual)]
+      [:match match]
+      [:mismatch (model/->Mismatch this actual)])))
