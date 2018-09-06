@@ -5,7 +5,7 @@ false(ns matcher-combinators.matchers-test
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
             [matcher-combinators.core :as c])
-  (:import [matcher_combinators.model Mismatch Missing]))
+  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
@@ -34,6 +34,8 @@ false(ns matcher-combinators.matchers-test
   (instance? Mismatch actual))
 (defn missing? [actual]
   (instance? Missing actual))
+(defn invalid-type? [actual]
+  (instance? InvalidMatcherType actual))
 
 (fact "in-any-order using matcher ordering with maximum matchings for diff"
   (c/match (m/in-any-order [a-nested-map b-nested-map])
@@ -68,3 +70,34 @@ false(ns matcher-combinators.matchers-test
          second
          (map vals))
     => (has every? one-mismatch?)))
+
+(fact "Regex matching and mismatching"
+  (c/match (m/equals {:one (m/regex #"1")})
+           {:one "1"})
+  => (just [:match (just {:one "1"})])
+
+  (c/match #"^pref" "prefix")
+  => [:match "pref"]
+
+  (c/match #"hello, (.*)" "hello, world")
+  => (just [:match (just ["hello, world" "world"])])
+
+  (c/match (m/equals {:one (m/regex #"1")})
+           {:one "2"})
+  => (just [:mismatch (just {:one mismatch?})])
+
+  (c/match (m/equals {:one (m/regex "1")})
+           {:one "1"})
+  => (just [:mismatch (just {:one invalid-type?})])
+
+  (c/match (m/equals {:one (m/regex #"1")})
+           {:one 2})
+  => (just [:mismatch (just {:one invalid-type?})]))
+
+(fact "mismatch that includes a matching regex shows the match data"
+  (c/match (m/equals {:two 2
+                      :one (m/regex #"hello, (.*)")})
+           {:two 1
+            :one "hello, world"})
+   => (just [:mismatch (just {:two mismatch?
+                              :one (just ["hello, world" "world"])})]))

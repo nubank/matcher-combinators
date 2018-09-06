@@ -213,3 +213,7 @@
   (f ..a..) => (ch/match {:a ..b..})
   (provided
     (x ..a..) => {:a ..b..}))
+
+(fact "treat regex as predicate in match"
+  {:one "1"} => (ch/match {:one #"1"})
+  {:one "hello, world"} => (ch/match {:one #"hello, (.*)"}))

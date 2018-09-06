@@ -6,6 +6,7 @@
             IPersistentVector IPersistentList IPersistentSet
             LazySeq Repeat Cons]
            [java.util UUID Date]
+           [java.util.regex Pattern]
            [java.time LocalDate LocalDateTime YearMonth]))
 
 (defmacro mimic-matcher [matcher-builder & types]
@@ -48,3 +49,4 @@
 (mimic-matcher matchers/equals Cons)
 (mimic-matcher matchers/equals Repeat)
 (mimic-matcher matchers/equals LazySeq)
+(mimic-matcher matchers/regex Pattern)

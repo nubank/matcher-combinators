@@ -49,6 +49,22 @@
      :else
      nil)))
 
+(defn- regex? [value] (instance? java.util.regex.Pattern value))
+(defrecord Regex [expected]
+  Matcher
+  (match [_this actual]
+   (if-let [issue (validate-input expected actual regex? (constantly true) 'regex "java.util.regex.Pattern")]
+     issue
+     (try
+       (if-let [match (re-find expected actual)]
+         [:match match]
+         [:mismatch (model/->Mismatch expected actual)])
+       (catch ClassCastException ex
+         [:mismatch (model/->InvalidMatcherType
+                      (str "provided: " actual)
+                      (str "regex " (print-str expected) " can't match 'expected' argument of type: "
+                           (type actual)))])))))
+
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher
   (match [_this _actual]
