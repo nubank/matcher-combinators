@@ -76,6 +76,12 @@ false(ns matcher-combinators.matchers-test
            {:one "1"})
   => (just [:match (just {:one "1"})])
 
+  (c/match #"^pref" "prefix")
+  => [:match "pref"]
+
+  (c/match #"hello, (.*)" "hello, world")
+  => (just [:match (just ["hello, world" "world"])])
+
   (c/match (m/equals {:one (m/regex #"1")})
            {:one "2"})
   => (just [:mismatch (just {:one mismatch?})])
@@ -87,3 +93,11 @@ false(ns matcher-combinators.matchers-test
   (c/match (m/equals {:one (m/regex #"1")})
            {:one 2})
   => (just [:mismatch (just {:one invalid-type?})]))
+
+(fact "mismatch that includes a matching regex shows the match data"
+  (c/match (m/equals {:two 2
+                      :one (m/regex #"hello, (.*)")})
+           {:two 1
+            :one "hello, world"})
+   => (just [:mismatch (just {:two mismatch?
+                              :one (just ["hello, world" "world"])})]))

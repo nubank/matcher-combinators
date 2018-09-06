@@ -56,8 +56,8 @@
    (if-let [issue (validate-input expected actual regex? (constantly true) 'regex "java.util.regex.Pattern")]
      issue
      (try
-       (if (re-find expected actual)
-         [:match actual]
+       (if-let [match (re-find expected actual)]
+         [:match match]
          [:mismatch (model/->Mismatch expected actual)])
        (catch ClassCastException ex
          [:mismatch (model/->InvalidMatcherType
