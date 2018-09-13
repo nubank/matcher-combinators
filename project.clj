@@ -1,4 +1,4 @@
-(defproject nubank/matcher-combinators "0.3.0"
+(defproject nubank/matcher-combinators "0.3.1"
   :description "Library for creating matcher combinator to compare nested data structures"
   :url "https://github.com/nubank/matcher-combinators"
   :license {:name "Apache License, Version 2.0"}
