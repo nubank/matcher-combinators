@@ -2,6 +2,7 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
+            [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
             [midje.util.exceptions :as exception]
