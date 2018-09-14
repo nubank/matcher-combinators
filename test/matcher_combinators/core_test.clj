@@ -290,7 +290,6 @@
     => (just [:mismatch (just [5 (just (model/->Missing anything))]
                               :in-any-order)])))
 
-
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
     (core/match (?matcher 1) 1)
@@ -306,6 +305,12 @@
 
 (def pred-set #{(pred-matcher odd?) (pred-matcher pos?)})
 (def pred-seq [(pred-matcher odd?) (pred-matcher pos?)])
+
+(def short-equals-seq (map equals [1 3]))
+
+(fact "embeds for sequences"
+  (core/match (embeds short-equals-seq) [3 4 1]) => (just [:match (just [3 4 1])])
+  (core/match (embeds short-equals-seq) [3 4 1 5]) => (just [:match (just [3 4 1 5])]))
 
 (fact "embeds /set-equals matches"
   (core/match (embeds pred-set) #{1 3}) => (just [:match (just #{1 3})])

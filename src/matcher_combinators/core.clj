@@ -1,5 +1,6 @@
 (ns matcher-combinators.core
-  (:require [matcher-combinators.helpers :as helpers]
+  (:require [clojure.math.combinatorics :as combo]
+            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
@@ -171,7 +172,7 @@
         :else                       best))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (let [elem-permutations (helpers/permutations elements)
+  (let [elem-permutations (combo/permutations elements)
         find-best-match   (matched-or-best-matchers matchers subset?)
         result            (reduce find-best-match
                                   {:matched   []
