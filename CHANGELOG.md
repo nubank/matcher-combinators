@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.3.2]
+- fix for `embeds` sequence matching where some matches weren't found
+
 ## [0.3.1]
 - fix to get project working with cljdoc
 

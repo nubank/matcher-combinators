@@ -1,5 +1,6 @@
 false(ns matcher-combinators.matchers-test
-  (:require [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
+  (:require [clojure.math.combinatorics :as combo]
+            [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
             [matcher-combinators.midje :refer [match]]
             [matcher-combinators.helpers :as helpers]
             [matcher-combinators.matchers :as m]
@@ -51,7 +52,7 @@ false(ns matcher-combinators.matchers-test
   (map #(->> %
              (c/match (m/in-any-order [1 2 3 4]))
              second)
-       (helpers/permutations [1 2 3 500]))
+       (combo/permutations [1 2 3 500]))
   => (has every? one-mismatch?))
 
 (facts "Show how input ordering affects diff size (when it ideally shouldn't)"
