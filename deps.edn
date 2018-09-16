@@ -1,0 +1,25 @@
+{:deps
+ {org.clojure/clojure            {:mvn/version "1.10.0-alpha7"
+                                  :exclusions [org.clojure/clojure]}
+  colorize                       {:mvn/version "0.1.1"}
+  org.clojure/math.combinatorics {:mvn/version "0.1.4"}
+  midje                          {:mvn/version "1.9.2"
+                                  :exclusions [org.clojure/clojure]}}
+
+ :paths ["src" "resources"]
+
+ :aliases
+ {:test
+  {:extra-deps {lambdaisland/kaocha    {:mvn/version "0.0-122"}
+                org.clojure/test.check {:mvn/version "0.9.0"}}
+   :main-opts ["-m" "kaocha.runner"]}
+
+  :dev
+  {:extra-paths ["test"]
+   :extra-deps  {org.clojure/test.check {:mvn/version "0.9.0"}}}
+
+  :mvn/repos
+  {"central" {:url "https://repo1.maven.org/maven2/"}
+   "clojars" {:url "https://clojars.org/repo"}
+   "jitpack" {:url "https://jitpack.io"}}
+  }}

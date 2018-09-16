@@ -1,0 +1,33 @@
+#kaocha
+{:tests [{;; Every suite must have an :id
+          :id :unit
+
+          ;; Directories containing files under test. This is used to
+          ;; watch for changes, and when doing code coverage analysis
+          ;; through Cloverage. These directories are *not* automatically
+          ;; added to the classpath.
+          :source-paths ["src"]
+
+          ;; Directories containing tests. These will automatically be
+          ;; added to the classpath when running this suite.
+          :test-paths ["test"]
+
+          ;; Regex patterns to determine whether a namespace contains
+          ;; tests.
+          :ns-patterns ["-test$"]
+          }]
+
+ :plugins [:kaocha.plugin/print-invocations]
+
+ ;; Colorize output (use ANSI escape sequences).
+ :color?      true
+
+ ;; Watch the file system for changes and re-run.
+ :watch?      true
+
+ ;; Specifiy the reporter function that generates output. Must be a namespaced
+ ;; symbol, or a vector of symbols. The symbols must refer to vars, which Kaocha
+ ;; will make sure are loaded. When providing a vector of symbols, or pointing
+ ;; at a var containing a vector, then kaocha will call all referenced functions
+ ;; for reporting.
+ :reporter    kaocha.report/documentation}
