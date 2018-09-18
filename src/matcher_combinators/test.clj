@@ -25,35 +25,28 @@
        stacktrace-file-and-line
        (merge report)))
 
+(defmethod clojure.core/print-method ::mismatch [result out]
+  (binding [*out* out]
+    (println)
+    (printer/pretty-print result)))
+
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [[matcher# actual#] (list ~@(rest form))]
      (if (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
          (clojure.test/do-report
-           (if (core/match? result#)
-             {:type     :pass
-              :message  ~msg
-              :expected '~form
-              :actual   (list 'match? matcher# actual#)}
-             (with-file+line-info
-               {:type     :matcher-combinators/mismatch
-                :message  ~msg
-                :expected '~form
-                :actual   (list '~'not (list 'match? matcher# actual#))
-                :markup   (second result#)}))))
+          (if (core/match? result#)
+            {:type     :pass
+             :message  ~msg
+             :expected '~form
+             :actual   (list 'match? matcher# actual#)}
+            (with-file+line-info
+              {:type     :fail
+               :message  ~msg
+               :expected (list 'match? '...)
+               :actual   (vary-meta (second result#) assoc :type ::mismatch)}))))
        (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected '~form
-          :actual   (str "The second argument of match? isn't a matcher")}))))
-
-(defmethod clojure.test/report :matcher-combinators/mismatch [m]
-  (clojure.test/with-test-out
-    (clojure.test/inc-report-counter :fail)
-    (println "\nFAIL in" (clojure.test/testing-vars-str m))
-    (when (seq clojure.test/*testing-contexts*)
-      (println (clojure.test/testing-contexts-str)))
-    (when-let [message (:message m)]
-      (println message))
-    (println "mismatch:")
-    (printer/pretty-print (:markup m))))
+        {:type     :fail
+         :message  ~msg
+         :expected '~form
+         :actual   (str "The second argument of match? isn't a matcher")}))))
