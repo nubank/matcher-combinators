@@ -12,7 +12,12 @@
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]
                  [org.clojure/math.combinatorics "0.1.4"]
-                 [midje "1.9.2" :exclusions [org.clojure/clojure]]]
+                 [midje "1.9.2" :exclusions [org.clojure/clojure
+                                             org.clojure/tools.namespace]]]
 
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}})
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
+             :kaocha {:dependencies [[lambdaisland/kaocha "0.0-153"]
+                                     [lambdaisland/kaocha-midje "0.0-5"]]}}
+
+  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]})
