@@ -2,6 +2,7 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
+            [matcher-combinators.result :as result]
             [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
@@ -33,8 +34,14 @@
                  (= (type actual) Metaconstant)
                  (= actual thread-safe-var-nesting/unbound-marker))
              (.equals this actual))
-      [:match actual]
-      (if (and (keyword? actual)
-               (= ::core/missing actual))
-        [:mismatch (model/->Missing this)]
-        [:mismatch (model/->Mismatch this actual)]))))
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0}
+      (let [mismatch-val (if (and (keyword? actual)
+                                  (= ::core/missing actual))
+                           (model/->Missing this)
+                           (model/->Mismatch this actual))]
+        {::result/type   :mismatch
+         ::result/value  mismatch-val
+         ::result/weight 1}))))
+

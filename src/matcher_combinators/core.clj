@@ -83,7 +83,7 @@
           ::result/weight 1})
        (catch ClassCastException ex
          {::result/type  :mismatch
-          ::Result/value (model/->InvalidMatcherType
+          ::result/value (model/->InvalidMatcherType
                            (str "provided: " actual)
                            (str "regex " (print-str expected) " can't match 'expected' argument of type: "
                                 (type actual)))
@@ -200,9 +200,6 @@
     (let [{:keys [matched?
                   unmatched
                   matched]} (matches-in-any-order? matchers elements subset? [])]
-      (println "best\t" best)
-      (println "matched\t" matched)
-      (println "elements\t" elements)
       (cond
         matched?                    (reduced ::match-found)
         (> (count matched)
@@ -229,8 +226,8 @@
 
 (defn- match-any-order [expected actual subset?]
   (if (not (sequential? actual))
-    {::result/type :mismatch
-     ::result/value (model/->Mismatch expected actual)
+    {::result/type   :mismatch
+     ::result/value  (model/->Mismatch expected actual)
      ::result/weight 1}
     (match-all-permutations expected actual subset?)))
 
@@ -258,9 +255,11 @@
                                      'equals
                                      "set"))]
       issue
-      (let [[matching? result-payload] (match-any-order
-                                         (into [] expected) (into [] actual) false)]
-        [matching? (into #{} result-payload)]))))
+      (let [{::result/keys [type value weight]} (match-any-order
+                                                  (into [] expected) (into [] actual) false)]
+        {::result/type   type
+         ::result/value  (into #{} value)
+         ::result/weight weight}))))
 
 (defrecord Prefix [expected]
   Matcher
@@ -294,9 +293,11 @@
                                      'embeds
                                      "set"))]
       issue
-      (let [[matching? result-payload] (match-any-order
-                                         (into [] expected) (into [] actual) true)]
-        [matching? (into #{} result-payload)]))))
+      (let [{::result/keys [type value weight]} (match-any-order
+                                                  (into [] expected) (into [] actual) true)]
+        {::result/type   type
+         ::result/value  (into #{} value)
+         ::result/weight weight}))))
 
 (defn match-pred [func actual]
   (cond

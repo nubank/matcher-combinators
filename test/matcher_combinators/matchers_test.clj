@@ -5,7 +5,8 @@ false(ns matcher-combinators.matchers-test
             [matcher-combinators.helpers :as helpers]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
-            [matcher-combinators.core :as c])
+            [matcher-combinators.core :as c]
+            [matcher-combinators.result :as result])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (def now (java.time.LocalDateTime/now))
@@ -41,8 +42,10 @@ false(ns matcher-combinators.matchers-test
 (fact "in-any-order using matcher ordering with maximum matchings for diff"
   (c/match (m/in-any-order [a-nested-map b-nested-map])
            [a-nested-map a-nested-map])
-  => (just [:mismatch (just [a-nested-map (contains {:id map? :model mismatch?})]
-                            :in-any-order)]))
+  => (just {::result/type   :mismatch
+            ::result/value  (just [a-nested-map (contains {:id map? :model mismatch?})]
+                                  :in-any-order)
+            ::result/weight number?}))
 
 (defn one-mismatch? [mismatch-list]
   (= 1 (count (filter #(or (mismatch? %) (missing? %)) mismatch-list))))
@@ -51,7 +54,7 @@ false(ns matcher-combinators.matchers-test
        number of matchers that don't match"
   (map #(->> %
              (c/match (m/in-any-order [1 2 3 4]))
-             second)
+             ::result/value)
        (combo/permutations [1 2 3 500]))
   => (has every? one-mismatch?))
 
@@ -59,7 +62,7 @@ false(ns matcher-combinators.matchers-test
   (fact "Given a particular input ordering, in-any-order shows the smallest diff"
     (->> [{:a 2} {:b 2}]
          (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
-         second
+         ::result/value
          (map vals))
     => (has every? one-mismatch?))
 
@@ -75,30 +78,44 @@ false(ns matcher-combinators.matchers-test
 (fact "Regex matching and mismatching"
   (c/match (m/equals {:one (m/regex #"1")})
            {:one "1"})
-  => (just [:match (just {:one "1"})])
+  => (just {::result/type   :match
+            ::result/value  (just {:one "1"})
+            ::result/weight 0})
 
   (c/match #"^pref" "prefix")
-  => [:match "pref"]
+  => {::result/type   :match
+      ::result/value  "pref"
+      ::result/weight 0}
 
   (c/match #"hello, (.*)" "hello, world")
-  => (just [:match (just ["hello, world" "world"])])
+  => (just {::result/type :match
+            ::result/value (just ["hello, world" "world"])
+            ::result/weight 0})
 
   (c/match (m/equals {:one (m/regex #"1")})
            {:one "2"})
-  => (just [:mismatch (just {:one mismatch?})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:one mismatch?})
+            ::result/weight number?})
 
   (c/match (m/equals {:one (m/regex "1")})
            {:one "1"})
-  => (just [:mismatch (just {:one invalid-type?})])
+  => (just {::result/type :mismatch
+            ::result/value (just {:one invalid-type?})
+            ::result/weight number?})
 
   (c/match (m/equals {:one (m/regex #"1")})
            {:one 2})
-  => (just [:mismatch (just {:one invalid-type?})]))
+  => (just {::result/type :mismatch
+            ::result/value (just {:one invalid-type?})
+            ::result/weight number?}))
 
 (fact "mismatch that includes a matching regex shows the match data"
   (c/match (m/equals {:two 2
                       :one (m/regex #"hello, (.*)")})
            {:two 1
             :one "hello, world"})
-   => (just [:mismatch (just {:two mismatch?
-                              :one (just ["hello, world" "world"])})]))
+  => (just {::result/type :mismatch
+            ::result/value (just {:two mismatch?
+                             :one (just ["hello, world" "world"])})
+            ::result/weight number?}))

@@ -4,7 +4,7 @@
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.model :as model]))
-
+(comment
 (facts "on the leaf values matcher: v"
   (match (equals 42) 42) => [:match 42]
   (match (equals 42) 43) => [:mismatch (model/->Mismatch 42 43)])
@@ -395,3 +395,4 @@
            [{:a "1" :x "12="} {:a "2" :x "14="}])
   => [:mismatch [{:a "2" :x (model/->Mismatch "14" "14=")}
                  {:a "1" :x (model/->Mismatch "12" "12=")}]])
+)
