@@ -1,5 +1,7 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
+            [clojure.spec.alpha :as s]
+            [matcher-combinators.result :as result]
             [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
@@ -9,25 +11,34 @@
   (match [this actual]
          "determine if a concrete `actual` value satisfies this matcher"))
 
-(defn match? [match-result]
-  (= :match (first match-result)))
+(s/fdef match?
+  :args (s/cat :match-result ::result/result)
+  :ret boolean?)
+(defn match? [{::result/keys [type]}]
+  (= :match type))
 
-(defn- mismatch? [match-result]
-  (= :mismatch (first match-result)))
+(defn- mismatch? [{::result/keys [type]}]
+  (= :mismatch type))
 
 (defn matcher? [x]
   (satisfies? Matcher x))
 
-(defn- value [match-result]
-  (second match-result))
+(defn- value [{::result/keys [value]}]
+  value)
 
 (defrecord Value [expected]
   Matcher
   (match [_this actual]
    (cond
-     (= ::missing actual) [:mismatch (model/->Missing expected)]
-     (= expected actual)  [:match actual]
-     :else                [:mismatch (model/->Mismatch expected actual)])))
+     (= ::missing actual) {::result/type   :mismatch
+                           ::result/value  (model/->Missing expected)
+                           ::result/weight 1}
+     (= expected actual)  {::result/type   :match
+                           ::result/value  actual
+                           ::result/weight 0}
+     :else                {::result/type   :mismatch
+                           ::result/value  (model/->Mismatch expected actual)
+                           ::result/weight 1})))
 
 (defn- validate-input
   ([expected actual pred matcher-name type]
@@ -35,17 +46,23 @@
   ([expected actual expected-pred actual-pred matcher-name type]
    (cond
      (= actual ::missing)
-     [:mismatch (model/->Missing expected)]
+     {::result/type  :mismatch
+      ::result/value (model/->Missing expected)
+      ::result/weight 1}
 
      (not (expected-pred expected))
-     [:mismatch (model/->InvalidMatcherType
-                  (str "provided: " expected)
-                  (str matcher-name
-                       " should be called with 'expected' argument of type: "
-                       type))]
+     {::result/type  :mismatch
+      ::result/value (model/->InvalidMatcherType
+                       (str "provided: " expected)
+                       (str matcher-name
+                            " should be called with 'expected' argument of type: "
+                            type))
+      ::result/weight 1}
 
      (not (actual-pred actual))
-     [:mismatch (model/->Mismatch expected actual)]
+     {::result/type  :mismatch
+      ::result/value (model/->Mismatch expected actual)
+      ::result/weight 1}
 
      :else
      nil)))
@@ -58,22 +75,30 @@
      issue
      (try
        (if-let [match (re-find expected actual)]
-         [:match match]
-         [:mismatch (model/->Mismatch expected actual)])
+         {::result/type   :match
+          ::result/value  match
+          ::result/weight 0}
+         {::result/type  :mismatch
+          ::result/value (model/->Mismatch expected actual)
+          ::result/weight 1})
        (catch ClassCastException ex
-         [:mismatch (model/->InvalidMatcherType
-                      (str "provided: " actual)
-                      (str "regex " (print-str expected) " can't match 'expected' argument of type: "
-                           (type actual)))])))))
+         {::result/type  :mismatch
+          ::Result/value (model/->InvalidMatcherType
+                           (str "provided: " actual)
+                           (str "regex " (print-str expected) " can't match 'expected' argument of type: "
+                                (type actual)))
+          ::result/weight 1})))))
 
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher
   (match [_this _actual]
-    [:mismatch (model/->InvalidMatcherType
-                 (str "provided: " provided)
-                 (str matcher-name
-                      " should be called with 'expected' argument of type: "
-                      type-msg))]))
+    {::result/type  :mismatch
+     ::result/value (model/->InvalidMatcherType
+                      (str "provided: " provided)
+                      (str matcher-name
+                           " should be called with 'expected' argument of type: "
+                           type-msg))
+     ::result/weight 1}))
 
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (map (fn [[key matcher]]
@@ -85,11 +110,15 @@
                                  actual)]
     (if (and (every? (comp match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
-      [:match actual]
-      [:mismatch (->> entry-results
-                      (map (fn [[key match-result]] [key (value match-result)]))
-                      (concat unexpected-entries)
-                      (into actual))])))
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0}
+      {::result/type  :mismatch
+       ::result/value (->> entry-results
+                           (map (fn [[key match-result]] [key (value match-result)]))
+                           (concat unexpected-entries)
+                           (into actual))
+       ::result/weight 1})))
 
 (defrecord EmbedsMap [expected]
   Matcher
@@ -113,10 +142,14 @@
 
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
-      [:mismatch (model/->Mismatch expected actual)]
+      {::result/type :mismatch
+       ::result/value (model/->Mismatch expected actual)
+       ::result/weight 1}
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
-                                              [:mismatch (model/->Unexpected extra-element)])))
+                                              {::result/type :mismatch
+                                               ::result/value (model/->Unexpected extra-element)
+                                               ::result/weight 1})))
             actual-elements (concat actual (repeat ::missing))
             match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
                                  matcher-fns actual-elements)
@@ -125,8 +158,12 @@
                               (max (count actual) (count expected)))
             match-results   (take match-size match-results')]
         (if (some mismatch? match-results)
-          [:mismatch (type-preserving-mismatch (empty actual) (map value match-results))]
-          [:match actual]))))
+          {::result/type :mismatch
+           ::result/value (type-preserving-mismatch (empty actual) (map value match-results))
+           ::result/weight 1}
+          {::result/type   :match
+           ::result/value  actual
+           ::result/weight 0}))))
 
 (defrecord EqualsSeq [expected]
   Matcher
@@ -163,6 +200,9 @@
     (let [{:keys [matched?
                   unmatched
                   matched]} (matches-in-any-order? matchers elements subset? [])]
+      (println "best\t" best)
+      (println "matched\t" matched)
+      (println "elements\t" elements)
       (cond
         matched?                    (reduced ::match-found)
         (> (count matched)
@@ -180,14 +220,18 @@
                                    :elements  elements}
                                   elem-permutations)]
     (if (= ::match-found result)
-      [:match elements]
+      {::result/type   :match
+       ::result/value  elements
+       ::result/weight 0}
       (match (->EqualsSeq (concat (:matched result)
                                   (:unmatched result)))
              (:elements result)))))
 
 (defn- match-any-order [expected actual subset?]
   (if (not (sequential? actual))
-    [:mismatch (model/->Mismatch expected actual)]
+    {::result/type :mismatch
+     ::result/value (model/->Mismatch expected actual)
+     ::result/weight 1}
     (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
@@ -257,10 +301,16 @@
 (defn match-pred [func actual]
   (cond
     (= actual ::missing)
-    [:mismatch (model/->Missing func)]
+    {::result/type  :mismatch
+     ::result/value (model/->Missing func)
+     ::result/weight 1}
 
     (func actual)
-    [:match actual]
+    {::result/type   :match
+     ::result/value  actual
+     ::result/weight 0}
 
     :else
-    [:mismatch (model/->FailedPredicate (str func) actual)]))
+    {::result/type  :mismatch
+     ::result/value (model/->FailedPredicate (str func) actual)
+     ::result/weight 1}))

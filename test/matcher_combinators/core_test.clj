@@ -385,3 +385,13 @@
   => (just [:mismatch (just #{1 (just (model/->Missing anything))}
                             :in-any-order)]))
 
+(fact "in-any-order minimal mismatch test"
+  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+           [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => [:mismatch [{:a "1" :x (model/->Mismatch "12" "12=")}
+                 {:a "2" :x (model/->Mismatch "14" "14=")}]]
+
+  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+           [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => [:mismatch [{:a "2" :x (model/->Mismatch "14" "14=")}
+                 {:a "1" :x (model/->Mismatch "12" "12=")}]])
