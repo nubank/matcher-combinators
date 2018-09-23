@@ -6,7 +6,6 @@
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [midje.emission.api :as emission]))
-
 (fact "sequence matching"
   [] => (match [])
   [1] => (match [1])

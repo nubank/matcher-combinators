@@ -524,13 +524,13 @@
       ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}]
       ::result/weight 1}
 
-
   (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
               [{:a "1" :x "12="} {:a "2" :x "14="}])
-  => {::result/type   :mismatch
-      ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}
-                       {:a "2" :x (model/->Mismatch "14" "14=")}]
-      ::result/weight 2}
+  => (just {::result/type   :mismatch
+            ::result/value  (just [{:a "1" :x (model/->Mismatch "12" "12=")}
+                                   {:a "2" :x (model/->Mismatch "14" "14=")}]
+                                  :in-any-order)
+            ::result/weight 2})
 
   (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
            [{:a "1" :x "12="} {:a "2" :x "14="}])

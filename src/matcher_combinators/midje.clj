@@ -15,10 +15,10 @@
   (if (exception/captured-throwable? actual)
     (checking/as-data-laden-falsehood
       {:notes [(exception/friendly-stacktrace actual)]})
-    (let [result (core/match matcher actual)]
+    (let [{::result/keys [type value] :as result} (core/match matcher actual)]
       (if (core/match? result)
         true
-        (checking/as-data-laden-falsehood {:notes [(printer/as-string result)]})))))
+        (checking/as-data-laden-falsehood {:notes [(printer/as-string [type value])]})))))
 
 (checkers.defining/defchecker match [matcher]
   (checkers.defining/checker [actual]

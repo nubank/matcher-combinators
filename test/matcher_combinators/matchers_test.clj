@@ -66,12 +66,12 @@ false(ns matcher-combinators.matchers-test
          (map vals))
     => (has every? one-mismatch?))
 
-  (future-fact "in-any-order minimization doesn't find the match ordering that
-                leads to the smallest diff, but rather the match ordering that
-                leads to the smallest number of immediately passing matchers."
+  (fact "in-any-order minimization doesn't find the match ordering that leads
+        to the smallest diff, but rather the match ordering that leads to the
+        smallest number of immediately passing matchers."
     (->> [{:b 2} {:a 2}]
          (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
-         second
+         ::result/value
          (map vals))
     => (has every? one-mismatch?)))
 

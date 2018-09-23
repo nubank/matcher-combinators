@@ -181,44 +181,55 @@
   (or (and subset? (empty? unmatched))
       (and (not subset?) (empty? unmatched) (empty? elements))))
 
+(defn- residual-matching-weight [matchers elements]
+  (reduce (fn [w {::result/keys [weight]}] (+ w weight))
+          0
+          (map (fn [m e] (match m e)) matchers elements)))
+
 (defn- matches-in-any-order? [unmatched elements subset? matching]
   (if (or (empty? unmatched) (empty? elements))
-    {:matched?  (matched-successfully? unmatched elements subset?)
-     :unmatched unmatched
-     :matched   matching}
+    (let [matched? (matched-successfully? unmatched elements subset?)]
+      {:matched?  matched?
+       :unmatched unmatched
+       :weight    (if matched? 0 (residual-matching-weight unmatched elements))
+       :matched   matching})
     (let [[elem & rest-elements] elements
-          matching-matcher       (helpers/find-first
-                                   #(match? (match % elem))
-                                   unmatched)]
+          matching-matcher       (helpers/find-first #(match? (match % elem))
+                                                     unmatched)]
       (if (nil? matching-matcher)
         {:matched?  false
          :unmatched unmatched
+         :weight    (residual-matching-weight unmatched elements)
          :matched   matching}
         (recur (helpers/remove-first #{matching-matcher} unmatched)
                rest-elements
                subset?
                (conj matching matching-matcher))))))
 
+(defn- better-mismatch? [best candidate]
+  (let [best-matched      (-> best :matched count)
+        candidate-matched (-> candidate :matched count)
+        candidate-weight  (:weight candidate)
+        best-weight       (:weight best)]
+    (and (>= candidate-matched best-matched)
+         (<= candidate-weight best-weight))))
+
 (defn- matched-or-best-matchers [matchers subset?]
   (fn [best elements]
-    (let [{:keys [matched?
-                  unmatched
-                  matched]} (matches-in-any-order? matchers elements subset? [])]
+    (let [{:keys [matched?] :as result} (matches-in-any-order? matchers elements subset? [])]
       (cond
-        matched?                    (reduced ::match-found)
-        (> (count matched)
-           (count (:matched best))) {:matched   matched
-                                     :unmatched unmatched
-                                     :elements  elements}
-        :else                       best))))
+        matched?                       (reduced ::match-found)
+        (better-mismatch? best result) (assoc result :elements elements)
+        :else                          best))))
 
 (defn- match-all-permutations [matchers elements subset?]
   (let [elem-permutations (combo/permutations elements)
         find-best-match   (matched-or-best-matchers matchers subset?)
         result            (reduce find-best-match
                                   {:matched   []
-                                   :unmatched matchers
-                                   :elements  elements}
+                                   :weight    Integer/MAX_VALUE
+                                   :elements  elements
+                                   :unmatched matchers}
                                   elem-permutations)]
     (if (= ::match-found result)
       {::result/type   :match
