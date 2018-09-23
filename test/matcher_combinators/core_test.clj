@@ -3,42 +3,62 @@
             [clojure.string :as str]
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model]
+            [matcher-combinators.result :as result]))
+
 (comment
 (facts "on the leaf values matcher: v"
-  (match (equals 42) 42) => [:match 42]
-  (match (equals 42) 43) => [:mismatch (model/->Mismatch 42 43)])
+  (match (equals 42) 42) => {::result/type   :match
+                             ::result/value  42
+                             ::result/weight 0}
+  (match (equals 42) 43) => {::result/type   :mismatch
+                             ::result/value  (model/->Mismatch 42 43)
+                             ::result/weight 1})
 
 (fact "on map matchers"
   (tabular
     (facts "on common behaviors among all map matchers"
       (fact "matches when given a map with matching values for every key"
         (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 42, :b 1337})
-        => [:match {:a 42, :b 1337}])
+        => {::result/type   :match
+            ::result/value  {:a 42, :b 1337}
+            ::result/weight 0})
 
       (fact "when actual values fail to match expected matchers for
             corresponding keys, mismatch marking each value Mismatch"
         (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 43, :b 1337})
-        => [:mismatch {:a (model/->Mismatch 42 43), :b 1337}]
+        => {::result/type   :mismatch
+            ::result/value  {:a (model/->Mismatch 42 43), :b 1337}
+            ::result/weight 1}
 
         (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 42, :b 13373})
-        => [:mismatch {:a 42, :b (model/->Mismatch 1337 13373)}]
+        => {::result/type   :mismatch
+            ::result/value  {:a 42, :b (model/->Mismatch 1337 13373)}
+            ::result/weight 1}
 
         (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 43, :b 13373})
-        => [:mismatch {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}])
+        => {::result/type   :mismatch
+            ::result/value  {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}
+            ::result/weight 2})
 
       (fact "when actual input map doesn't contain values for expected keys,
             mismatch marking each key with a Missing value"
         (match (?map-matcher {:a (equals 42)}) {})
-        => [:mismatch {:a (model/->Missing 42)}]
+        => {::result/type   :mismatch
+            ::result/value  {:a (model/->Missing 42)}
+            ::result/weight 1}
 
         (match (?map-matcher {:a (equals 42) :b (equals 42)}) {:b 42})
-        => [:mismatch {:b 42, :a (model/->Missing 42)}])
+        => {::result/type   :mismatch
+            ::result/value  {:b 42, :a (model/->Missing 42)}
+            ::result/weight 1})
 
       (tabular
         (fact "mismatch when given an actual input that is not a map"
           (match (?map-matcher {:a (equals 1)}) ?actual)
-          => [:mismatch (model/->Mismatch {:a (equals 1)} ?actual)])
+          => {::result/type   :mismatch
+              ::result/value  (model/->Mismatch {:a (equals 1)} ?actual)
+              ::result/weight 1})
         ?actual
         1
         "a1"
@@ -52,10 +72,14 @@
           corresponding matchers specified, mismatch marking each key with an
           Unexpected value"
       (match (equals {:a (equals 42)}) {:a 42 :b 1337})
-      => [:mismatch {:a 42, :b (model/->Unexpected 1337)}]
+      => {::result/type   :mismatch
+          ::result/value  {:a 42, :b (model/->Unexpected 1337)}
+          ::result/weight 1}
 
       (match (equals {:a (equals 42)}) {:b 42})
-      => [:mismatch {:b (model/->Unexpected 42), :a (model/->Missing 42)}])))
+      => {::result/type   :mismatch
+          ::result/value  {:b (model/->Unexpected 42), :a (model/->Missing 42)}
+          ::result/weight 2})))
 
 (facts "on sequence matchers"
   (tabular
@@ -64,14 +88,18 @@
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
                [{:id 1, :a 1} {:id 2, :a 2}])
-        => [:match [{:id 1, :a 1} {:id 2, :a 2}]])
+        => {::result/type   :match
+            ::result/value  [{:id 1, :a 1} {:id 2, :a 2}]
+            ::result/weight 0})
 
       (fact "mismatch when none of the expected matchers is a match for one
              element of the given sequence"
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
                [{:id 1 :a 1} {:id 2 :a 200}])
-        => (just [:mismatch anything]))
+        => (just {::result/type   :mismatch
+                  ::result/value  anything
+                  ::result/weight number?}))
 
       (fact "only matches when all expected matchers are matched by elements of
              the given sequence"
@@ -79,21 +107,28 @@
                                    (equals {:id (equals 2) :a (equals 2)})
                                    (equals {:id (equals 3) :a (equals 3)})])
                [{:id 1 :a 1} {:id 2 :a 2}])
-        => (just [:mismatch anything]))
+        => (just {::result/type   :mismatch
+                  ::result/value  anything
+                  ::result/weight number?}))
 
       (fact "only matches when all of the input sequence elements are matched
              by an expected matcher"
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
                [{:id 1 :a 1} {:id 2 :a 2} {:id 3 :a 3}])
-        => (just [:mismatch anything]))
+        => (just {::result/type   :mismatch
+                  ::result/value  anything
+                  ::result/weight number?}))
 
       (tabular
         (fact "mismatches when the actual input is not a sequence"
           (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                      (equals {:id (equals 2) :a (equals 2)})]) ?actual)
-          => [:mismatch (model/->Mismatch [(equals {:id (equals 1) :a (equals 1)})
-                                           (equals {:id (equals 2) :a (equals 2)})] ?actual)])
+          => {::result/type   :mismatch
+              ::result/value  (model/->Mismatch [(equals {:id (equals 1) :a (equals 1)})
+                                                 (equals {:id (equals 2) :a (equals 2)})]
+                                                ?actual)
+              ::result/weight 1})
         ?actual
         12
         "12"
@@ -109,30 +144,44 @@
   (facts "on the equals matcher for sequences"
     (fact "on element mismatches, marks each mismatch"
       (match (equals [(equals 1) (equals 2)]) [2 1])
-      => [:mismatch [(model/->Mismatch 1 2) (model/->Mismatch 2 1)]]
+      => {::result/type   :mismatch
+          ::result/value  [(model/->Mismatch 1 2) (model/->Mismatch 2 1)]
+          ::result/weight 2}
 
       (match (equals [(equals 1) (equals 2)]) [1 3])
-      => [:mismatch [1 (model/->Mismatch 2 3)]])
+      => {::result/type   :mismatch
+          ::result/value  [1 (model/->Mismatch 2 3)]
+          ::result/weight 1})
 
     (fact "mismatch reports elements in correct order"
       (match (equals [(equals 1) (equals 2) (equals 3)])
              (list 1 2 4))
-      => [:mismatch [1 2 (model/->Mismatch 3 4)]])
+      => {::result/type   :mismatch
+          ::result/value  [1 2 (model/->Mismatch 3 4)]
+          ::result/weight 1})
 
     (fact "when there are more elements than expected matchers, mark each extra element as Unexpected"
       (match (equals [(equals 1) (equals 2)]) [1 2 3])
-      => [:mismatch [1 2 (model/->Unexpected 3)]])
+      => {::result/type   :mismatch
+          ::result/value  [1 2 (model/->Unexpected 3)]
+          ::result/weight 1})
 
     (fact "Mismatch plays well with nil"
       (match (equals [(equals 1) (equals 2) (equals 3)]) [1 2 nil])
-      => [:mismatch [1 2 (model/->Mismatch 3 nil)]])
+      => {::result/type   :mismatch
+          ::result/value  [1 2 (model/->Mismatch 3 nil)]
+          ::result/weight 1})
 
     (fact "when there are more matchers then actual elements, append the expected values marked as Missing"
       (match (equals [(equals 1) (equals 2) (equals 3)]) [1 2])
-      => [:mismatch [1 2 (model/->Missing 3)]]
+      => {::result/type   :mismatch
+          ::result/value  [1 2 (model/->Missing 3)]
+          ::result/weight 1}
 
       (match (equals [(equals {:a (equals 1)}) (equals {:b (equals 2)})]) [{:a 1}])
-      => [:mismatch [{:a 1} (model/->Missing {:b (equals 2)})]]))
+      => {::result/type   :mismatch
+          ::result/value  [{:a 1} (model/->Missing {:b (equals 2)})]
+          ::result/weight 1}))
 
   (facts "on the in-any-order sequence matcher"
     (tabular
@@ -142,57 +191,73 @@
             (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
                                     (equals {:id (equals 2) :x (equals 2)})])
             [{:id 2 :x 2} {:id 1 :x 1}])
-          => [:match [{:id 2 :x 2} {:id 1 :x 1}]]
+          => {::result/type   :match
+              ::result/value  [{:id 2 :x 2} {:id 1 :x 1}]
+              ::result/weight 0}
 
           (match
             (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
                                     (equals {:id (equals 2) :x (equals 2)})
                                     (equals {:id (equals 3) :x (equals 3)})])
             [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
-          => [:match [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]]))
+          => {::result/type   :match
+              ::result/value  [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]
+              ::result/weight 0}))
       ?in-any-order-matcher
       in-any-order)
 
     (facts "the 1-argument arity has a simple all-or-nothing behavior:"
       (fact "in-any-order for list of same value/matchers"
         (match (in-any-order [(equals 2) (equals 2)]) [2 2])
-        => [:match [2 2]])
+        => {::result/type   :match
+            ::result/value  [2 2]
+            ::result/weight 0})
 
       (fact "when there the matcher and list count differ, mark specific mismatches"
         (match (in-any-order [(equals 1) (equals 2)]) [1 2 3])
-        => (just [:mismatch (just [1 2 (model/->Unexpected 3)]
-                                  :in-any-order)])
+        => (just {::result/type   :mismatch
+                  ::result/value  (just [1 2 (model/->Unexpected 3)]
+                                        :in-any-order)
+                  ::result/weight 1})
 
         (match (in-any-order [(equals 1) (equals 2) (equals 3)]) [1 2])
-        => (just [:mismatch (just [1 2 (model/->Missing 3)]
-                                  :in-any-order)])))))
+        => (just {::result/type   :mismatch
+                  ::result/value  (just [1 2 (model/->Missing 3)]
+                                        :in-any-order)
+                  ::result/weight 1})))))
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
     (match
       (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 2] 20])
-    => [:match [[1 2] 20]]
+    => {::result/type   :match
+        ::result/value  [[1 2] 20]
+        ::result/weight 0}
 
     (match
       (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 5] 20])
-    => [:mismatch [[1 (model/->Mismatch 2 5)] 20]]
+    => {::result/type   :mismatch
+        ::result/value  [[1 (model/->Mismatch 2 5)] 20]
+        ::result/weight 1}
 
     (match
       (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 5] 21])
-    => [:mismatch [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]])
+    => {::result/type   :mismatch
+        ::result/value  [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]
+        ::result/weight 2})
 
   (fact "sequence type is preserved in mismatch output"
     (-> (equals [(equals [(equals 1)])])
         (match [[2]])
-        second)
+        ::result/value)
     => #(instance? (class (vector)) %)
 
     (-> (equals [(equals [(equals 1)])])
         (match (list [2]))
-        second)
+        ::result/value)
     => #(instance? (class (list 'placeholder)) %))
 
   (fact "nesting in-any-order matchers"
@@ -200,40 +265,52 @@
       (in-any-order [(equals {:id (equals 1) :a (equals 1)})
                      (equals {:id (equals 2) :a (equals 2)})])
       [{:id 1 :a 1} {:id 2 :a 2}])
-    => [:match [{:id 1 :a 1} {:id 2 :a 2}]])
+    => {::result/type   :match
+        ::result/value  [{:id 1 :a 1} {:id 2 :a 2}]
+        ::result/weight 0})
 
   (facts "nesting embeds for maps"
     (match
       (embeds {:a (equals 42) :m (embeds {:x (equals "foo")})})
       {:a 42 :m {:x "foo"}})
-    => [:match {:a 42 :m {:x "foo"}}]
+    => {::result/type   :match
+        ::result/value  {:a 42 :m {:x "foo"}}
+        ::result/weight 0}
 
 
     (match (embeds {:a (equals 42)
                     :m (embeds {:x (equals "foo")})})
            {:a 42
             :m {:x "bar"}})
-    => [:mismatch {:a 42
-                   :m {:x (model/->Mismatch "foo" "bar")}}]
+    => {::result/type   :mismatch
+        ::result/value  {:a 42
+                         :m {:x (model/->Mismatch "foo" "bar")}}
+        ::result/weight 1}
 
     (match (embeds {:a (equals 42)
                     :m (embeds {:x (equals "foo")})})
            {:a 43
             :m {:x "bar"}})
-    => [:mismatch {:a (model/->Mismatch 42 43)
-                   :m {:x (model/->Mismatch "foo" "bar")}}])
+    => {::result/type   :mismatch
+        ::result/value  {:a (model/->Mismatch 42 43)
+                         :m {:x (model/->Mismatch "foo" "bar")}}
+        ::result/weight 2})
 
   (match (equals [(equals {:a (equals 42)
                            :b (equals 1337)})
                   (equals 20)])
          [{:a 42 :b 1337} 20])
-  => [:match [{:a 42 :b 1337} 20]]
+  => {::result/type   :match
+      ::result/value  [{:a 42 :b 1337} 20]
+      ::result/weight 0}
 
   (match (equals [(equals {:a (equals 42)
                            :b (equals 1337)})
                   (equals 20)])
          [{:a 43 :b 1337} 20])
-  => [:mismatch [{:a (model/->Mismatch 42 43) :b 1337} 20]])
+  => {::result/type   :mismatch
+      ::result/value  [{:a (model/->Mismatch 42 43) :b 1337} 20]
+      ::result/weight 1})
 
 
 ;; Since the parser namespace needs to be loaded to interpret functions as
@@ -250,9 +327,13 @@
 
 (fact
   (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])
-  => [:match [1 2]]
+  => {::result/type   :match
+      ::result/value  [1 2]
+      ::result/weight 0}
   (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1])
-  => (just [:mismatch (just [1 anything])]))
+  => (just {::result/type   :mismatch
+            ::result/value  (just [1 anything])
+            ::result/weight 1}))
 
 (let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
   (fact "no matching when there are more matchers than elements"
@@ -284,21 +365,25 @@
                         :matched   (just [anything anything])}))
   (fact "mismatch if there are more matchers than actual elements"
     (#'core/match-any-order matchers [5] false)
-    => (just [:mismatch (just [(just (model/->Missing anything)) 5]
-                              :in-any-order)])
+    => (just {::result/type   :mismatch
+              ::result/value  (just [(just (model/->Missing anything)) 5]
+                                    :in-any-order)
+              ::result/weight 1})
     (#'core/match-any-order matchers [5] true)
-    => (just [:mismatch (just [5 (just (model/->Missing anything))]
-                              :in-any-order)])))
+    => (just {::result/type   :mismatch
+              ::result/value  (just [5 (just (model/->Missing anything))]
+                                    :in-any-order)
+              ::result/weight 1})))
 
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
     (core/match (?matcher 1) 1)
-    => (just [:mismatch
-              (sweet/contains {:expected-type-msg
-                               #(str/starts-with? % (-> ?matcher var meta :name str))
-
-                               :provided
-                               "provided: 1"})]))
+    => (just {::result/type   :mismatch
+              ::result/value  (sweet/contains {:expected-type-msg
+                                               #(str/starts-with? % (-> ?matcher var meta :name str))
+                                               :provided
+                                               "provided: 1"})
+              ::result/weight number?}))
   ?matcher
   prefix
   embeds)
@@ -309,90 +394,147 @@
 (def short-equals-seq (map equals [1 3]))
 
 (fact "embeds for sequences"
-  (core/match (embeds short-equals-seq) [3 4 1]) => (just [:match (just [3 4 1])])
-  (core/match (embeds short-equals-seq) [3 4 1 5]) => (just [:match (just [3 4 1 5])]))
+  (core/match (embeds short-equals-seq) [3 4 1]) => (just {::result/type   :match
+                                                           ::result/value  (just [3 4 1])
+                                                           ::result/weight 0})
+  (core/match (embeds short-equals-seq) [3 4 1 5]) => (just {::result/type   :match
+                                                             ::result/value  (just [3 4 1 5])
+                                                             ::result/weight 0}))
 
 (fact "embeds /set-equals matches"
-  (core/match (embeds pred-set) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (set-embeds pred-seq) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (equals pred-set) #{1 3}) => (just [:match (just #{1 3})])
-  (core/match (set-equals pred-seq) #{1 3}) => (just [:match (just #{1 3})]))
+  (core/match (embeds pred-set) #{1 3}) => (just {::result/type   :match
+                                                  ::result/value  (just #{1 3})
+                                                  ::result/weight 0})
+  (core/match (set-embeds pred-seq) #{1 3}) => (just {::result/type   :match
+                                                      ::result/value  (just #{1 3})
+                                                      ::result/weight 0})
+  (core/match (equals pred-set) #{1 3}) => (just {::result/type   :match
+                                                  ::result/value  (just #{1 3})
+                                                  ::result/weight 0})
+  (core/match (set-equals pred-seq) #{1 3}) => (just {::result/type   :match
+                                                      ::result/value  (just #{1 3})
+                                                      ::result/weight 0}))
 
 (fact "embeds /equals mismatches due to type"
   (core/match (equals pred-seq) #{1 3})
-  => (just [:mismatch (just {:actual   #{1 3}
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   #{1 3}
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (equals pred-set) [1 3])
-  => (just [:mismatch (just {:actual   [1 3]
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   [1 3]
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (embeds pred-seq) #{1 3})
-  => (just [:mismatch (just {:actual   #{1 3}
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   #{1 3}
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (embeds pred-set) [1 3])
-  => (just [:mismatch (just {:actual   [1 3]
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   [1 3]
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (embeds 1) [1])
-  => (just [:mismatch (just {:expected-type-msg #"^embeds *"
-                             :provided          #"^provided: 1"})]))
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:expected-type-msg #"^embeds *"
+                                   :provided          #"^provided: 1"})
+            ::result/weight 1}))
 
 (fact "embeds /set-equals mismatches due to type"
   (core/match (set-embeds pred-seq) [1 3])
-  => (just [:mismatch (just {:actual   [1 3]
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   [1 3]
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (set-equals pred-seq) [1 3])
-  => (just [:mismatch (just {:actual   [1 3]
-                             :expected anything})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:actual   [1 3]
+                                   :expected anything})
+            ::result/weight 1})
   (core/match (set-embeds 1) [1 3])
-  => (just [:mismatch (just {:expected-type-msg #"^set-embeds*"
-                             :provided          #"^provided: 1"})])
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:expected-type-msg #"^set-embeds*"
+                                   :provided          #"^provided: 1"})
+            ::result/weight 1})
   (core/match (set-equals 1) [1 3])
-  => (just [:mismatch (just {:expected-type-msg #"^set-equals*"
-                             :provided          #"^provided: 1"})]))
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:expected-type-msg #"^set-equals*"
+                                   :provided          #"^provided: 1"})
+            ::result/weight 1}))
 
 (fact "embeds /set-equals mismatches due to content"
   (core/match (set-embeds pred-set) #{1 -2})
-  => (just [:mismatch (just #{1 (just {:actual -2
-                                       :form   anything})})])
+  => (just {::result/type  :mismatch
+            ::result/value (just #{1 (just {:actual -2
+                                            :form   anything})})
+            ::result/weight 1})
 
   (core/match (set-embeds pred-seq) #{1 -2})
-  => (just [:mismatch (just #{1 (just {:actual -2
-                                       :form   anything})})])
+  => (just {::result/type :mismatch
+            ::result/weight 1
+            ::result/value (just #{1 (just {:actual -2
+                                            :form   anything})})})
 
   (core/match (equals pred-set) #{1 -2})
-  => (just [:mismatch (just #{1 (just {:actual -2
-                                       :form   anything})})])
+  => (just {::result/type :mismatch
+            ::result/weight 1
+            ::result/value (just #{1 (just {:actual -2
+                                            :form   anything})})})
 
   (core/match (set-equals pred-seq) #{1 -2})
-  => (just [:mismatch (just #{1 (just {:actual -2
-                                       :form   anything})})]))
+  => (just {::result/type :mismatch
+            ::result/weight 1
+            ::result/value (just #{1 (just {:actual -2
+                                            :form   anything})})}))
 
 (def even-odd-set #{(pred-matcher #(and (odd? %) (pos? %)))
                     (pred-matcher even?)})
 (def even-odd-seq (into [] even-odd-set))
 (fact "Order agnostic checks show fine-grained mismatch details"
   (core/match (equals even-odd-set) #{1 2 -3})
-  => (just [:mismatch #{1 2 (model/->Unexpected -3)}])
+  => (just {::result/type   :mismatch
+            ::result/value  #{1 2 (model/->Unexpected -3)}
+            ::result/weight 1})
 
   (core/match (in-any-order even-odd-seq) [1 2 -3])
-  => (just [:mismatch (just [1 2 (model/->Unexpected -3)]
-                            :in-any-order)])
+  => (just {::result/type   :mismatch
+            ::result/value  (just [1 2 (model/->Unexpected -3)]
+                                  :in-any-order)
+            ::result/weight 1})
 
   (core/match (in-any-order even-odd-seq) [1])
-  => (just [:mismatch (just [1 (just (model/->Missing anything))]
-                            :in-any-order)])
+  => (just {::result/type   :mismatch
+            ::result/value  (just [1 (just (model/->Missing anything))]
+                                  :in-any-order)
+            ::result/weight 1})
 
   (core/match (equals even-odd-set) #{1})
-  => (just [:mismatch (just #{1 (just (model/->Missing anything))}
-                            :in-any-order)]))
+  => (just {::result/type   :mismatch
+            ::result/value  (just #{1 (just (model/->Missing anything))}
+                                  :in-any-order)
+            ::result/weight 1}))
 
-(fact "in-any-order minimal mismatch test"
-  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
-           [{:a "1" :x "12="} {:a "2" :x "14="}])
-  => [:mismatch [{:a "1" :x (model/->Mismatch "12" "12=")}
-                 {:a "2" :x (model/->Mismatch "14" "14=")}]]
-
-  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
-           [{:a "1" :x "12="} {:a "2" :x "14="}])
-  => [:mismatch [{:a "2" :x (model/->Mismatch "14" "14=")}
-                 {:a "1" :x (model/->Mismatch "12" "12=")}]])
 )
+(fact "in-any-order minimal mismatch test"
+  (core/match [{:a "1" :x "12"}]
+              [{:a "1" :x "12="}])
+  => {::result/type   :mismatch
+      ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}]
+      ::result/weight 1}
+
+
+  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+              [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => {::result/type   :mismatch
+      ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}
+                       {:a "2" :x (model/->Mismatch "14" "14=")}]
+      ::result/weight 2}
+
+  (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
+           [{:a "1" :x "12="} {:a "2" :x "14="}])
+  => {::result/type   :mismatch
+      ::result/value  [{:a "2" :x (model/->Mismatch "14" "14=")}
+                       {:a "1" :x (model/->Mismatch "12" "12=")}]
+      ::result/weight 2})

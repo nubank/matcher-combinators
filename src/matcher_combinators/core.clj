@@ -23,9 +23,6 @@
 (defn matcher? [x]
   (satisfies? Matcher x))
 
-(defn- value [{::result/keys [value]}]
-  value)
-
 (defrecord Value [expected]
   Matcher
   (match [_this actual]
@@ -113,12 +110,17 @@
       {::result/type   :match
        ::result/value  actual
        ::result/weight 0}
-      {::result/type  :mismatch
-       ::result/value (->> entry-results
-                           (map (fn [[key match-result]] [key (value match-result)]))
-                           (concat unexpected-entries)
-                           (into actual))
-       ::result/weight 1})))
+      (let [mismatch-val (->> entry-results
+                              (map (fn [[key match-result]] [key (::result/value match-result)]))
+                              (concat unexpected-entries)
+                              (into actual))
+            weight        (->> entry-results
+                               (map second)
+                               (reduce (fn [acc-weight {::result/keys [weight]}] (+ acc-weight weight))
+                                       (if allow-unexpected? 0 (count unexpected-entries))))]
+        {::result/type   :mismatch
+         ::result/value  mismatch-val
+         ::result/weight weight}))))
 
 (defrecord EmbedsMap [expected]
   Matcher
@@ -142,13 +144,13 @@
 
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
-      {::result/type :mismatch
-       ::result/value (model/->Mismatch expected actual)
+      {::result/type   :mismatch
+       ::result/value  (model/->Mismatch expected actual)
        ::result/weight 1}
       (let [matcher-fns     (concat (map #(partial match %) expected)
                                     (repeat (fn [extra-element]
-                                              {::result/type :mismatch
-                                               ::result/value (model/->Unexpected extra-element)
+                                              {::result/type   :mismatch
+                                               ::result/value  (model/->Unexpected extra-element)
                                                ::result/weight 1})))
             actual-elements (concat actual (repeat ::missing))
             match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
@@ -158,9 +160,11 @@
                               (max (count actual) (count expected)))
             match-results   (take match-size match-results')]
         (if (some mismatch? match-results)
-          {::result/type :mismatch
-           ::result/value (type-preserving-mismatch (empty actual) (map value match-results))
-           ::result/weight 1}
+          {::result/type   :mismatch
+           ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+           ::result/weight (->> match-results
+                                (map ::result/weight)
+                                (reduce + 0))}
           {::result/type   :match
            ::result/value  actual
            ::result/weight 0}))))
