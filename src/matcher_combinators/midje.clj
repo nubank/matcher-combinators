@@ -2,6 +2,7 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
+            [matcher-combinators.result :as result]
             [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
@@ -14,10 +15,10 @@
   (if (exception/captured-throwable? actual)
     (checking/as-data-laden-falsehood
       {:notes [(exception/friendly-stacktrace actual)]})
-    (let [result (core/match matcher actual)]
+    (let [{::result/keys [type value] :as result} (core/match matcher actual)]
       (if (core/match? result)
         true
-        (checking/as-data-laden-falsehood {:notes [(printer/as-string result)]})))))
+        (checking/as-data-laden-falsehood {:notes [(printer/as-string [type value])]})))))
 
 (checkers.defining/defchecker match [matcher]
   (checkers.defining/checker [actual]
@@ -33,8 +34,14 @@
                  (= (type actual) Metaconstant)
                  (= actual thread-safe-var-nesting/unbound-marker))
              (.equals this actual))
-      [:match actual]
-      (if (and (keyword? actual)
-               (= ::core/missing actual))
-        [:mismatch (model/->Missing this)]
-        [:mismatch (model/->Mismatch this actual)]))))
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0}
+      (let [mismatch-val (if (and (keyword? actual)
+                                  (= ::core/missing actual))
+                           (model/->Missing this)
+                           (model/->Mismatch this actual))]
+        {::result/type   :mismatch
+         ::result/value  mismatch-val
+         ::result/weight 1}))))
+

@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
             [matcher-combinators.model :as model]
+            [matcher-combinators.result :as result]
             [colorize.core :as colorize])
   (:import [matcher_combinators.model Mismatch Missing Unexpected FailedPredicate InvalidMatcherType]))
 
@@ -49,6 +50,6 @@
     print-diff-dispatch
     (pprint/pprint expr)))
 
-(defn as-string [expr]
+(defn as-string [value]
   (with-out-str
-    (pretty-print expr)))
+    (pretty-print value)))

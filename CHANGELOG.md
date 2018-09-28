@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.3.3]
+- make `in-any-order` choose smallest mismatch when same number of matchers one level down fail.
+
 ## [0.3.2]
 - fix for `embeds` sequence matching where some matches weren't found
 
