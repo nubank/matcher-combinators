@@ -30,22 +30,22 @@
      (if (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
          (clojure.test/do-report
-           (if (core/match? result#)
-             {:type     :pass
-              :message  ~msg
-              :expected '~form
-              :actual   (list 'match? matcher# actual#)}
-             (with-file+line-info
-               {:type     :matcher-combinators/mismatch
-                :message  ~msg
-                :expected '~form
-                :actual   (list '~'not (list 'match? matcher# actual#))
-                :markup   (second result#)}))))
+          (if (core/match? result#)
+            {:type     :pass
+             :message  ~msg
+             :expected '~form
+             :actual   (list 'match? matcher# actual#)}
+            (with-file+line-info
+              {:type     :matcher-combinators/mismatch
+               :message  ~msg
+               :expected '~form
+               :actual   (list '~'not (list 'match? matcher# actual#))
+               :markup   (second result#)}))))
        (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected '~form
-          :actual   (str "The second argument of match? isn't a matcher")}))))
+        {:type     :fail
+         :message  ~msg
+         :expected '~form
+         :actual   (str "The second argument of match? isn't a matcher")}))))
 
 (defmethod clojure.test/report :matcher-combinators/mismatch [m]
   (clojure.test/with-test-out

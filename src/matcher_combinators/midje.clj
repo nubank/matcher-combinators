@@ -14,7 +14,7 @@
 (defn check-match [matcher actual]
   (if (exception/captured-throwable? actual)
     (checking/as-data-laden-falsehood
-      {:notes [(exception/friendly-stacktrace actual)]})
+     {:notes [(exception/friendly-stacktrace actual)]})
     (let [{::result/keys [type value] :as result} (core/match matcher actual)]
       (if (core/match? result)
         true
@@ -22,10 +22,10 @@
 
 (checkers.defining/defchecker match [matcher]
   (checkers.defining/checker [actual]
-    (if (core/matcher? matcher)
-      (check-match matcher actual)
-      (checking/as-data-laden-falsehood
-        {:notes [(str "Input wasn't a matcher: " matcher)]}))))
+                             (if (core/matcher? matcher)
+                               (check-match matcher actual)
+                               (checking/as-data-laden-falsehood
+                                {:notes [(str "Input wasn't a matcher: " matcher)]}))))
 
 (extend-protocol core/Matcher
   Metaconstant

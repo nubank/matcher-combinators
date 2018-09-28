@@ -1,13 +1,13 @@
-false(ns matcher-combinators.matchers-test
-  (:require [clojure.math.combinatorics :as combo]
-            [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
-            [matcher-combinators.midje :refer [match]]
-            [matcher-combinators.helpers :as helpers]
-            [matcher-combinators.matchers :as m]
-            [matcher-combinators.model :as model]
-            [matcher-combinators.core :as c]
-            [matcher-combinators.result :as result])
-  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
+false (ns matcher-combinators.matchers-test
+        (:require [clojure.math.combinatorics :as combo]
+                  [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
+                  [matcher-combinators.midje :refer [match]]
+                  [matcher-combinators.helpers :as helpers]
+                  [matcher-combinators.matchers :as m]
+                  [matcher-combinators.model :as model]
+                  [matcher-combinators.core :as c]
+                  [matcher-combinators.result :as result])
+        (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
@@ -16,18 +16,18 @@ false(ns matcher-combinators.matchers-test
 (def response-time (java.time.LocalDateTime/now))
 
 (def nested-map
- {:id {:type :user-id
-       :value an-id-string}
- :input {:id {:type :user-id
-              :value an-id-string}
-         :timestamp now
-         :trigger "blabla"}
- :model "sampa_v3"
- :output {:sampa-score 123.4M
-          :user-id another-id
-          :w-alpha -0.123}
- :response-time response-time
- :version "1.33.7"})
+  {:id {:type :user-id
+        :value an-id-string}
+   :input {:id {:type :user-id
+                :value an-id-string}
+           :timestamp now
+           :trigger "blabla"}
+   :model "sampa_v3"
+   :output {:sampa-score 123.4M
+            :user-id another-id
+            :w-alpha -0.123}
+   :response-time response-time
+   :version "1.33.7"})
 
 (def a-nested-map nested-map)
 (def b-nested-map (assoc-in nested-map [:model] "curitiba"))
@@ -41,7 +41,7 @@ false(ns matcher-combinators.matchers-test
 
 (fact "in-any-order using matcher ordering with maximum matchings for diff"
   (c/match (m/in-any-order [a-nested-map b-nested-map])
-           [a-nested-map a-nested-map])
+    [a-nested-map a-nested-map])
   => (just {::result/type   :mismatch
             ::result/value  (just [a-nested-map (contains {:id map? :model mismatch?})]
                                   :in-any-order)
@@ -77,7 +77,7 @@ false(ns matcher-combinators.matchers-test
 
 (fact "Regex matching and mismatching"
   (c/match (m/equals {:one (m/regex #"1")})
-           {:one "1"})
+    {:one "1"})
   => (just {::result/type   :match
             ::result/value  (just {:one "1"})
             ::result/weight 0})
@@ -93,19 +93,19 @@ false(ns matcher-combinators.matchers-test
             ::result/weight 0})
 
   (c/match (m/equals {:one (m/regex #"1")})
-           {:one "2"})
+    {:one "2"})
   => (just {::result/type   :mismatch
             ::result/value  (just {:one mismatch?})
             ::result/weight number?})
 
   (c/match (m/equals {:one (m/regex "1")})
-           {:one "1"})
+    {:one "1"})
   => (just {::result/type :mismatch
             ::result/value (just {:one invalid-type?})
             ::result/weight number?})
 
   (c/match (m/equals {:one (m/regex #"1")})
-           {:one 2})
+    {:one 2})
   => (just {::result/type :mismatch
             ::result/value (just {:one invalid-type?})
             ::result/weight number?}))
@@ -113,9 +113,9 @@ false(ns matcher-combinators.matchers-test
 (fact "mismatch that includes a matching regex shows the match data"
   (c/match (m/equals {:two 2
                       :one (m/regex #"hello, (.*)")})
-           {:two 1
-            :one "hello, world"})
+    {:two 1
+     :one "hello, world"})
   => (just {::result/type :mismatch
             ::result/value (just {:two mismatch?
-                             :one (just ["hello, world" "world"])})
+                                  :one (just ["hello, world" "world"])})
             ::result/weight number?}))

@@ -79,11 +79,11 @@
   {:a 1 :b 2} =not=> (match (m/equals [[:a 1] [:b 2]])))
 
 (facts "dealing with sets"
- (fact "midje set checker example"
+  (fact "midje set checker example"
     #{3 8 1} => (midje/just [odd? 3 even?]))
- (fact "to match sets, you need to turn it into a list"
-  #{3 8 1} =not=> (match (m/equals [(midje/as-checker odd?) 3 (midje/as-checker even?)]))
-  (seq #{3 8 1}) => (match (m/in-any-order [(midje/as-checker odd?) 3 (midje/as-checker even?)]))))
+  (fact "to match sets, you need to turn it into a list"
+    #{3 8 1} =not=> (match (m/equals [(midje/as-checker odd?) 3 (midje/as-checker even?)]))
+    (seq #{3 8 1}) => (match (m/in-any-order [(midje/as-checker odd?) 3 (midje/as-checker even?)]))))
 
 (fact [5 1 4 2] => (midje/contains [1 2 5] :gaps-ok :in-any-order))
 (fact [5 1 4 2] => (match (m/prefix [5 1]))
@@ -107,7 +107,7 @@
   {:a [1 3]} => (match (m/equals {:a (m/in-any-order [(midje/as-checker odd?) 1])}))
   {:a [1]} =not=> (match (m/equals {:a (m/in-any-order [(midje/as-checker odd?) 1])}))
   [1 2] => (match (m/in-any-order [(midje/as-checker even?)
-                                      (midje/as-checker odd?)])))
+                                   (midje/as-checker odd?)])))
 
 (facts "match sets"
   (fact "simple cases"
@@ -147,12 +147,11 @@
 
     (fact "a match failure will fail the test"
       (emission/silently
-        (fact "will fail"
-          (f [1 2 :not-this]) => 1
-          (provided
-            (f (match (m/equals [is-int? is-int? is-int?]))) => 1)))
+       (fact "will fail"
+         (f [1 2 :not-this]) => 1
+         (provided
+           (f (match (m/equals [is-int? is-int? is-int?]))) => 1)))
       => falsey)))
-
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
@@ -161,32 +160,32 @@
 (def response-time (java.time.LocalDateTime/now))
 
 (def nested-map
- {:id {:type :user-id
-       :value an-id-string}
- :input {:id {:type :user-id
-              :value an-id-string}
-         :timestamp now
-         :trigger "blabla"}
- :model "sampa_v3"
- :output {:sampa-score 123.4M
-          :user-id another-id
-          :w-alpha -0.123}
- :response-time response-time
- :version "1.33.7"})
+  {:id {:type :user-id
+        :value an-id-string}
+   :input {:id {:type :user-id
+                :value an-id-string}
+           :timestamp now
+           :trigger "blabla"}
+   :model "sampa_v3"
+   :output {:sampa-score 123.4M
+            :user-id another-id
+            :w-alpha -0.123}
+   :response-time response-time
+   :version "1.33.7"})
 
 (fact "match nested maps with UUID, LocalDateTime, BigDecimal, and Double values"
   nested-map
   => (match {:id {:type :user-id
-                     :value an-id-string}
-                :input {:id {:type keyword?
-                             :value an-id-string}
-                        :timestamp now}
-                :model "sampa_v3"
-                :output {:sampa-score 123.4M
-                         :user-id another-id
-                         :w-alpha -0.123}
-                :response-time response-time
-                :version string?}))
+                  :value an-id-string}
+             :input {:id {:type keyword?
+                          :value an-id-string}
+                     :timestamp now}
+             :model "sampa_v3"
+             :output {:sampa-score 123.4M
+                      :user-id another-id
+                      :w-alpha -0.123}
+             :response-time response-time
+             :version string?}))
 
 (fact "matchers can use `nil` inside them"
   {:a nil} => (match {:a nil})
@@ -220,9 +219,9 @@
   (provided (x ..a..) => {:a ..b..}))
 
 (fact
-  (f ..a..) => (match {:a ..b..})
-  (provided
-    (x ..a..) => {:a ..b..}))
+ (f ..a..) => (match {:a ..b..})
+ (provided
+   (x ..a..) => {:a ..b..}))
 
 (fact "treat regex as predicate in match"
   {:one "1"} => (match {:one #"1"})

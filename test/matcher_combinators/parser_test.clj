@@ -41,37 +41,36 @@
 (def gen-scalar-pair
   (gen-distinct-pair gen-scalar))
 
-
 (facts "scalar values act as equals matchers"
   (for-all [i gen-scalar]
-    {:num-tests 50}
-    (core/match i i) => (core/match (equals i) i))
+           {:num-tests 50}
+           (core/match i i) => (core/match (equals i) i))
 
   (for-all [[i j] gen-scalar-pair]
-    {:num-tests 50}
-    (core/match i j) => (core/match (equals i) j)))
+           {:num-tests 50}
+           (core/match i j) => (core/match (equals i) j)))
 
 (fact "maps act as equals matcher"
   (fact
-    (= (core/match (equals {:a (equals 10)}) {:a 10})
-       (core/match (equals {:a 10}) {:a 10})
-       (core/match {:a 10} {:a 10}))
+   (= (core/match (equals {:a (equals 10)}) {:a 10})
+      (core/match (equals {:a 10}) {:a 10})
+      (core/match {:a 10} {:a 10}))
     => truthy))
 
 (fact "vectors act as equals matchers"
   (fact
-    (= (core/match (equals [(equals 10)]) [10])
-       (core/match (equals [10]) [10])
-       (core/match [10] [10]))
+   (= (core/match (equals [(equals 10)]) [10])
+      (core/match (equals [10]) [10])
+      (core/match [10] [10]))
     => truthy))
 
 (fact "lists also act as equals matchers"
   (fact
-    (= (core/match (equals [(equals 10)]) [10])
-       (core/match (equals '(10)) [10])
-       (core/match '(10) [10])) => truthy))
+   (= (core/match (equals [(equals 10)]) [10])
+      (core/match (equals '(10)) [10])
+      (core/match '(10) [10])) => truthy))
 
 (fact "`nil` is parsed as an equals"
   (fact
-    (= (core/match (equals nil) nil)
-       (core/match nil nil)) => truthy))
+   (= (core/match (equals nil) nil)
+      (core/match nil nil)) => truthy))

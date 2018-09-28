@@ -89,7 +89,7 @@
       (fact "matches when actual sequence elements match each matcher, in order and in total"
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
-               [{:id 1, :a 1} {:id 2, :a 2}])
+          [{:id 1, :a 1} {:id 2, :a 2}])
         => {::result/type   :match
             ::result/value  [{:id 1, :a 1} {:id 2, :a 2}]
             ::result/weight 0})
@@ -98,7 +98,7 @@
              element of the given sequence"
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
-               [{:id 1 :a 1} {:id 2 :a 200}])
+          [{:id 1 :a 1} {:id 2 :a 200}])
         => (just {::result/type   :mismatch
                   ::result/value  anything
                   ::result/weight number?}))
@@ -108,7 +108,7 @@
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})
                                    (equals {:id (equals 3) :a (equals 3)})])
-               [{:id 1 :a 1} {:id 2 :a 2}])
+          [{:id 1 :a 1} {:id 2 :a 2}])
         => (just {::result/type   :mismatch
                   ::result/value  anything
                   ::result/weight number?}))
@@ -117,7 +117,7 @@
              by an expected matcher"
         (match (?sequence-matcher [(equals {:id (equals 1) :a (equals 1)})
                                    (equals {:id (equals 2) :a (equals 2)})])
-               [{:id 1 :a 1} {:id 2 :a 2} {:id 3 :a 3}])
+          [{:id 1 :a 1} {:id 2 :a 2} {:id 3 :a 3}])
         => (just {::result/type   :mismatch
                   ::result/value  anything
                   ::result/weight number?}))
@@ -157,7 +157,7 @@
 
     (fact "mismatch reports elements in correct order"
       (match (equals [(equals 1) (equals 2) (equals 3)])
-             (list 1 2 4))
+        (list 1 2 4))
       => {::result/type   :mismatch
           ::result/value  [1 2 (model/->Mismatch 3 4)]
           ::result/weight 1})
@@ -190,17 +190,17 @@
       (facts "common behavior for all in-any-order arities"
         (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
           (match
-            (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
-                                    (equals {:id (equals 2) :x (equals 2)})])
+           (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
+                                   (equals {:id (equals 2) :x (equals 2)})])
             [{:id 2 :x 2} {:id 1 :x 1}])
           => {::result/type   :match
               ::result/value  [{:id 2 :x 2} {:id 1 :x 1}]
               ::result/weight 0}
 
           (match
-            (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
-                                    (equals {:id (equals 2) :x (equals 2)})
-                                    (equals {:id (equals 3) :x (equals 3)})])
+           (?in-any-order-matcher [(equals {:id (equals 1) :x (equals 1)})
+                                   (equals {:id (equals 2) :x (equals 2)})
+                                   (equals {:id (equals 3) :x (equals 3)})])
             [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
           => {::result/type   :match
               ::result/value  [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]
@@ -231,21 +231,21 @@
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
     (match
-      (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
+     (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 2] 20])
     => {::result/type   :match
         ::result/value  [[1 2] 20]
         ::result/weight 0}
 
     (match
-      (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
+     (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 5] 20])
     => {::result/type   :mismatch
         ::result/value  [[1 (model/->Mismatch 2 5)] 20]
         ::result/weight 1}
 
     (match
-      (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
+     (equals [(equals [(equals 1) (equals 2)]) (equals 20)])
       [[1 5] 21])
     => {::result/type   :mismatch
         ::result/value  [[1 (model/->Mismatch 2 5)] (model/->Mismatch 20 21)]
@@ -264,8 +264,8 @@
 
   (fact "nesting in-any-order matchers"
     (match
-      (in-any-order [(equals {:id (equals 1) :a (equals 1)})
-                     (equals {:id (equals 2) :a (equals 2)})])
+     (in-any-order [(equals {:id (equals 1) :a (equals 1)})
+                    (equals {:id (equals 2) :a (equals 2)})])
       [{:id 1 :a 1} {:id 2 :a 2}])
     => {::result/type   :match
         ::result/value  [{:id 1 :a 1} {:id 2 :a 2}]
@@ -273,17 +273,14 @@
 
   (facts "nesting embeds for maps"
     (match
-      (embeds {:a (equals 42) :m (embeds {:x (equals "foo")})})
+     (embeds {:a (equals 42) :m (embeds {:x (equals "foo")})})
       {:a 42 :m {:x "foo"}})
     => {::result/type   :match
         ::result/value  {:a 42 :m {:x "foo"}}
-        ::result/weight 0}
-
-
-    (match (embeds {:a (equals 42)
-                    :m (embeds {:x (equals "foo")})})
-           {:a 42
-            :m {:x "bar"}})
+        ::result/weight 0} (match (embeds {:a (equals 42)
+                                           :m (embeds {:x (equals "foo")})})
+                             {:a 42
+                              :m {:x "bar"}})
     => {::result/type   :mismatch
         ::result/value  {:a 42
                          :m {:x (model/->Mismatch "foo" "bar")}}
@@ -291,8 +288,8 @@
 
     (match (embeds {:a (equals 42)
                     :m (embeds {:x (equals "foo")})})
-           {:a 43
-            :m {:x "bar"}})
+      {:a 43
+       :m {:x "bar"}})
     => {::result/type   :mismatch
         ::result/value  {:a (model/->Mismatch 42 43)
                          :m {:x (model/->Mismatch "foo" "bar")}}
@@ -301,7 +298,7 @@
   (match (equals [(equals {:a (equals 42)
                            :b (equals 1337)})
                   (equals 20)])
-         [{:a 42 :b 1337} 20])
+    [{:a 42 :b 1337} 20])
   => {::result/type   :match
       ::result/value  [{:a 42 :b 1337} 20]
       ::result/weight 0}
@@ -309,11 +306,10 @@
   (match (equals [(equals {:a (equals 42)
                            :b (equals 1337)})
                   (equals 20)])
-         [{:a 43 :b 1337} 20])
+    [{:a 43 :b 1337} 20])
   => {::result/type   :mismatch
       ::result/value  [{:a (model/->Mismatch 42 43) :b 1337} 20]
       ::result/weight 1})
-
 
 ;; Since the parser namespace needs to be loaded to interpret functions as
 ;; matchers, and we don't want to load the parser namespce, we need to manually
@@ -328,7 +324,7 @@
   (->PredMatcher expected))
 
 (fact
-  (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])
+ (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])
   => {::result/type   :match
       ::result/value  [1 2]
       ::result/weight 0}
@@ -520,13 +516,13 @@
 
 (fact "in-any-order minimal mismatch test"
   (core/match [{:a "1" :x "12"}]
-              [{:a "1" :x "12="}])
+    [{:a "1" :x "12="}])
   => {::result/type   :mismatch
       ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}]
       ::result/weight 1}
 
   (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
-              [{:a "1" :x "12="} {:a "2" :x "14="}])
+    [{:a "1" :x "12="} {:a "2" :x "14="}])
   => (just {::result/type   :mismatch
             ::result/value  (just [{:a "1" :x (model/->Mismatch "12" "12=")}
                                    {:a "2" :x (model/->Mismatch "14" "14=")}]
@@ -534,7 +530,7 @@
             ::result/weight 2})
 
   (core/match (in-any-order [{:a "2" :x "14"} {:a "1" :x "12"}])
-           [{:a "1" :x "12="} {:a "2" :x "14="}])
+    [{:a "1" :x "12="} {:a "2" :x "14="}])
   => {::result/type   :mismatch
       ::result/value  [{:a "2" :x (model/->Mismatch "14" "14=")}
                        {:a "1" :x (model/->Mismatch "12" "12=")}]
