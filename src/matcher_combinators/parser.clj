@@ -11,10 +11,10 @@
 
 (defmacro mimic-matcher [matcher-builder & types]
   `(extend-protocol
-     core/Matcher
+    core/Matcher
      ~@(mapcat (fn [t] `(~t
-                          (match [this# actual#]
-                                 (core/match (~matcher-builder this#) actual#)))) types)))
+                         (match [this# actual#]
+                           (core/match (~matcher-builder this#) actual#)))) types)))
 
 (extend-type clojure.lang.Fn
   core/Matcher
