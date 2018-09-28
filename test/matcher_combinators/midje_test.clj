@@ -5,7 +5,11 @@
             [matcher-combinators.midje :refer [match] :as ch]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
+            [clojure.spec.test.alpha :as spec.test]
             [midje.emission.api :as emission]))
+
+(spec.test/instrument)
+
 (fact "sequence matching"
   [] => (match [])
   [1] => (match [1])
@@ -224,3 +228,4 @@
   {:one "1"} => (match {:one #"1"})
   {:one "hello, world"} => (match {:one #"hello, (.*)"}))
 
+(spec.test/unstrument)

@@ -1,12 +1,14 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly contains] :as sweet]
             [clojure.string :as str]
+            [clojure.spec.test.alpha :as spec.test]
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]))
 
-(comment
+(spec.test/instrument)
+
 (facts "on the leaf values matcher: v"
   (match (equals 42) 42) => {::result/type   :match
                              ::result/value  42
@@ -516,7 +518,6 @@
                                   :in-any-order)
             ::result/weight 1}))
 
-)
 (fact "in-any-order minimal mismatch test"
   (core/match [{:a "1" :x "12"}]
               [{:a "1" :x "12="}])
@@ -538,3 +539,5 @@
       ::result/value  [{:a "2" :x (model/->Mismatch "14" "14=")}
                        {:a "1" :x (model/->Mismatch "12" "12=")}]
       ::result/weight 2})
+
+(spec.test/unstrument)
