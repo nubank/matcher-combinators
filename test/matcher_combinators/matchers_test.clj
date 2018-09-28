@@ -1,13 +1,13 @@
-false (ns matcher-combinators.matchers-test
-        (:require [clojure.math.combinatorics :as combo]
-                  [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
-                  [matcher-combinators.midje :refer [match]]
-                  [matcher-combinators.helpers :as helpers]
-                  [matcher-combinators.matchers :as m]
-                  [matcher-combinators.model :as model]
-                  [matcher-combinators.core :as c]
-                  [matcher-combinators.result :as result])
-        (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
+(ns matcher-combinators.matchers-test
+  (:require [clojure.math.combinatorics :as combo]
+            [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
+            [matcher-combinators.midje :refer [match]]
+            [matcher-combinators.helpers :as helpers]
+            [matcher-combinators.matchers :as m]
+            [matcher-combinators.model :as model]
+            [matcher-combinators.core :as c]
+            [matcher-combinators.result :as result])
+  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
