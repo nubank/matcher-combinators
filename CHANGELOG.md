@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.4.0]
+- api for using matching logic as a yes/no predicate, without access to mismatch info
+
 ## [0.3.4]
 - fix typo in spec that causes errors when spec checking is enabled
 
