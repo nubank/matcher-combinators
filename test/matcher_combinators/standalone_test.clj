@@ -8,13 +8,16 @@
 
 (spec.test/instrument)
 
-(fact
+(fact "basic use of matchers with match?"
   (standalone/match? (m/in-any-order [1 2]) [1 2]) => true
   (standalone/match? (m/in-any-order [1 2]) [1 3]) => false)
 
-(fact
+(fact "the parser defaults still work"
   (standalone/match? (m/embeds {:a odd?}) {:a 1 :b 2}) => true
   (standalone/match? {:a odd?} {:a 1 :b 2}) => true
   (standalone/match? {:a odd?} {:a 2 :b 2}) => false)
+
+(fact "using partial version of match?"
+  ((standalone/match? (m/embeds {:a odd?})) {:a 1 :b 2})) => true
 
 (spec.test/unstrument)

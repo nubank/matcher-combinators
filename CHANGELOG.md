@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.4.1]
+- multiple-arity fix for standalone matching api
+
 ## [0.4.0]
 - api for using matching logic as a yes/no predicate, without access to mismatch info
 

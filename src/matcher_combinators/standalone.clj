@@ -4,13 +4,16 @@
             [matcher-combinators.parser]))
 
 (s/fdef match?
-  :args (s/cat :matcher (partial satisfies? core/Matcher)
-               :actual any?)
+  :args (s/alt :partial (s/cat :matcher (partial satisfies? core/Matcher))
+               :full    (s/cat :matcher (partial satisfies? core/Matcher)
+                               :actual any?))
   :ret boolean?)
 
 (defn match?
   "Does the value match the provided matcher-combinator?"
-  [matcher actual]
-  (-> matcher
-      (core/match actual)
-      core/match?))
+  ([matcher]
+   (fn [actual] (match? matcher actual)))
+  ([matcher actual]
+   (-> matcher
+       (core/match actual)
+       core/match?)))
