@@ -2,6 +2,7 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
+            [matcher-combinators.result :as result]
             [clojure.string :as str]
             [clojure.test :as clojure.test]))
 
@@ -40,7 +41,7 @@
                :message  ~msg
                :expected '~form
                :actual   (list '~'not (list 'match? matcher# actual#))
-               :markup   (second result#)}))))
+               :markup   (::result/value result#)}))))
        (clojure.test/do-report
         {:type     :fail
          :message  ~msg
