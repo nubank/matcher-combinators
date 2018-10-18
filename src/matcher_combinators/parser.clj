@@ -7,7 +7,7 @@
             LazySeq Repeat Cons]
            [java.util UUID Date]
            [java.util.regex Pattern]
-           [java.time LocalDate LocalDateTime YearMonth]))
+           [java.time LocalDate LocalDateTime LocalTime YearMonth]))
 
 (defmacro mimic-matcher [matcher-builder & types]
   `(extend-protocol
@@ -35,6 +35,7 @@
                Date
                LocalDate
                LocalDateTime
+               LocalTime
                YearMonth
                Ratio
                BigDecimal

@@ -154,6 +154,7 @@
       => falsey)))
 
 (def now (java.time.LocalDateTime/now))
+(def now-local-time (java.time.LocalTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
 (def an-id (java.util.UUID/fromString an-id-string))
 (def another-id (java.util.UUID/fromString "8f488446-374e-4975-9670-35ca0a633da1"))
@@ -165,6 +166,7 @@
    :input {:id {:type :user-id
                 :value an-id-string}
            :timestamp now
+           :timestamp-local-time now-local-time
            :trigger "blabla"}
    :model "sampa_v3"
    :output {:sampa-score 123.4M
@@ -173,13 +175,14 @@
    :response-time response-time
    :version "1.33.7"})
 
-(fact "match nested maps with UUID, LocalDateTime, BigDecimal, and Double values"
+(fact "match nested maps with UUID, LocalDateTime, LocalTime, BigDecimal, and Double values"
   nested-map
   => (match {:id {:type :user-id
                   :value an-id-string}
              :input {:id {:type keyword?
                           :value an-id-string}
-                     :timestamp now}
+                     :timestamp now
+                     :timestamp-local-time now-local-time}
              :model "sampa_v3"
              :output {:sampa-score 123.4M
                       :user-id another-id
