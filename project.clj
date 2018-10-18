@@ -1,4 +1,4 @@
-(defproject nubank/matcher-combinators "0.4.1"
+(defproject nubank/matcher-combinators "0.4.2"
   :description "Library for creating matcher combinator to compare nested data structures"
   :url "https://github.com/nubank/matcher-combinators"
   :license {:name "Apache License, Version 2.0"}
@@ -21,7 +21,7 @@
                  [org.clojure/spec.alpha "0.2.176"]
                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]
                  [org.clojure/math.combinatorics "0.1.4"]
-                 [midje "1.9.3" :exclusions [org.clojure/clojure]]]
+                 [midje "1.9.4" :exclusions [org.clojure/clojure]]]
 
   :aliases {"lint"     ["do" "cljfmt" "check," "kibit"]
             "lint-fix" ["do" "cljfmt" "fix," "kibit" "--replace"]}
