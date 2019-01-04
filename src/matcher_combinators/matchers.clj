@@ -9,6 +9,7 @@
     (sequential? expected) (core/->EqualsSeq expected)
     (set? expected)        (core/->SetEquals expected false)
     (map? expected)        (core/->EqualsMap expected)
+    (bytes? expected)      (core/->ByteArray expected)
     :else                  (core/->Value expected)))
 
 (defn set-equals
@@ -26,6 +27,7 @@
     (sequential? expected) (core/->EmbedsSeq expected)
     (set? expected)        (core/->SetEmbeds expected false)
     (map? expected)        (core/->EmbedsMap expected)
+    (bytes? expected)      (core/->ByteArray expected)
     :else                  (core/->InvalidType expected "embeds" "seq, set, map")))
 
 (defn set-embeds
@@ -54,3 +56,8 @@
   "Matcher that will match when given value matches the `expected` regular expression."
   [expected]
   (core/->Regex expected))
+
+(defn byte-array
+  "Matcher that will compare ByteArrays contents."
+  [expected]
+  (core/->ByteArray expected))

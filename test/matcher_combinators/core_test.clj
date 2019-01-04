@@ -536,4 +536,14 @@
                        {:a "1" :x (model/->Mismatch "12" "12=")}]
       ::result/weight 2})
 
+(facts "on ByteArray values"
+  (let [x (clojure.core/byte-array [(byte 0x43) (byte 0x6c) (byte 0x6f)])
+        y (clojure.core/byte-array [(byte 0x21)])]
+    (match (byte-array x) x) => {::result/type   :match
+                                 ::result/value  x
+                                 ::result/weight 0}
+    (match (byte-array x) y) => {::result/type   :mismatch
+                                 ::result/value  (model/->Mismatch x y)
+                                 ::result/weight 1}))
+
 (spec.test/unstrument)

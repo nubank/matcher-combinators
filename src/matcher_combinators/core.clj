@@ -330,3 +330,19 @@
     {::result/type  :mismatch
      ::result/value (model/->FailedPredicate (str func) actual)
      ::result/weight 1}))
+
+(defrecord ByteArray [expected]
+  Matcher
+  (match [_this actual]
+    (cond
+      (= actual ::missing) {::result/type  :mismatch
+                            ::result/value (model/->Missing expected)
+                            ::result/weight 1}
+
+      (= (set expected) (set actual)) {::result/type   :match
+                                       ::result/value  actual
+                                       ::result/weight 0}
+
+      :else {::result/type   :mismatch
+             ::result/value  (model/->Mismatch expected actual)
+             ::result/weight 1})))
