@@ -12,8 +12,8 @@
     "determine if a concrete `actual` value satisfies this matcher"))
 
 (s/fdef match?
-        :args (s/cat :match-result ::result/result)
-        :ret boolean?)
+  :args (s/cat :match-result ::result/result)
+  :ret boolean?)
 (defn match? [{::result/keys [type]}]
   (= :match type))
 

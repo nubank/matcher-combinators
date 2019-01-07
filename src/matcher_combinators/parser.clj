@@ -13,15 +13,15 @@
   `(extend-protocol
     core/Matcher
      ~@(mapcat (fn [t] `(~t
-                          (match [this# actual#]
-                                 (core/match (~matcher-builder this#) actual#)))) types)))
+                         (match [this# actual#]
+                           (core/match (~matcher-builder this#) actual#)))) types)))
 
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
   (let [type-pairs (->> type-strings
                         (map symbol)
                         (mapcat (fn [t] `(~t
-                                (match [this# actual#]
-                                       (core/match (~matcher-builder this#) actual#))))))]
+                                          (match [this# actual#]
+                                            (core/match (~matcher-builder this#) actual#))))))]
     `(extend-protocol core/Matcher ~@type-pairs)))
 
 (extend-type clojure.lang.Fn
