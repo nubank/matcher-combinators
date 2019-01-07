@@ -119,3 +119,17 @@
             ::result/value (just {:two mismatch?
                                   :one (just ["hello, world" "world"])})
             ::result/weight number?}))
+
+(fact "handling primitive java types"
+  (fact "byte-arrays"
+    (let [a (byte-array [(byte 0x43) (byte 0x42)])
+          b (byte-array [(byte 0x42) (byte 0x43)])]
+      (c/match (m/equals a) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value {:actual   b
+                                :expected a}
+                ::result/weight 1}))))
