@@ -33,7 +33,8 @@
                              gen/ratio
                              gen-big-decimal
                              gen-big-int
-                             gen/char]))
+                             gen/char
+                             gen/bytes]))
 
 (defn gen-distinct-pair [element-generator]
   (gen/such-that (fn [[i j]] (not= i j)) (gen/tuple element-generator)))

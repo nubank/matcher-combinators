@@ -16,10 +16,21 @@
                          (match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
 
+(defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
+  (let [type-pairs (->> type-strings
+                        (map symbol)
+                        (mapcat (fn [t] `(~t
+                                          (match [this# actual#]
+                                            (core/match (~matcher-builder this#) actual#))))))]
+    `(extend-protocol core/Matcher ~@type-pairs)))
+
 (extend-type clojure.lang.Fn
   core/Matcher
   (match [this actual]
     (core/match-pred this actual)))
+
+(mimic-matcher-java-primitives matchers/equals
+                               "[B")
 
 (mimic-matcher matchers/equals
                nil
