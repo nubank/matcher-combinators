@@ -35,6 +35,7 @@
 (mimic-matcher matchers/equals
                nil
                Integer
+               Short
                Long
                Float
                Double

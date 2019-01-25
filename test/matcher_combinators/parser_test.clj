@@ -21,8 +21,12 @@
 (def gen-float
   (gen/fmap #(float %) gen/int))
 
+(def gen-short
+  (gen/fmap short gen/int))
+
 (def gen-scalar (gen/one-of [gen-java-integer
                              gen/int ;; really a Long
+                             gen-short
                              gen/string
                              gen/symbol
                              gen-float
