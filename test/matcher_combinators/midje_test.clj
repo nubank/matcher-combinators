@@ -2,11 +2,12 @@
   (:require [midje.sweet :as midje :refer [fact facts => falsey]]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.midje :refer [match] :as ch]
+            [matcher-combinators.midje :refer [match throws-match] :as ch]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [clojure.spec.test.alpha :as spec.test]
-            [midje.emission.api :as emission]))
+            [midje.emission.api :as emission])
+  (:import [clojure.lang ExceptionInfo]))
 
 (spec.test/instrument)
 
@@ -229,5 +230,13 @@
 (fact "treat regex as predicate in match"
   {:one "1"} => (match {:one #"1"})
   {:one "hello, world"} => (match {:one #"hello, (.*)"}))
+
+(fact "throws-match usage"
+  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
+  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1} ExceptionInfo)
+
+  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2})
+  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2} ExceptionInfo)
+  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 1} clojure.lang.ArityException))
 
 (spec.test/unstrument)

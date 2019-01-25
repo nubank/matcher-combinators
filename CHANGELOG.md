@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.6.0]
+- implement `throws-match` (midje) and `thrown-match?` (clojure.test) exception handling matchers
+
 ## [0.5.1]
 - parser support for shorts
 

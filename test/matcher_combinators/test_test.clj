@@ -1,8 +1,9 @@
 (ns matcher-combinators.test-test
-  (:require [matcher-combinators.test]
+  (:require [clojure.test :refer :all]
+            [matcher-combinators.test]
             [matcher-combinators.core :as core]
-            [matcher-combinators.matchers :as m]
-            [clojure.test :refer :all]))
+            [matcher-combinators.matchers :as m])
+  (:import [clojure.lang ExceptionInfo]))
 
 (def example-matcher {:username string?
                       :account  {:id        integer?
@@ -27,3 +28,10 @@
               {:a {:b 1}})
       "Predicates can be used in matchers")
   (is (match? {:a {:b 1}} {:a {:b 1 :c 2}})))
+
+(defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
+
+(deftest exception-matching
+  (is (thrown-match? ExceptionInfo
+                     {:foo 1}
+                     (bang!))))
