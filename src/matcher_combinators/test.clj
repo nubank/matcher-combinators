@@ -61,18 +61,18 @@
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (clojure.test/do-report
-                (if (core/match? result#)
-                  {:type     :pass
-                   :message  ~msg
-                   :expected '~form
-                   :actual   (list 'thrown-match? ~klass ~matcher '~body)}
-                  (with-file+line-info
-                    {:type     :matcher-combinators/exception-mismatch
-                     :message  ~msg
-                     :expected '~form
-                     :actual   (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
-                     :ex-class ~klass
-                     :markup   (::result/value result#)}))))
+               (if (core/match? result#)
+                 {:type     :pass
+                  :message  ~msg
+                  :expected '~form
+                  :actual   (list 'thrown-match? ~klass ~matcher '~body)}
+                 (with-file+line-info
+                   {:type     :matcher-combinators/exception-mismatch
+                    :message  ~msg
+                    :expected '~form
+                    :actual   (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                    :ex-class ~klass
+                    :markup   (::result/value result#)}))))
             e#))))
 
 (defmethod clojure.test/report :matcher-combinators/exception-mismatch [m]
