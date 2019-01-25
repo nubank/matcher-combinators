@@ -86,10 +86,12 @@ For example:
   (is (match? [1 odd?] [1 3]))
   (is (match? (m/prefix [1 odd?]) [1 1 2 3])))
 
+(defn bang [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
+
 (deftest exception-matching
   (is (thrown-match? ExceptionInfo
                      {:foo 1}
-                     (throw (ex-info "an exception" {:foo 1 :bar 2})))))
+                     (bang!))))
 ```
 
 ## Matchers
