@@ -231,12 +231,12 @@
   {:one "1"} => (match {:one #"1"})
   {:one "hello, world"} => (match {:one #"hello, (.*)"}))
 
-(fact "throws-match"
+(fact "throws-match usage"
   (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
-  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match ExceptionInfo {:foo 1})
+  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1} ExceptionInfo)
 
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2})
-  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match ExceptionInfo {:foo 2})
-  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match clojure.lang.ArityException {:foo 1}))
+  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2} ExceptionInfo)
+  (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 1} clojure.lang.ArityException))
 
 (spec.test/unstrument)

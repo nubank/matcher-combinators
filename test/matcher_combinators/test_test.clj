@@ -29,7 +29,7 @@
       "Predicates can be used in matchers")
   (is (match? {:a {:b 1}} {:a {:b 1 :c 2}})))
 
-(defn bang [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
+(defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
 
 (deftest exception-matching
   (is (thrown-match? ExceptionInfo
