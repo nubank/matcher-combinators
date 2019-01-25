@@ -9,7 +9,9 @@
             [midje.util.exceptions :as exception]
             [midje.util.thread-safe-var-nesting :as thread-safe-var-nesting]
             [midje.checking.checkers.defining :as checkers.defining])
-  (:import [midje.data.metaconstant Metaconstant]))
+  (:import [clojure.lang ArityException]
+           [midje.data.metaconstant Metaconstant]
+           [midje.util.exceptions ICapturedThrowable]))
 
 (defn check-match [matcher actual]
   (if (exception/captured-throwable? actual)
@@ -20,12 +22,52 @@
         true
         (checking/as-data-laden-falsehood {:notes [(printer/as-string [type value])]})))))
 
-(checkers.defining/defchecker match [matcher]
+(checkers.defining/defchecker match
+                              "Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"
+                              [matcher]
   (checkers.defining/checker [actual]
                              (if (core/matcher? matcher)
                                (check-match matcher actual)
                                (checking/as-data-laden-falsehood
                                 {:notes [(str "Input wasn't a matcher: " matcher)]}))))
+
+
+(defn- parse-throws-args! [args]
+  (let [arg-count (count args)]
+    (case arg-count
+      1 (if (core/matcher? (first args))
+          [(first args) nil]
+          (throw (IllegalArgumentException.
+                   "1-arity throws-match must be provided a matcher")))
+      2 (if (and (core/matcher? (first args))
+                 (isa? (second args) Throwable))
+          [(first args) (second args)]
+          (throw (IllegalArgumentException.
+                   "2-arity throws-match must be provided a matcher and a throwable subclass")))
+      (throw (ArityException. arg-count "throws-match")))))
+
+(checkers.defining/defchecker throws-match
+                              "Takes in a matcher or a matcher and throwable subclass.
+                              Returns a checker that asserts an exception was raised and the ex-data within it satisfies the matcher"
+                              [& args]
+  (checkers.defining/checker [actual]
+     (if-not (instance? ICapturedThrowable actual)
+       false
+       (let [[matcher ex-class] (parse-throws-args! args)
+             throwable          (.throwable ^ICapturedThrowable actual)]
+         (cond
+           (and ex-class
+                (not (instance? ex-class throwable)))
+           (checking/as-data-laden-falsehood
+             {:notes [(str "Unexpected exception (" throwable ") was raised instead of "
+                           ex-class)]})
+
+           (core/matcher? matcher)
+           (check-match matcher (ex-data throwable))
+
+           :else
+           (checking/as-data-laden-falsehood
+             {:notes [(str "Input wasn't a matcher: " matcher)]}))))))
 
 (extend-protocol core/Matcher
   Metaconstant

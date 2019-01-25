@@ -48,6 +48,44 @@
          :expected '~form
          :actual   (str "The second argument of match? isn't a matcher")}))))
 
+(defmethod clojure.test/assert-expr 'thrown-match? [msg form]
+  ;; (is (thrown-with-match? exception-class matcher expr))
+  ;; Asserts that evaluating expr throws an exception of class c.
+  ;; Also asserts that the exception data satisfies the provided matcher.
+  (let [klass   (nth form 1)
+        matcher (nth form 2)
+        body    (nthnext form 3)]
+    `(try ~@body
+          (clojure.test/do-report {:type :fail, :message ~msg, :expected '~form, :actual nil})
+          (println 1)
+          (catch ~klass e#
+            (let [result# (core/match ~matcher (ex-data e#))]
+              (clojure.test/do-report
+                (if (core/match? result#)
+                  {:type     :pass
+                   :message  ~msg
+                   :expected '~form
+                   :actual   (list 'thrown-match? ~klass ~matcher '~body)}
+                  (with-file+line-info
+                    {:type     :matcher-combinators/exception-mismatch
+                     :message  ~msg
+                     :expected '~form
+                     :actual   (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                     :ex-class ~klass
+                     :markup   (::result/value result#)}))))
+            e#))))
+
+(defmethod clojure.test/report :matcher-combinators/exception-mismatch [m]
+  (clojure.test/with-test-out
+    (clojure.test/inc-report-counter :fail)
+    (println "\nFAIL in" (clojure.test/testing-vars-str m))
+    (when (seq clojure.test/*testing-contexts*)
+      (println (clojure.test/testing-contexts-str)))
+    (when-let [message (:message m)]
+      (println message))
+    (println (:ex-class m) "data mismatches:")
+    (printer/pretty-print (:markup m))))
+
 (defmethod clojure.test/report :matcher-combinators/mismatch [m]
   (clojure.test/with-test-out
     (clojure.test/inc-report-counter :fail)

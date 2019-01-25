@@ -33,7 +33,10 @@ This library addresses this issue by providing composable matcher combinators th
 
 ### Midje:
 
-The `matcher-combinators.midje` namespace defines the `match` midje-style checker. This checker is used to wrap matcher-combinators to be used on the right-side of the fact check arrows
+The `matcher-combinators.midje` namespace defines the `match` and `throws-match` midje-style checkers. These should be used on the right-side of the midje `fact` check arrows (`=>`)
+
+ - `match`: This checker is used to wrap a matcher-combinator asserts that the provided value satisfies the matcher.
+ - `throws-match`: This checker wraps a matcher-combinator and optionally a throwable subclass. It asserts that an exception (of the given class) is raised and the `ex-data` satisfies the provided matcher.
 
 For example:
 
@@ -46,6 +49,13 @@ For example:
   ;; but when a map isn't immediately wrapped, it is interpreted as an `embeds` matcher
   ;; so you can write the previous check as:
   {:a {:bb 1 :cc 2} :d 3} => (match (m/equals {:a {:bb 1} :d 3})))
+
+(fact "you can assert an exception is thrown "
+  ;; Assert _some_ exception is raised and the ex-data inside satisfies the matcher
+  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
+
+  ;; Assert _a specific_ exception is raised and the ex-data inside satisfies the matcher
+  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match ExceptionInfo {:foo 1}))
 ```
 
 Note that you can also use the `match` checker to match arguments within midje's `provided` construct:
@@ -60,7 +70,10 @@ Note that you can also use the `match` checker to match arguments within midje's
 
 ### `clojure.test`
 
-Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` directive. The first argument to `match?` should be the matcher-combinator represented the expected value, and the second argument should be the actual value being checked.
+Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
+
+ - `match?`: The first argument should be the matcher-combinator represented the expected value, and the second argument should be the expression being checked.
+ - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinators, and the third the expression being checked.
 
 For example:
 
@@ -72,6 +85,11 @@ For example:
   ;; by default a sequentials are interpreted as a `equals` matcher
   (is (match? [1 odd?] [1 3]))
   (is (match? (m/prefix [1 odd?]) [1 1 2 3])))
+
+(deftest exception-matching
+  (is (thrown-match? ExceptionInfo
+                     {:foo 1}
+                     (throw (ex-info "an exception" {:foo 1 :bar 2})))))
 ```
 
 ## Matchers
