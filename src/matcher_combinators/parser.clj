@@ -4,7 +4,7 @@
             [matcher-combinators.model :as model])
   (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
             IPersistentVector IPersistentList IPersistentSet
-            LazySeq Repeat Cons]
+            LazySeq Repeat Cons Var]
            [java.util UUID Date]
            [java.util.regex Pattern]
            [java.time LocalDate LocalDateTime LocalTime YearMonth]))
@@ -53,7 +53,8 @@
                BigDecimal
                BigInteger
                BigInt
-               Character)
+               Character
+               Var)
 
 (mimic-matcher matchers/embeds IPersistentMap)
 (mimic-matcher matchers/equals IPersistentVector)
