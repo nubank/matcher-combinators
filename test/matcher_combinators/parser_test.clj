@@ -24,6 +24,8 @@
 (def gen-short
   (gen/fmap short gen/int))
 
+(def gen-var (gen/elements (vals (ns-interns 'clojure.core))))
+
 (def gen-scalar (gen/one-of [gen-java-integer
                              gen/int ;; really a Long
                              gen-short
@@ -38,7 +40,8 @@
                              gen-big-decimal
                              gen-big-int
                              gen/char
-                             gen/bytes]))
+                             gen/bytes
+                             gen-var]))
 
 (defn gen-distinct-pair [element-generator]
   (gen/such-that (fn [[i j]] (not= i j)) (gen/tuple element-generator)))
