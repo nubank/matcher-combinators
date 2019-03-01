@@ -64,11 +64,18 @@
      :else
      nil)))
 
-(defn- regex? [value] (instance? java.util.regex.Pattern value))
+(defn- regex? [value]
+  #?(:clj  (instance? java.util.regex.Pattern value)
+     :cljs (regexp? value)))
+
+(def regex-type
+  #?(:clj  "java.util.regex.Pattern"
+     :cljs "RegExp"))
+
 (defrecord Regex [expected]
   Matcher
   (match [_this actual]
-    (if-let [issue (validate-input expected actual regex? (constantly true) 'regex "java.util.regex.Pattern")]
+    (if-let [issue (validate-input expected actual regex? (constantly true) 'regex regex-type)]
       issue
       (try
         (if-let [match (re-find expected actual)]
@@ -78,7 +85,7 @@
           {::result/type  :mismatch
            ::result/value (model/->Mismatch expected actual)
            ::result/weight 1})
-        (catch ClassCastException ex
+        (catch #?(:clj ClassCastException, :cljs js/Error) _
           {::result/type  :mismatch
            ::result/value (model/->InvalidMatcherType
                            (str "provided: " actual)
