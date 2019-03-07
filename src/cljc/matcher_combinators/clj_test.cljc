@@ -1,4 +1,4 @@
-(ns matcher-combinators.test
+(ns matcher-combinators.clj-test
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]

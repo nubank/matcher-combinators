@@ -19,9 +19,6 @@
                  [midje "1.9.6" :exclusions [org.clojure/clojure]]
                  ]
 
-  :clj {:dependencies []}
-
-
   :test-paths ["test/clj" "test/cljc"]
 
   :profiles {:dev {:plugins [[lein-midje "3.2.1"]

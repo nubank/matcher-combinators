@@ -1,13 +1,15 @@
 (ns matcher-combinators.parser
+  #?(:cljs
+     (:require-macros matcher-combinators.parser))
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.matchers :as matchers]
-            [matcher-combinators.model :as model])
-  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
-            IPersistentVector IPersistentList IPersistentSet
-            LazySeq Repeat Cons Var]
-           [java.util UUID Date]
-           [java.util.regex Pattern]
-           [java.time LocalDate LocalDateTime LocalTime YearMonth]))
+            [matcher-combinators.matchers :as matchers])
+  #?(:clj
+     (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
+               IPersistentVector IPersistentList IPersistentSet
+               LazySeq Repeat Cons Var]
+              [java.util UUID Date]
+              [java.util.regex Pattern]
+              [java.time LocalDate LocalDateTime LocalTime YearMonth])))
 
 (defmacro mimic-matcher [matcher-builder & types]
   `(extend-protocol
@@ -16,6 +18,31 @@
                          (match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
 
+#?(:cljs (do
+(extend-type Fn
+  core/Matcher
+  (match [this actual]
+    (core/match-pred this actual)))
+(extend-type js/Number
+  core/Matcher
+  (match [this actual]
+    (core/equals this actual)))
+
+(mimic-matcher matchers/equals
+               nil
+               Keyword
+               Symbol
+               Var
+               js/Number
+               js/String
+               UUID)
+
+(mimic-matcher matchers/embeds IMap)
+(mimic-matcher matchers/equals Cons)
+(mimic-matcher matchers/equals Repeat)
+(mimic-matcher matchers/equals APersistentVector)))
+
+#?(:clj (do
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
   (let [type-pairs (->> type-strings
                         (map symbol)
@@ -63,4 +90,4 @@
 (mimic-matcher matchers/equals Cons)
 (mimic-matcher matchers/equals Repeat)
 (mimic-matcher matchers/equals LazySeq)
-(mimic-matcher matchers/regex Pattern)
+(mimic-matcher matchers/regex Pattern)))

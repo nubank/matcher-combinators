@@ -1,31 +1,39 @@
 (ns matcher-combinators.printer
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
-            [matcher-combinators.model :as model]
+            #?(:clj  [matcher-combinators.model]
+               :cljs [matcher-combinators.model :refer [Mismatch
+                                                        Missing
+                                                        Unexpected
+                                                        FailedPredicate
+                                                        InvalidMatcherType]])
             [matcher-combinators.result :as result]
-            #?(:clj [colorize.core :as colorize])))
+            #?(:clj [colorize.core :as colorize]))
+  #?(:clj
+     (:import [matcher_combinators.model Mismatch Missing Unexpected
+               FailedPredicate InvalidMatcherType])))
 
 (defrecord ColorTag [color expression])
 
-(defmulti markup-expression class)
+(defmulti markup-expression type)
 
-(defmethod markup-expression model.Mismatch [mismatch]
+(defmethod markup-expression Mismatch [mismatch]
   (list 'mismatch
         (->ColorTag :yellow (:expected mismatch))
         (->ColorTag :red (:actual mismatch))))
 
-(defmethod markup-expression model.Missing [missing]
+(defmethod markup-expression Missing [missing]
   (list 'missing (->ColorTag :red (:expected missing))))
 
-(defmethod markup-expression model.Unexpected [unexpected]
+(defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))
 
-(defmethod markup-expression model.FailedPredicate [failed-predicate]
+(defmethod markup-expression FailedPredicate [failed-predicate]
   (list 'predicate
         (->ColorTag :yellow (:form failed-predicate))
         (->ColorTag :red (:actual failed-predicate))))
 
-(defmethod markup-expression model.InvalidMatcherType [invalid-type]
+(defmethod markup-expression InvalidMatcherType [invalid-type]
   (list 'invalid-matcher-input
         (->ColorTag :yellow (:expected-type-msg invalid-type))
         (->ColorTag :red (:provided invalid-type))))
