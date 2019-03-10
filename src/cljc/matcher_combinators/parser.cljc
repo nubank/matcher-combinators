@@ -18,29 +18,70 @@
                          (match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
 
-#?(:cljs (do
-(extend-type Fn
+#?(:cljs
+(extend-protocol
   core/Matcher
-  (match [this actual]
-    (core/match-pred this actual)))
-(extend-type js/Number
-  core/Matcher
-  (match [this actual]
-    (core/equals this actual)))
 
-(mimic-matcher matchers/equals
-               nil
-               Keyword
-               Symbol
-               Var
-               js/Number
-               js/String
-               UUID)
+  ;; function as predicate
+  function
+  (match [this actual]
+    (core/match-pred this actual))
 
-(mimic-matcher matchers/embeds IMap)
-(mimic-matcher matchers/equals Cons)
-(mimic-matcher matchers/equals Repeat)
-(mimic-matcher matchers/equals APersistentVector)))
+  ;; equals base types
+  nil
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  number
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  string
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  boolean
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  Keyword
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  UUID
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  js/Date
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  Var
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  ;; equals nested types
+  Cons
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  Repeat
+  (match [this actual]
+    (core/match (matchers/equals this) actual))
+
+  default
+  (match [this actual]
+    (cond
+      (satisfies? IMap this)
+      (core/match (matchers/embeds this) actual)
+
+      (or (satisfies? ISet this)
+          (satisfies? ISequential this))
+      (core/match (matchers/equals this) actual)))
+
+  js/RegExp
+  (match [this actual]
+    (core/match (matchers/regex this) actual))))
 
 #?(:clj (do
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]

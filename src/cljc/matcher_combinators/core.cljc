@@ -234,7 +234,8 @@
         find-best-match   (matched-or-best-matchers matchers subset?)
         result            (reduce find-best-match
                                   {:matched   []
-                                   :weight    Integer/MAX_VALUE
+                                   :weight    #?(:clj Integer/MAX_VALUE
+                                                 :cljs Number.MAX_SAFE_INTEGER)
                                    :elements  elements
                                    :unmatched matchers}
                                   elem-permutations)]
@@ -278,7 +279,7 @@
                                      "set"))]
       issue
       (let [{::result/keys [type value weight]} (match-any-order
-                                                 (vec expected) (vec actual) false)]
+                                                  (vec expected) (vec actual) false)]
         {::result/type   type
          ::result/value  (set value)
          ::result/weight weight}))))

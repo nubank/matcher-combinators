@@ -43,7 +43,6 @@
         body    (nthnext form 3)]
     `(try ~@body
           (t/do-report {:type :fail, :message ~msg, :expected '~form, :actual nil})
-          (println 1)
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (t/do-report
@@ -62,7 +61,6 @@
             e#))))))
 
 #?(:cljs (do
-
 (defmethod t/report [::t/default :matcher-combinators/exception-mismatch] [m]
   (t/inc-report-counter! :fail)
   (println "\nFAIL in" (t/testing-vars-str m))
