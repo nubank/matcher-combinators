@@ -1,4 +1,4 @@
-(ns matcher-combinators.foo
+(ns matcher-combinators.cljs-example-test
   (:require [clojure.test :refer [deftest testing is are]]
             [matcher-combinators.parser]
             [matcher-combinators.matchers :as m]
