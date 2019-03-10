@@ -39,7 +39,7 @@
     (str \u001b code)))
 
 (defn- style* [s & codes]
-  (str (apply str (map ansi-code codes)) s (ansi-code "[0m")))
+  (str (clojure.string/join (map ansi-code codes)) s (ansi-code "[0m")))
 
 (defn style [s & codes]
   (apply style* s (map ANSI-CODES codes)))

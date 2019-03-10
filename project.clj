@@ -44,13 +44,6 @@
                                    :main matcher-combinators.doo-runner
                                    :optimizations :none
                                    :process-shim false}}
-                       {:id "dev"
-                        :source-paths ["src/cljc" "src/cljs"]
-                        :compiler {:output-to "hello_world.js"
-                                   :output-dir "target/dev_out"
-                                   :optimizations :none
-                                   :cache-analysis true
-                                   :source-map true}}
                        {:id "advanced-test"
                         :source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
                         :compiler {:output-to "target/advanced_out/test.js"

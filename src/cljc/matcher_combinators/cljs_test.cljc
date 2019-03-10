@@ -33,13 +33,12 @@
              :message  ~msg
              :expected '~form
              :actual   (list 'match? matcher# actual#)}
-            (do
             (with-file+line-info
               {:type     :matcher-combinators/mismatch
                :message  ~msg
                :expected '~form
                :actual   (list '~'not (list 'match? matcher# actual#))
-               :markup   (::result/value result#)})))))
+               :markup   (::result/value result#)}))))
        (t/do-report
         {:type     :fail
          :message  ~msg
