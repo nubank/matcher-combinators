@@ -1,6 +1,4 @@
 (ns matcher-combinators.parser
-  #?(:cljs
-     (:require-macros matcher-combinators.parser))
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers])
   #?(:clj
@@ -10,13 +8,6 @@
               [java.util UUID Date]
               [java.util.regex Pattern]
               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
-
-(defmacro mimic-matcher [matcher-builder & types]
-  `(extend-protocol
-    core/Matcher
-     ~@(mapcat (fn [t] `(~t
-                         (match [this# actual#]
-                           (core/match (~matcher-builder this#) actual#)))) types)))
 
 #?(:cljs
 (extend-protocol
@@ -84,6 +75,13 @@
     (core/match (matchers/regex this) actual))))
 
 #?(:clj (do
+(defmacro mimic-matcher [matcher-builder & types]
+  `(extend-protocol
+    core/Matcher
+     ~@(mapcat (fn [t] `(~t
+                         (match [this# actual#]
+                           (core/match (~matcher-builder this#) actual#)))) types)))
+
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
   (let [type-pairs (->> type-strings
                         (map symbol)

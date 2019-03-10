@@ -8,7 +8,7 @@
                                                         FailedPredicate
                                                         InvalidMatcherType]])
             [matcher-combinators.result :as result]
-            #?(:clj [colorize.core :as colorize]))
+            [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
      (:import [matcher_combinators.model Mismatch Missing Unexpected
                FailedPredicate InvalidMatcherType])))
@@ -41,10 +41,13 @@
 (defmethod markup-expression :default [expression]
   expression)
 
-(defn colorized-print [in-color]
-  #?(:clj (clojure.core/print (colorize/ansi (:color in-color))))
-  (pprint/write-out (:expression in-color))
-  #?(:clj (clojure.core/print (colorize/ansi :reset))))
+(defn colorized-print [{:keys [color expression]}]
+  (if color
+    #?(:clj  (do (ansi-color/set-color color)
+                 (pprint/write-out expression)
+                 (ansi-color/reset))
+       :cljs (pprint/write-out (ansi-color/style expression color)))
+    (pprint/write-out expression)))
 
 (defn print-diff-dispatch [expression]
   (let [markup (markup-expression expression)]

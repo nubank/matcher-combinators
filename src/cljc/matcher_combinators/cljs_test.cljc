@@ -10,6 +10,18 @@
 (defn with-file+line-info [report]
   #?(:cljs (merge (t/file-and-line (js/Error.) 4) report)))
 
+;; This technique was copied from https://github.com/tonsky/datascript
+;; below is the reasoning from the datascript repo:
+
+;;  The matcher-combinators.cljs-test namespace exists only for the side
+;;  effect of extending the cljs.test/assert-expr multimethod.
+
+;;  This has to be done on the clj side of cljs compilation, and
+;;  so we have a separate namespace that is only loaded by cljs
+;;  via a :require-macros clause in datascript.test.core. This
+;;  means we have a clj namespace that should only be loaded by
+;;  cljs compilation.
+
 #?(:clj (do
 (defmethod assert-expr 'match? [_ msg form]
   `(let [[matcher# actual#] (list ~@(rest form))]
@@ -20,13 +32,13 @@
             {:type     :pass
              :message  ~msg
              :expected '~form
-             :actual   (list 'match matcher# actual#)}
+             :actual   (list 'match? matcher# actual#)}
             (do
             (with-file+line-info
               {:type     :matcher-combinators/mismatch
                :message  ~msg
                :expected '~form
-               :actual   (list '~'not (list 'match matcher# actual#))
+               :actual   (list '~'not (list 'match? matcher# actual#))
                :markup   (::result/value result#)})))))
        (t/do-report
         {:type     :fail

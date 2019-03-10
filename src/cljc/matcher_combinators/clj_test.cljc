@@ -46,7 +46,7 @@
         {:type     :fail
          :message  ~msg
          :expected '~form
-         :actual   (str "The second argument of match? isn't a matcher")}))))
+         :actual   (str "The first argument of match? isn't a matcher")}))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
