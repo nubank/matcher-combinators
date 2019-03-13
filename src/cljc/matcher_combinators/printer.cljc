@@ -1,14 +1,21 @@
 (ns matcher-combinators.printer
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
-            [matcher-combinators.model :as model]
+            #?(:clj  [matcher-combinators.model]
+               :cljs [matcher-combinators.model :refer [Mismatch
+                                                        Missing
+                                                        Unexpected
+                                                        FailedPredicate
+                                                        InvalidMatcherType]])
             [matcher-combinators.result :as result]
-            [colorize.core :as colorize])
-  (:import [matcher_combinators.model Mismatch Missing Unexpected FailedPredicate InvalidMatcherType]))
+            [matcher-combinators.ansi-color :as ansi-color])
+  #?(:clj
+     (:import [matcher_combinators.model Mismatch Missing Unexpected
+               FailedPredicate InvalidMatcherType])))
 
 (defrecord ColorTag [color expression])
 
-(defmulti markup-expression class)
+(defmulti markup-expression type)
 
 (defmethod markup-expression Mismatch [mismatch]
   (list 'mismatch
@@ -34,10 +41,13 @@
 (defmethod markup-expression :default [expression]
   expression)
 
-(defn colorized-print [in-color]
-  (clojure.core/print (colorize/ansi (:color in-color)))
-  (pprint/write-out (:expression in-color))
-  (clojure.core/print (colorize/ansi :reset)))
+(defn colorized-print [{:keys [color expression]}]
+  (if color
+    #?(:clj  (do (ansi-color/set-color color)
+                 (pprint/write-out expression)
+                 (ansi-color/reset))
+       :cljs (pprint/write-out (ansi-color/style expression color)))
+    (pprint/write-out expression)))
 
 (defn print-diff-dispatch [expression]
   (let [markup (markup-expression expression)]

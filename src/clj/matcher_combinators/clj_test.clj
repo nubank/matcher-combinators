@@ -1,4 +1,4 @@
-(ns matcher-combinators.test
+(ns matcher-combinators.clj-test
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
@@ -46,7 +46,7 @@
         {:type     :fail
          :message  ~msg
          :expected '~form
-         :actual   (str "The second argument of match? isn't a matcher")}))))
+         :actual   (str "The first argument of match? isn't a matcher")}))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
@@ -57,7 +57,6 @@
         body    (nthnext form 3)]
     `(try ~@body
           (clojure.test/do-report {:type :fail, :message ~msg, :expected '~form, :actual nil})
-          (println 1)
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (clojure.test/do-report

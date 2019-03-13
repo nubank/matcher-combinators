@@ -12,10 +12,3 @@
 (s/def ::value any?)
 
 (s/def ::result (s/keys :req [::weight ::type ::value]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; helpers
-
-(defn assert-spec [spec value]
-  (when-not (s/valid? spec value)
-    (throw (AssertionError. (s/explain-data spec value)))))

@@ -18,8 +18,8 @@ This library addresses this issue by providing composable matcher combinators th
 ## Features
 
 - Pretty-printed diffs when the actual result doesn't match the expected matcher
-- Integrates with clojure.test and midje
-- Good readability by providing default interpretations of core clojure data-structures as matcher combinators
+- Integrates with `clojure.test` and `midje`
+- Good readability by providing default interpretations of core Clojure data-structures as matcher combinators
 
 | Midje checkers | Matcher combinators |
 | ------- | ----- |
@@ -138,10 +138,16 @@ An example of this in the wild can be seen in the `abracad` library [here](https
 
 ## Running tests
 
-The project contains both midje and `clojure.test` tests.
+The project contains `midje`, `clojure.test`, and `cljs.test` tests.
 
-Midje is capable of running both types of tests:
+To run Clojure tests:
 
 ```
 lein midje
+```
+
+To run Clojurescript tests:
+
+```
+lein node-test
 ```
