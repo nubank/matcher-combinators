@@ -35,7 +35,8 @@
             "test-clj" ["all" "do" ["test"] ["check"]]
             "test-phantom" ["doo" "phantom" "test"]
             "test-advanced" ["doo" "phantom" "advanced-test"]
-            "test-node" ["doo" "node" "node-test"]}
+            "test-node-watch" ["doo" "node" "node-test"]
+            "test-node" ["doo" "node" "node-test" "once"]}
   ;; Below, :process-shim false is workaround for <https://github.com/bensu/doo/pull/141>
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
