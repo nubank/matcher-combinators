@@ -120,6 +120,13 @@
                                   :one (just ["hello, world" "world"])})
             ::result/weight number?}))
 
+(fact "java classes"
+  (c/match (m/equals java.lang.String)
+           java.lang.String)
+  => (just {::result/type :match
+            ::result/value java.lang.String
+            ::result/weight 0}))
+
 (fact "handling primitive java types"
   (fact "byte-arrays"
     (let [a (byte-array [(byte 0x43) (byte 0x42)])

@@ -82,3 +82,8 @@
   (fact
    (= (core/match (equals nil) nil)
       (core/match nil nil)) => truthy))
+
+(fact "java classes are parsed as an equals"
+  (fact
+   (= (core/match (equals java.lang.String) java.lang.String)
+      (core/match java.lang.String java.lang.String)) => truthy))
