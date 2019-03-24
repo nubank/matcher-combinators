@@ -120,12 +120,20 @@
                                   :one (just ["hello, world" "world"])})
             ::result/weight number?}))
 
-(fact "java classes"
-  (c/match (m/equals java.lang.String)
-           java.lang.String)
-  => (just {::result/type :match
-            ::result/value java.lang.String
-            ::result/weight 0}))
+(facts "java classes"
+  (fact "matching"
+    (c/match (m/equals java.lang.String)
+             java.lang.String)
+    => (just {::result/type :match
+              ::result/value java.lang.String
+              ::result/weight 0}))
+  (fact "mismatching"
+    (c/match (m/equals java.lang.Number)
+             java.lang.String)
+    => (just {::result/type :mismatch
+              ::result/value {:actual   java.lang.String
+                              :expected java.lang.Number}
+              ::result/weight 1})))
 
 (fact "handling primitive java types"
   (fact "byte-arrays"
