@@ -100,6 +100,7 @@
 
 (mimic-matcher matchers/equals
                nil
+               java.lang.Class
                Integer
                Short
                Long
