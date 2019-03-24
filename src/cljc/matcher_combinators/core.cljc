@@ -93,6 +93,16 @@
                                 (type actual)))
            ::result/weight 1})))))
 
+(defrecord Absent []
+  Matcher
+  (match [_this _actual]
+    ;; `Absent` should never be matched against directly. That happening means
+    ;; it wasn't used in the context of a map
+    {::result/type  :mismatch
+     ::result/value (model/->InvalidMatcherContext
+                      "`absent` matcher should only be used as the value in a map")
+     ::result/weight 1}))
+
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher
   (match [_this _actual]
@@ -104,12 +114,25 @@
                           type-msg))
      ::result/weight 1}))
 
+(defn- find-unexpected [expected-map key]
+  (when-let [[k v] (find expected-map key)]
+    (when-not (= Absent (type v)) [k v])))
+
+(defn- match-kv [actual [key matcher]]
+  (if (= Absent (type matcher))
+    (if-let [[k v] (find actual key)]
+      [key {::result/type   :mismatch
+            ::result/value  (model/->Unexpected v)
+            ::result/weight 1}]
+      nil)
+    [key (match matcher (get actual key ::missing))]))
+
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
-  (let [entry-results      (map (fn [[key matcher]]
-                                  [key (match matcher (get actual key ::missing))])
-                                expected)
+  (let [entry-results      (->> expected
+                                (map (partial match-kv actual))
+                                (filter identity))
         unexpected-entries (keep (fn [[key val]]
-                                   (when-not (find expected key)
+                                   (when-not (find-unexpected expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
     (if (and (every? (comp match? second) entry-results)

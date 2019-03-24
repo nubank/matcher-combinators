@@ -374,6 +374,44 @@
               ::result/weight 1})))
 
 (tabular
+  (fact "matching for absence in map"
+    (core/match (?matcher {:a (equals 42)
+                           :b absent})
+      {:a 42})
+    => (just {::result/type   :match
+              ::result/value  {:a 42}
+              ::result/weight 0})
+
+    (core/match (?matcher {:a (equals 42)
+                           :b absent})
+      {:a 42
+       :b 43})
+    => (just {::result/type   :mismatch
+              ::result/value  (just {:a 42
+                                     :b (just {:actual 43})})
+              ::result/weight #(or (= 1 %) (= 2 %))}))
+  ?matcher
+  equals
+  embeds)
+
+(fact "`absent` interaction with keys pointing to `nil` values"
+  (core/match (equals {:a (equals 42)
+                       :b absent})
+              {:a 42
+               :b nil})
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:a 42
+                                   :b {:actual nil}})
+            ::result/weight 2}))
+
+(fact "using `absent` incorrectly outside of a map"
+  (core/match (equals [(equals 42) absent])
+    [42])
+  => (just {::result/type   :mismatch
+            ::result/value  (just [42 {:message "`absent` matcher should only be used as the value in a map"}])
+            ::result/weight 1}))
+
+(tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
     (core/match (?matcher 1) 1)
     => (just {::result/type   :mismatch

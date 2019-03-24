@@ -54,3 +54,7 @@
   "Matcher that will match when given value matches the `expected` regular expression."
   [expected]
   (core/->Regex expected))
+
+(def absent
+  "Value-position matcher for maps that matches when containing map doesn't have the key pointing to this matcher."
+  (core/->Absent))
