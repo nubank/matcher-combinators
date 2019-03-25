@@ -148,3 +148,32 @@
                 ::result/value {:actual   b
                                 :expected a}
                 ::result/weight 1}))))
+
+(defrecord RecordA [val])
+(defrecord RecordB [val])
+
+(facts "records"
+  (fact "matching"
+    (let [a (RecordA. "val")]
+      (c/match (m/equals a) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})))
+
+  (fact "mismatching with same type and different values"
+    (let [a (RecordA. "val a")
+          b (RecordA. "val b")]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value {:actual b
+                                :expected a}
+                ::result/weight 1})))
+
+  (fact "mismatching with same values and different type"
+    (let [a (RecordA. "val")
+          b (RecordB. "val")]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value {:actual b
+                                :expected a}
+                ::result/weight 1}))))

@@ -8,6 +8,7 @@
   (cond
     (sequential? expected) (core/->EqualsSeq expected)
     (set? expected)        (core/->SetEquals expected false)
+    (record? expected)     (core/->EqualsRecord expected)
     (map? expected)        (core/->EqualsMap expected)
     :else                  (core/->Value expected)))
 
