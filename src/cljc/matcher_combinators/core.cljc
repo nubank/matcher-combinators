@@ -146,7 +146,7 @@
 (defrecord EqualsRecord [expected]
   Matcher
   (match [_this actual]
-    (if-let [issue (validate-input expected actual #(or (map? %) (record? %)) 'equals "record")]
+    (if-let [issue (validate-input expected actual map? 'equals "record")]
       issue
       (cond
         (and (record? expected)
