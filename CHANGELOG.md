@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. This change
 ## [0.9.0]
 - matcher for asserting absence of key
 
+## [0.8.1]
+- declare `match?` to help avoid linters removing require
+
 ## [0.8.0]
 - parser support for java classes
 
