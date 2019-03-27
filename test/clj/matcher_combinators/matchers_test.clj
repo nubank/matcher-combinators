@@ -1,7 +1,6 @@
 (ns matcher-combinators.matchers-test
   (:require [clojure.math.combinatorics :as combo]
             [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
-            [matcher-combinators.midje :refer [match]]
             [matcher-combinators.helpers :as helpers]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
@@ -148,3 +147,30 @@
                 ::result/value {:actual   b
                                 :expected a}
                 ::result/weight 1}))))
+
+(def a-map {:a (constantly false)})
+(def b-map {:a (constantly false)})
+(def a-seq [(constantly false)])
+(def b-seq [(constantly false)])
+
+(facts "value matcher"
+  (fact "for maps"
+    (c/match (m/value a-map) a-map)
+    => (just {::result/type :match
+              ::result/value a-map
+              ::result/weight 0})
+    (c/match (m/value a-map) b-map)
+    => (just {::result/type :mismatch
+              ::result/value {:actual   b-map
+                              :expected a-map}
+              ::result/weight 1}))
+  (fact "for seqs"
+    (c/match (m/value a-seq) a-seq)
+    => (just {::result/type :match
+              ::result/value a-seq
+              ::result/weight 0})
+    (c/match (m/value a-seq) b-seq)
+    => (just {::result/type :mismatch
+              ::result/value {:actual   b-seq
+                              :expected a-seq}
+              ::result/weight 1})))

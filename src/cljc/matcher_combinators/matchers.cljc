@@ -1,6 +1,11 @@
 (ns matcher-combinators.matchers
   (:require [matcher-combinators.core :as core]))
 
+(defn value
+  "Matcher that uses underlying language-level equality"
+  [expected]
+  (core/->Value expected))
+
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
   `expected`."

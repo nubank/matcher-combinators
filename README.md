@@ -128,6 +128,8 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
 
+- `value` uses `=` to compares `expected` with `actual`. Same behavior as `equals` except in the case of maps and sequences, where `value` continues to use `=` but `equals` recursively applies matching logic. Useful for asserting equality for special maps such as prismatic schemas.
+
 - `regex`: matches the `actual-value-found` when provided an `expected-regex` using `(re-find expected-regex actual-value-found)`
 
 ### building new matchers

@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.9.0]
+- add `value` matcher for forcing map like structures to be compared using equality
+
 ## [0.8.1]
 - declare `match?` to help avoid linters removing require
 

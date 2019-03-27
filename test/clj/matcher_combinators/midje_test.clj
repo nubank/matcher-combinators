@@ -239,4 +239,18 @@
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2} ExceptionInfo)
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 1} clojure.lang.ArityException))
 
+(def a-map {:a (constantly false)})
+(def b-map {:a (constantly false)})
+
+(facts "match maps using clojure `=`"
+  (fact "functions that are equavalent aren't referentially equal"
+    (:a a-map) =not=> (:a b-map))
+
+  (fact "using default map matching fails because functions are called as predicates"
+    a-map =not=> (match b-map))
+
+  (fact "using `value` maps are compared using `=`"
+    a-map => (match (m/value a-map))
+    a-map =not=> (match (m/value b-map))))
+
 (spec.test/unstrument)
