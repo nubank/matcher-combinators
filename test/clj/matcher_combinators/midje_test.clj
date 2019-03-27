@@ -36,6 +36,13 @@
   {:a {:bb 1} :c 2} => (match {:a {:bb 1}})
   {:a {:bb 1} :c 2} => (match {:a {:bb odd?}}))
 
+(fact "map absent"
+  {:a {:aa 11}} => (match {:a {:bb m/absent} :b m/absent})
+  {:a {:aa 11} :b 1} =not=> (match {:a {:bb m/absent} :b m/absent}))
+
+(fact "absent used in wrong context"
+  [1] =not=> (match [m/absent]))
+
 (fact "map in a sequence in a map"
   {:a [{:bb 1} {:cc 2 :dd 3}] :b 4} => (match {:a [{:bb 1} {:cc 2 :dd 3}] :b 4})
   {:a [{:bb 1} {:cc 2 :dd 3}] :b 4} => (match (m/equals {:a [{:bb 1} {:cc 2 :dd 3}] :b 4})))
