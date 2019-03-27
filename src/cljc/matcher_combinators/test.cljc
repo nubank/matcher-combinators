@@ -4,3 +4,5 @@
        :clj  [clojure.test :as t :refer        [is are deftest testing]])
     #?(:cljs [matcher-combinators.cljs-test]
        :clj  [matcher-combinators.clj-test])))
+
+(declare match?)
