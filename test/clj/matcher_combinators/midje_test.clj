@@ -56,6 +56,7 @@
     {:a {:bb odd?} :c 2} => (match (m/equals {:a {:bb (midje/exactly odd?)} :c 2}))))
 
 (defrecord Point [x y])
+(defrecord BluePoint [x y])
 
 (fact "matching records with maps"
   (->Point 1 2) => (match (m/equals {:x 1 :y 2}))
@@ -73,7 +74,8 @@
 
 (fact "matching records with records"
   (->Point 1 2) => (match (m/equals (->Point 1 2)))
-  (->Point 1 2) => (match (->Point 1 2)))
+  (->Point 1 2) => (match (->Point 1 2))
+  (->Point 1 2) =not=> (match (->BluePoint 1 2)))
 
 (fact "equals doesn't coerce like midje `just`"
   {:a 1 :b 2} => (midje/just [[:a 1] [:b 2]])

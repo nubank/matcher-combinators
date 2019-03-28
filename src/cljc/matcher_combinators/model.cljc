@@ -5,3 +5,4 @@
 (defrecord Unexpected [actual])
 (defrecord InvalidMatcherType [provided expected-type-msg])
 (defrecord FailedPredicate [form actual])
+(defrecord TypeMismatch [expected actual])

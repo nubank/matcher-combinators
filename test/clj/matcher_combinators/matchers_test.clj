@@ -149,29 +149,30 @@
                                 :expected a}
                 ::result/weight 1}))))
 
-(defrecord RecordA [val])
-(defrecord RecordB [val])
+(defrecord Point [x y])
+(defrecord BluePoint [x y])
 
-(facts "records"
+(facts "records equals"
   (fact "matching"
-    (let [a (RecordA. "val")]
+    (let [a (->Point 1 2)]
       (c/match (m/equals a) a)
       => (just {::result/type :match
                 ::result/value a
                 ::result/weight 0})))
 
   (fact "mismatching with same type and different values"
-    (let [a (RecordA. "val a")
-          b (RecordA. "val b")]
+    (let [a (->Point 1 2)
+          b (->Point 2 2)]
       (c/match (m/equals a) b)
       => (just {::result/type :mismatch
-                ::result/value {:actual b
-                                :expected a}
+                ::result/value (just {:x {:actual 2
+                                          :expected 1}
+                                      :y 2})
                 ::result/weight 1})))
 
   (fact "mismatching with same values and different type"
-    (let [a (RecordA. "val")
-          b (RecordB. "val")]
+    (let [a (->Point 1 2)
+          b (->BluePoint 1 2)]
       (c/match (m/equals a) b)
       => (just {::result/type :mismatch
                 ::result/value {:actual b
