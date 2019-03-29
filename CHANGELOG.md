@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.0.0]
+- Using `nil` as the matcher for value at a key in a map now only matches if the key is absent.
+
+For example:
+```clojure
+(testing "will match because `:b` points to `nil` in the matcher and the `actual` doesn't have `:b`"
+  (is (match? {:a 1 :b nil}
+              {:a 1})))
+(testing 'won't match because `:b` is present in the `actual` when the `nil` signifies it should be absent"
+  (is (match? {:a 1 :b nil}
+              {:a 1 :b 2})))
+```
+
 ## [0.8.1]
 - declare `match?` to help avoid linters removing require
 

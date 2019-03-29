@@ -130,6 +130,26 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
 
 - `regex`: matches the `actual-value-found` when provided an `expected-regex` using `(re-find expected-regex actual-value-found)`
 
+#### Asserting the absence of a key/value in a map using built-in matchers
+
+Usually with matcher-combinators you specify the data you expect to be present in the datastructure.
+At times it is useful to be able to additionally assert in a concise manner the absence of certain data.
+
+To assert the absence of a key/value entry in a map, point they key to `nil` in the matcher.
+For example:
+
+```clojure
+(testing "will match because `:b` points to `nil` in the matcher and the `actual` doesn't have `:b`"
+  (is (match? {:a 1 :b nil}
+              {:a 1})))
+
+(testing 'won't match because `:b` is present in the `actual` when the `nil` signifies it should be absent"
+  (is (match? {:a 1 :b nil}
+              {:a 1 :b 2})))
+```
+
+If you would like to actually assert that the key is present and points to `nil`, use `nil?` instead.
+
 ### building new matchers
 
 You can extend your data-types to work with `matcher-combinators` by implemented the [`Matcher` protocol](https://github.com/nubank/matcher-combinators/blob/066da1a07ab620a6c63bbb0ce8e1b6b3a4ccd956/src/matcher_combinators/core.clj#L5-L9).

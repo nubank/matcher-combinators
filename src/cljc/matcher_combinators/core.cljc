@@ -104,10 +104,20 @@
                           type-msg))
      ::result/weight 1}))
 
+
+(defn- match-kv [actual [key matcher]]
+  (if (nil? matcher)
+    (if-let [[k v] (find actual key)]
+      [key {::result/type   :mismatch
+            ::result/value  (model/->Unexpected v)
+            ::result/weight 1}]
+      nil)
+    [key (match matcher (get actual key ::missing))]))
+
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
-  (let [entry-results      (map (fn [[key matcher]]
-                                  [key (match matcher (get actual key ::missing))])
-                                expected)
+  (let [entry-results      (->> expected
+                                (map (partial match-kv actual))
+                                (filter identity))
         unexpected-entries (keep (fn [[key val]]
                                    (when-not (find expected key)
                                      [key (unexpected-handler val)]))

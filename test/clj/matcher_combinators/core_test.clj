@@ -55,6 +55,17 @@
             ::result/value  {:b 42, :a (model/->Missing 42)}
             ::result/weight 1})
 
+      (fact "when key points to `nil` in matcher, expect the key to be missing in actual"
+        (match (?map-matcher {:a (equals 42) :b nil}) {:a 42})
+        => {::result/type   :match
+            ::result/value  {:a 42}
+            ::result/weight 0}
+
+        (match (?map-matcher {:a (equals 42) :b nil}) {:a 42 :b 42})
+        => {::result/type   :mismatch
+            ::result/value  {:a 42, :b (model/->Unexpected 42)}
+            ::result/weight 1})
+
       (tabular
         (fact "mismatch when given an actual input that is not a map"
           (match (?map-matcher {:a (equals 1)}) ?actual)

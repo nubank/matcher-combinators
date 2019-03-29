@@ -191,9 +191,15 @@
              :response-time response-time
              :version string?}))
 
-(fact "matchers can use `nil` inside them"
-  {:a nil} => (match {:a nil})
-  {:a 1} =not=> (match {:a nil}))
+(facts "matchers can use `nil` inside them"
+  [1 nil] => (match (m/in-any-order [nil 1]))
+
+  (fact "but when you use `nil` in a map, it indicates absence"
+    {} => (match (m/equals {:a nil}))
+    {:a nil} =not=> (match {:a nil}))
+
+  (fact "to match `nil` in a map, use `nil?`"
+    {:a nil} => (match (m/equals {:a nil?}))))
 
 (def an-object (Object.))
 (fact "Objects aren't matchers, so matching on them shouldn't work and produce
