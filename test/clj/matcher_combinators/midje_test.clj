@@ -116,6 +116,11 @@
     #{1 2 3} => (match (m/equals #{1 2 3}))
     #{1 2 3} =not=> (match (m/equals #{1 2}))
     #{1 2 3} => (match (m/embeds #{1 2}))
+    '([:abc #{1}]
+      [:xyz #{2 3 4 5 6 7}]
+      [:def #{5 6}]
+      [:ghi #{9 10 8 11 1}]
+      [:jkl #{9 2 3 4 12 5 10 13 6 14 15 16 17 7 8 11 1}]) => (match (m/embeds [[:jkl #{1 2}]]))
     #{} => (match #{})
     #{} => (match (m/equals #{})))
 
