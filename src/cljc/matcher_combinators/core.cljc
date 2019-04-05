@@ -2,7 +2,6 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
-            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
@@ -200,18 +199,24 @@
        :unmatched unmatched
        :weight    (if matched? 0 (residual-matching-weight unmatched elements))
        :matched   matching})
-    (let [[elem & rest-elements] elements
-          matching-matcher       (helpers/find-first #(match? (match % elem))
-                                                     unmatched)]
-      (if (nil? matching-matcher)
-        {:matched?  false
-         :unmatched unmatched
-         :weight    (residual-matching-weight unmatched elements)
-         :matched   matching}
-        (recur (helpers/remove-first #{matching-matcher} unmatched)
-               rest-elements
-               subset?
-               (conj matching matching-matcher))))))
+    (cond
+      (match? (match (first unmatched) (first elements)))
+      (recur (rest unmatched)
+             (rest elements)
+             subset?
+             (conj matching (first unmatched)))
+
+      subset?
+      (recur unmatched
+             (rest elements)
+             subset?
+             matching)
+
+      :else
+      {:matched?  false
+       :unmatched unmatched
+       :weight    (residual-matching-weight unmatched elements)
+       :matched   matching})))
 
 (defn- better-mismatch? [best candidate]
   (let [best-matched      (-> best :matched count)
@@ -221,8 +226,8 @@
     (and (>= candidate-matched best-matched)
          (<= candidate-weight best-weight))))
 
-(defn- matched-or-best-matchers [matchers subset?]
-  (fn [best elements]
+(defn- matched-or-best-matchers [elements subset?]
+  (fn [best matchers]
     (let [{:keys [matched?] :as result} (matches-in-any-order? matchers elements subset? [])]
       (cond
         matched?                       (reduced ::match-found)
@@ -230,15 +235,15 @@
         :else                          best))))
 
 (defn- match-all-permutations [matchers elements subset?]
-  (let [elem-permutations (combo/permutations elements)
-        find-best-match   (matched-or-best-matchers matchers subset?)
+  (let [matchers-permutations (combo/permutations matchers)
+        find-best-match   (matched-or-best-matchers elements subset?)
         result            (reduce find-best-match
                                   {:matched   []
                                    :weight    #?(:clj Integer/MAX_VALUE
                                                  :cljs Number.MAX_SAFE_INTEGER)
                                    :elements  elements
                                    :unmatched matchers}
-                                  elem-permutations)]
+                                  matchers-permutations)]
     (if (= ::match-found result)
       {::result/type   :match
        ::result/value  elements
