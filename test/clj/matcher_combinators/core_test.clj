@@ -353,9 +353,9 @@
                         :unmatched empty?
                         :matched   vector?})
     (#'core/matches-in-any-order? matchers [5 1 3 2] true [])
-    => (sweet/contains {:matched?  false
-                        :unmatched (just [anything])
-                        :matched   (just [anything])}))
+    => (sweet/contains {:matched?  true
+                        :unmatched (just [])
+                        :matched   (just [anything anything])}))
   (fact "works well with identical matchers"
     (#'core/matches-in-any-order? [(equals 2) (equals 2)] [2 2] false [])
     => (sweet/contains {:matched?  true
@@ -533,9 +533,10 @@
   (core/match (in-any-order [(equals {:a (equals "2") :x (equals "14")})
                              (equals {:a (equals "1") :x (equals "12")})])
     [{:a "1" :x "12="} {:a "2" :x "14="}])
-  => {::result/type   :mismatch
-      ::result/value  [{:a "2" :x (model/->Mismatch "14" "14=")}
-                       {:a "1" :x (model/->Mismatch "12" "12=")}]
-      ::result/weight 2})
+  => (just {::result/type   :mismatch
+            ::result/value  (just [{:a "2" :x (model/->Mismatch "14" "14=")}
+                                   {:a "1" :x (model/->Mismatch "12" "12=")}]
+                                  :in-any-order)
+            ::result/weight 2}))
 
 (spec.test/unstrument)
