@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.8.4]
+- fix cljs related warning in math.combinatorics
+
 ## [0.8.3]
 - fix compatibility issue with shadow-cljs
 
