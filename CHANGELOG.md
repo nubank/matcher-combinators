@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.8.3]
+- fix compatibility issue with shadow-cljs
+
 ## [0.8.2]
 - fix slow matching behavior for `in-any-order` / `embeds`
 
