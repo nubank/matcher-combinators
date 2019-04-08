@@ -75,7 +75,7 @@
 (defmethod t/report [::t/default :matcher-combinators/exception-mismatch] [m]
   (t/inc-report-counter! :fail)
   (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq t/*testing-contexts*)
+  (when (seq (:testing-contexts (t/get-current-env)))
     (println (t/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))
@@ -85,7 +85,7 @@
 (defmethod t/report [::t/default :matcher-combinators/mismatch] [m]
   (t/inc-report-counter! :fail)
   (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq t/*testing-contexts*)
+  (when (seq (:testing-contexts (t/get-current-env)))
     (println (t/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))
