@@ -14,7 +14,7 @@
 
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/spec.alpha "0.2.176"]
-                 [org.clojure/math.combinatorics "0.1.4"]
+                 [org.clojure/math.combinatorics "0.1.5"]
                  [midje "1.9.6" :exclusions [org.clojure/clojure]]]
 
   :test-paths ["test/clj"]
