@@ -5,7 +5,7 @@
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
-            [cljs.test :as t :refer [assert-expr] :refer-macros [deftest is]]))
+            [cljs.test :as t :refer-macros [deftest is]]))
 
 (defn with-file+line-info [report]
   #?(:cljs (merge (t/file-and-line (js/Error.) 4) report)))
@@ -23,7 +23,7 @@
 ;;  cljs compilation.
 
 #?(:clj (do
-(defmethod assert-expr 'match? [_ msg form]
+(defmethod t/assert-expr 'match? [_ msg form]
   `(let [[matcher# actual#] (list ~@(rest form))]
      (if (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
@@ -45,7 +45,7 @@
          :expected '~form
          :actual   (str "The first argument of match? isn't a matcher")}))))
 
-(defmethod assert-expr 'thrown-match? [_ msg form]
+(defmethod t/assert-expr 'thrown-match? [_ msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
   ;; Asserts that evaluating expr throws an exception of class c.
   ;; Also asserts that the exception data satisfies the provided matcher.
@@ -75,7 +75,7 @@
 (defmethod t/report [::t/default :matcher-combinators/exception-mismatch] [m]
   (t/inc-report-counter! :fail)
   (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq t/*testing-contexts*)
+  (when (seq (:testing-contexts (t/get-current-env)))
     (println (t/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))
@@ -85,7 +85,7 @@
 (defmethod t/report [::t/default :matcher-combinators/mismatch] [m]
   (t/inc-report-counter! :fail)
   (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq t/*testing-contexts*)
+  (when (seq (:testing-contexts (t/get-current-env)))
     (println (t/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))

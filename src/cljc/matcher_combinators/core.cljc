@@ -2,7 +2,6 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
-            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.model :as model]))
 
 (defprotocol Matcher
@@ -149,23 +148,39 @@
       lst
       (reverse lst))))
 
+(def ^:private unexpected-matcher
+  (reify Matcher
+    (match [_this actual]
+      {::result/type   :mismatch
+       ::result/value  (model/->Unexpected actual)
+       ::result/weight 1})))
+
+(defn- normalize-inputs-length
+  "Modify the matchers and actuals sequences to match in length.
+  When `matchers` is longer, add `missing` elements to `actuals`.
+  When `actuals` is longer, add unexpected entry matchers to `matchers`."
+  [matchers actuals]
+  (let [matchers-count (count matchers)
+        actuals-count  (count actuals)]
+    (if (< actuals-count matchers-count)
+      [matchers
+       (take matchers-count (concat actuals (repeat ::missing)))]
+      [(take actuals-count (concat matchers (repeat unexpected-matcher)))
+       actuals])))
+
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
     {::result/type   :mismatch
      ::result/value  (model/->Mismatch expected actual)
      ::result/weight 1}
-    (let [matcher-fns     (concat (map #(partial match %) expected)
-                                  (repeat (fn [extra-element]
-                                            {::result/type   :mismatch
-                                             ::result/value  (model/->Unexpected extra-element)
-                                             ::result/weight 1})))
-          actual-elements (concat actual (repeat ::missing))
-          match-results'  (map (fn [match-fn actual-element] (match-fn actual-element))
-                               matcher-fns actual-elements)
-          match-size      (if subseq?
-                            (count expected)
-                            (max (count actual) (count expected)))
-          match-results   (take match-size match-results')]
+    (let [[matchers
+           actual-elems] (normalize-inputs-length expected actual)
+          match-results' (map (fn [matcher actual-element] (match matcher actual-element))
+                              matchers actual-elems)
+          match-size     (if subseq?
+                           (count expected)
+                           (max (count actual) (count expected)))
+          match-results  (take match-size match-results')]
       (if (some mismatch? match-results)
         {::result/type   :mismatch
          ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
@@ -200,18 +215,24 @@
        :unmatched unmatched
        :weight    (if matched? 0 (residual-matching-weight unmatched elements))
        :matched   matching})
-    (let [[elem & rest-elements] elements
-          matching-matcher       (helpers/find-first #(match? (match % elem))
-                                                     unmatched)]
-      (if (nil? matching-matcher)
-        {:matched?  false
-         :unmatched unmatched
-         :weight    (residual-matching-weight unmatched elements)
-         :matched   matching}
-        (recur (helpers/remove-first #{matching-matcher} unmatched)
-               rest-elements
-               subset?
-               (conj matching matching-matcher))))))
+    (cond
+      (match? (match (first unmatched) (first elements)))
+      (recur (rest unmatched)
+             (rest elements)
+             subset?
+             (conj matching (first unmatched)))
+
+      subset?
+      (recur unmatched
+             (rest elements)
+             subset?
+             matching)
+
+      :else
+      {:matched?  false
+       :unmatched unmatched
+       :weight    (residual-matching-weight unmatched elements)
+       :matched   matching})))
 
 (defn- better-mismatch? [best candidate]
   (let [best-matched      (-> best :matched count)
@@ -221,24 +242,27 @@
     (and (>= candidate-matched best-matched)
          (<= candidate-weight best-weight))))
 
-(defn- matched-or-best-matchers [matchers subset?]
-  (fn [best elements]
+(defn- matched-or-best-matchers [elements subset?]
+  (fn [best matchers]
     (let [{:keys [matched?] :as result} (matches-in-any-order? matchers elements subset? [])]
       (cond
         matched?                       (reduced ::match-found)
         (better-mismatch? best result) (assoc result :elements elements)
         :else                          best))))
 
-(defn- match-all-permutations [matchers elements subset?]
-  (let [elem-permutations (combo/permutations elements)
-        find-best-match   (matched-or-best-matchers matchers subset?)
-        result            (reduce find-best-match
-                                  {:matched   []
-                                   :weight    #?(:clj Integer/MAX_VALUE
-                                                 :cljs Number.MAX_SAFE_INTEGER)
-                                   :elements  elements
-                                   :unmatched matchers}
-                                  elem-permutations)]
+(defn- match-all-permutations [expected elements subset?]
+  (let [[matchers elements] (if subset?
+                              [expected elements]
+                              (normalize-inputs-length expected elements))
+        matcher-perms       (combo/permutations matchers)
+        find-best-match     (matched-or-best-matchers elements subset?)
+        result              (reduce find-best-match
+                                    {:matched   []
+                                     :weight    #?(:clj Integer/MAX_VALUE
+                                                   :cljs (.-MAX_SAFE_INTEGER js/Number))
+                                     :elements  elements
+                                     :unmatched matchers}
+                                    matcher-perms)]
     (if (= ::match-found result)
       {::result/type   :match
        ::result/value  elements
