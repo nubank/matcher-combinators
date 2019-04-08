@@ -259,7 +259,7 @@
         result              (reduce find-best-match
                                     {:matched   []
                                      :weight    #?(:clj Integer/MAX_VALUE
-                                                   :cljs Number.MAX_SAFE_INTEGER)
+                                                   :cljs (.-MAX_SAFE_INTEGER js/Number))
                                      :elements  elements
                                      :unmatched matchers}
                                     matcher-perms)]
