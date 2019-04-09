@@ -2,7 +2,6 @@
   (:require [clojure.math.combinatorics :as combo]
             [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
             [matcher-combinators.midje :refer [match]]
-            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
             [matcher-combinators.core :as c]

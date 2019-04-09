@@ -99,12 +99,22 @@
       [5 1 4 2] =not=> (match (m/prefix [5 1 4 2 6]))
       [5 1 4 2] =not=> (match (m/prefix [1 5])))
 
+(def big-list [[:abc #{1}]
+               [:xyz #{2 3 4 5 6 7}]
+               [:def #{5 6}]
+               [:ghi #{9 10 8 11 1}]
+               [:jkl #{9 2 3 4 12 5 10 13 6 14 15 16 17 7 8 11 1}]])
+
 (fact [5 1 4 2] => (match (m/embeds [5 1]))
       [5 1 4 2] => (match (m/embeds [1 5]))
       [5 1 4 2] => (match (m/embeds [5 1 4 2]))
       [5 1 4 2] => (match (m/embeds [1 5 2 4]))
       [5 1 4 2] => (match (m/embeds [odd? even?]))
-      [5 1 4 2] =not=> (match (m/embeds [5 1 4 2 6])))
+      [5 1 4 2] =not=> (match (m/embeds [5 1 4 2 6]))
+      big-list
+      => (match (m/embeds [[:jkl (m/embeds #{1 2})]]))
+      big-list
+      =not=> (match (m/embeds [[:jkl #{1 2}]])))
 
 (fact "Find optimal in-any-order matching just like midje"
   [1 3] => (midje/just [odd? 1] :in-any-order)
