@@ -40,6 +40,10 @@
     (is (match? {:foo even?}
                 {:foo 2
                  :bar 3}))
+    (is (match? {:foo even?
+                 :baz m/absent}
+                {:foo 2
+                 :bar 3}))
     (is (match? {:one #"1"}
                 {:one "1"}))))
 

@@ -122,13 +122,13 @@
 (facts "java classes"
   (fact "matching"
     (c/match (m/equals java.lang.String)
-             java.lang.String)
+      java.lang.String)
     => (just {::result/type :match
               ::result/value java.lang.String
               ::result/weight 0}))
   (fact "mismatching"
     (c/match (m/equals java.lang.Number)
-             java.lang.String)
+      java.lang.String)
     => (just {::result/type :mismatch
               ::result/value {:actual   java.lang.String
                               :expected java.lang.Number}

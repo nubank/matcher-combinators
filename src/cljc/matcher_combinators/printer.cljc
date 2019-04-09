@@ -6,12 +6,13 @@
                                                         Missing
                                                         Unexpected
                                                         FailedPredicate
+                                                        InvalidMatcherContext
                                                         InvalidMatcherType]])
             [matcher-combinators.result :as result]
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
      (:import [matcher_combinators.model Mismatch Missing Unexpected
-               FailedPredicate InvalidMatcherType])))
+               FailedPredicate InvalidMatcherContext InvalidMatcherType])))
 
 (defrecord ColorTag [color expression])
 
@@ -37,6 +38,10 @@
   (list 'invalid-matcher-input
         (->ColorTag :yellow (:expected-type-msg invalid-type))
         (->ColorTag :red (:provided invalid-type))))
+
+(defmethod markup-expression InvalidMatcherContext [invalid-context]
+  (list 'invalid-matcher-context
+        (->ColorTag :red (:message invalid-context))))
 
 (defmethod markup-expression :default [expression]
   expression)
