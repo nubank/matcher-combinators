@@ -67,6 +67,7 @@
 
 (fact "matching records with maps"
   (->Point 1 2) => (match (m/equals {:x 1 :y 2}))
+  (->Point 1 2) => (match {:x 1})
   {:a (->Point 1 2) :b 2} => (match {:a (->Point 1 2)})
   {:a (->Point 1 2) :b 2} => (match {:a {:x 1 :y 2}})
   (->Point {:a 1} {:b 2}) => (match {:x {:a 1}})

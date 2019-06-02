@@ -26,6 +26,7 @@
   (cond
     (sequential? expected) (core/->EmbedsSeq expected)
     (set? expected)        (core/->SetEmbeds expected false)
+    (record? expected)     (core/->EmbedsRecord expected)
     (map? expected)        (core/->EmbedsMap expected)
     :else                  (core/->InvalidType expected "embeds" "seq, set, map")))
 

@@ -184,6 +184,18 @@
         :else
         (match (->EqualsMap expected) actual)))))
 
+(defrecord EmbedsRecord [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [issue (validate-input expected actual record? map? 'embeds "record")]
+      issue
+      (cond
+        (record? actual)
+        (match-record expected actual ->EqualsMap)
+
+        :else
+        (match (->EmbedsMap expected) actual)))))
+ 
 (defn- type-preserving-mismatch [base-list values]
   (let [lst (into base-list values)]
     (if (vector? base-list)
