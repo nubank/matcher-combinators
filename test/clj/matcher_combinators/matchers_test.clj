@@ -179,15 +179,7 @@
                 ::result/weight 1}))))
 
 (facts "records embeds"
-  (fact "matching when a map is expected"
-    (let [a (->Point 1 2)
-          b {:x 1}]
-      (c/match (m/embeds b) a)
-      => (just {::result/type :match
-                ::result/value a
-                ::result/weight 0})))
-
-  (fact "matching when a map is expected"
+  (fact "matching"
     (let [a (->Point 1 2)
           b (->Point 1 2)]
       (c/match (m/embeds b) a)
@@ -195,6 +187,13 @@
                 ::result/value a
                 ::result/weight 0})))
 
+  (fact "matching when a map is expected"
+    (let [a (->Point 1 2)
+          b {:x 1}]
+      (c/match (m/embeds b) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})))
 
   (fact "mismatching as records are not allowed to have missing properties"
     (let [a (->Point 1 2)
