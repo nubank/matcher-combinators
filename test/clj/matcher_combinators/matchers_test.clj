@@ -2,7 +2,6 @@
   (:require [clojure.math.combinatorics :as combo]
             [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
             [matcher-combinators.midje :refer [match]]
-            [matcher-combinators.helpers :as helpers]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
             [matcher-combinators.core :as c]
@@ -123,13 +122,13 @@
 (facts "java classes"
   (fact "matching"
     (c/match (m/equals java.lang.String)
-             java.lang.String)
+      java.lang.String)
     => (just {::result/type :match
               ::result/value java.lang.String
               ::result/weight 0}))
   (fact "mismatching"
     (c/match (m/equals java.lang.Number)
-             java.lang.String)
+      java.lang.String)
     => (just {::result/type :mismatch
               ::result/value {:actual   java.lang.String
                               :expected java.lang.Number}

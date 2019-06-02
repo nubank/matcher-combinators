@@ -353,9 +353,9 @@
                         :unmatched empty?
                         :matched   vector?})
     (#'core/matches-in-any-order? matchers [5 1 3 2] true [])
-    => (sweet/contains {:matched?  false
-                        :unmatched (just [anything])
-                        :matched   (just [anything])}))
+    => (sweet/contains {:matched?  true
+                        :unmatched (just [])
+                        :matched   (just [anything anything])}))
   (fact "works well with identical matchers"
     (#'core/matches-in-any-order? [(equals 2) (equals 2)] [2 2] false [])
     => (sweet/contains {:matched?  true
@@ -372,6 +372,44 @@
               ::result/value  (just [5 (just (model/->Missing anything))]
                                     :in-any-order)
               ::result/weight 1})))
+
+(tabular
+  (fact "matching for absence in map"
+    (core/match (?matcher {:a (equals 42)
+                           :b absent})
+      {:a 42})
+    => (just {::result/type   :match
+              ::result/value  {:a 42}
+              ::result/weight 0})
+
+    (core/match (?matcher {:a (equals 42)
+                           :b absent})
+      {:a 42
+       :b 43})
+    => (just {::result/type   :mismatch
+              ::result/value  (just {:a 42
+                                     :b (just {:actual 43})})
+              ::result/weight #(or (= 1 %) (= 2 %))}))
+  ?matcher
+  equals
+  embeds)
+
+(fact "`absent` interaction with keys pointing to `nil` values"
+  (core/match (equals {:a (equals 42)
+                       :b absent})
+              {:a 42
+               :b nil})
+  => (just {::result/type   :mismatch
+            ::result/value  (just {:a 42
+                                   :b {:actual nil}})
+            ::result/weight 2}))
+
+(fact "using `absent` incorrectly outside of a map"
+  (core/match (equals [(equals 42) absent])
+    [42])
+  => (just {::result/type   :mismatch
+            ::result/value  (just [42 {:message "`absent` matcher should only be used as the value in a map"}])
+            ::result/weight 1}))
 
 (tabular
   (fact "Providing seq/map matcher with incorrect input leads to automatic mismatch"
@@ -533,9 +571,10 @@
   (core/match (in-any-order [(equals {:a (equals "2") :x (equals "14")})
                              (equals {:a (equals "1") :x (equals "12")})])
     [{:a "1" :x "12="} {:a "2" :x "14="}])
-  => {::result/type   :mismatch
-      ::result/value  [{:a "2" :x (model/->Mismatch "14" "14=")}
-                       {:a "1" :x (model/->Mismatch "12" "12=")}]
-      ::result/weight 2})
+  => (just {::result/type   :mismatch
+            ::result/value  (just [{:a "2" :x (model/->Mismatch "14" "14=")}
+                                   {:a "1" :x (model/->Mismatch "12" "12=")}]
+                                  :in-any-order)
+            ::result/weight 2}))
 
 (spec.test/unstrument)

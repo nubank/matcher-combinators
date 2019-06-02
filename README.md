@@ -108,7 +108,6 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
 ### built-in matchers
 
 - `equals` operates over base values, maps, sequences, and sets
-
   - base values (string, int, function, etc.): matches when the given value is exactly the same as the `expected`.
   - map: matches when
       1. the keys of the `expected` map are equal to the given map's keys
@@ -129,6 +128,8 @@ If a data-structure isn't wrapped in a specific matcher-combinator the default i
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
 
 - `regex`: matches the `actual-value-found` when provided an `expected-regex` using `(re-find expected-regex actual-value-found)`
+
+- `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't.
 
 ### building new matchers
 
