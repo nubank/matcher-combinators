@@ -1,5 +1,14 @@
 # Change Log
-All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
+All notable changes to this project will be documented in this file. This
+change log follows the conventions of
+[keepachangelog.com](http://keepachangelog.com/).
+
+## [1.0.0]
+- [BREAKING] When a record is in the `expected` position of the matcher, the
+  `actual` value must be a record of the same type.
+
+  Previous behavior would match if the `actual` was a map with the same keys,
+  or a record of a different type with the same keys
 
 ## [0.9.0]
 - matcher for asserting absence of key

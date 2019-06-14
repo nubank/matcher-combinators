@@ -34,7 +34,6 @@
   (list 'mismatch
         (->ColorTag :yellow (type (:expected mismatch)))
         (->ColorTag :red (type (:actual mismatch)))))
-                                           
 
 (defmethod markup-expression FailedPredicate [failed-predicate]
   (list 'predicate
