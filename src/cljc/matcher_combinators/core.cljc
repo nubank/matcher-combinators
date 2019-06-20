@@ -165,6 +165,17 @@
       issue
       (compare-maps expected actual model/->Unexpected false))))
 
+(defrecord EqualsRecord [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [issue (validate-input expected actual record? map? 'equals "record")]
+      issue
+      (if (= (type expected) (type actual))
+          (match (->EqualsMap expected) actual)
+          {::result/type   :mismatch
+           ::result/value  (model/->TypeMismatch expected actual)
+           ::result/weight 1}))))
+
 (defn- type-preserving-mismatch [base-list values]
   (let [lst (into base-list values)]
     (if (vector? base-list)

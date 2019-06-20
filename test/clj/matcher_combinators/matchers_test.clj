@@ -147,3 +147,68 @@
                 ::result/value {:actual   b
                                 :expected a}
                 ::result/weight 1}))))
+
+(defrecord Point [x y])
+(defrecord BluePoint [x y])
+
+(facts "records equals"
+  (fact "matching"
+    (let [a (->Point 1 2)]
+      (c/match (m/equals a) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})))
+
+  (fact "mismatching with same type and different values"
+    (let [a (->Point 1 2)
+          b (->Point 2 2)]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value (just {:x {:actual 2
+                                          :expected 1}
+                                      :y 2})
+                ::result/weight 1})))
+
+  (fact "mismatching with same values and different type"
+    (let [a (->Point 1 2)
+          b (->BluePoint 1 2)]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value {:actual b
+                                :expected a}
+                ::result/weight 1}))))
+
+(facts "records embeds"
+  (fact "matching"
+    (let [a (->Point 1 2)
+          b (->Point 1 2)]
+      (c/match (m/embeds b) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})))
+
+  (fact "matching when a map is expected"
+    (let [a (->Point 1 2)
+          b {:x 1}]
+      (c/match (m/embeds b) a)
+      => (just {::result/type :match
+                ::result/value a
+                ::result/weight 0})))
+
+  (fact "mismatching as records are not allowed to have missing properties"
+    (let [a (->Point 1 2)
+          b (map->Point {:x 1})]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value (just {:x 1
+                                      :y {:actual nil :expected 2}})
+                ::result/weight 1})))
+
+  (fact "mismatching with same values and different type"
+    (let [a (->Point 1 2)
+          b (->BluePoint 1 2)]
+      (c/match (m/equals a) b)
+      => (just {::result/type :mismatch
+                ::result/value {:actual b
+                                :expected a}
+                ::result/weight 1}))))
