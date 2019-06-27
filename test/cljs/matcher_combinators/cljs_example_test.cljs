@@ -61,3 +61,14 @@
   (is (thrown-match? ExceptionInfo
                      {:foo 1}
                      (bang!))))
+
+(comment
+  (deftest match?-no-actual-arg
+    (testing "fails with nice message when you don't provide an `actual` arg to `match?`"
+      (is (match? 1)
+          :in-wrong-place)))
+
+  (deftest thrown-match?-no-actual-arg
+    (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"
+      (is (thrown-match? ExceptionInfo {:a 1})
+          :in-wrong-place))))

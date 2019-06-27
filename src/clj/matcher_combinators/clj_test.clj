@@ -27,8 +27,17 @@
        (merge report)))
 
 (defmethod clojure.test/assert-expr 'match? [msg form]
-  `(let [[matcher# actual#] (list ~@(rest form))]
-     (if (core/matcher? matcher#)
+  `(let [args#              (list ~@(rest form))
+         [matcher# actual#] args#]
+     (cond
+       (not (= 2 (count args#)))
+       (clojure.test/do-report
+        {:type     :fail
+         :message  ~msg
+         :expected (symbol "`match?` expects 2 arguments: a `matcher` and the `actual`")
+         :actual   (symbol (str (count args#) " were provided: " '~form))})
+
+       (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
          (clojure.test/do-report
           (if (core/match? result#)
@@ -42,6 +51,8 @@
                :expected '~form
                :actual   (list '~'not (list 'match? matcher# actual#))
                :markup   (::result/value result#)}))))
+
+       :else
        (clojure.test/do-report
         {:type     :fail
          :message  ~msg
@@ -56,7 +67,17 @@
         matcher (nth form 2)
         body    (nthnext form 3)]
     `(try ~@body
-          (clojure.test/do-report {:type :fail, :message ~msg, :expected '~form, :actual nil})
+          (let [args# (list ~@(rest form))]
+            (if (not (= 3 (count args#)))
+              (clojure.test/do-report
+               {:type     :fail
+                :message  ~msg
+                :expected (symbol "`thrown-match?` expects 3 arguments: an exception class, a `matcher`, and the `actual`")
+                :actual   (symbol (str (count args#) " were provided: " '~form))})
+            (clojure.test/do-report {:type     :fail
+                                     :message  ~msg
+                                     :expected '~form
+                                     :actual   (symbol "the expected exception wasn't thrown")})))
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (clojure.test/do-report
