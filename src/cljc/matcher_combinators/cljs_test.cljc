@@ -52,8 +52,8 @@
        (t/do-report
          {:type     :fail
           :message  ~msg
-          :expected '~form
-          :actual   (str "The first argument of match? isn't a matcher")}))))
+          :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
+          :actual   '~form}))))
 
 (defmethod t/assert-expr 'thrown-match? [_ msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))

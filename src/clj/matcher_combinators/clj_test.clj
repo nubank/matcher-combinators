@@ -56,8 +56,8 @@
        (clojure.test/do-report
         {:type     :fail
          :message  ~msg
-         :expected '~form
-         :actual   (str "The first argument of match? isn't a matcher")}))))
+         :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
+         :actual   '~form}))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
