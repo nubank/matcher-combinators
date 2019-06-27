@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.0.1]
+- Provide clearer message on incorrect arg count to `match?` and `thrown-match?`
+
 ## [1.0.0]
 - [BREAKING] When a record is in the `expected` position of the matcher, the
   `actual` value must be a record of the same type.
