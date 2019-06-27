@@ -1,4 +1,4 @@
-(defproject nubank/matcher-combinators "1.0.0"
+(defproject nubank/matcher-combinators "1.0.1"
   :description "Library for creating matcher combinator to compare nested data structures"
   :url "https://github.com/nubank/matcher-combinators"
   :license {:name "Apache License, Version 2.0"}
@@ -12,7 +12,7 @@
                      provided [[:inner 0]]
                      tabular  [[:inner 0]]}}
 
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/spec.alpha "0.2.176"]
                  [org.clojure/math.combinatorics "0.1.5"]
                  [midje "1.9.8" :exclusions [org.clojure/clojure]]]
