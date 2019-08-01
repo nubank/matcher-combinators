@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.1.0]
+- Improve cider + cursive integration by using `:fail`, which is the standard in `clojure.test`
+  for reporting mismatches. Thanks to Arne Brasseur (@plexus) for implementation
+
 ## [1.0.1]
 - Provide clearer message on incorrect arg count to `match?` and `thrown-match?`
 
