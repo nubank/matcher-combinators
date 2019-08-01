@@ -63,9 +63,11 @@
     {:a {:bb odd?} :c 2} => (match (m/equals {:a {:bb (midje/exactly odd?)} :c 2}))))
 
 (defrecord Point [x y])
+(defrecord BluePoint [x y])
 
 (fact "matching records with maps"
   (->Point 1 2) => (match (m/equals {:x 1 :y 2}))
+  (->Point 1 2) => (match {:x 1})
   {:a (->Point 1 2) :b 2} => (match {:a (->Point 1 2)})
   {:a (->Point 1 2) :b 2} => (match {:a {:x 1 :y 2}})
   (->Point {:a 1} {:b 2}) => (match {:x {:a 1}})
@@ -73,14 +75,26 @@
   (->Point {:a 1 :c 3} {:b 2}) =not=> (match {:x {:a 1 :c 6}}))
 
 (fact "matching maps with records"
-  {:x 1 :y 2} => (match (m/equals (->Point 1 2)))
-  {:a {:x 1 :y 2}} => (match {:a (->Point 1 2)})
+  {:x 1 :y 2} =not=> (match (m/equals (->Point 1 2)))
+  {:a {:x 1 :y 2}} =not=> (match {:a (->Point 1 2)})
   {:x 1 :y 3} =not=> (match (m/equals (->Point 1 2)))
   {:x 1 :z 2} =not=> (match (m/equals (->Point 1 2))))
 
 (fact "matching records with records"
   (->Point 1 2) => (match (m/equals (->Point 1 2)))
-  (->Point 1 2) => (match (->Point 1 2)))
+  (->Point 1 2) => (match (->Point 1 2))
+  (->Point 1 2) =not=> (match (->BluePoint 1 2)))
+
+(fact "embeds with records is just `equals`"
+  ;; this is due to the fact that records implement both IPersistentMap and
+  ;; IRecord, so we can't have the parser default to being `equals` for records
+  ;; but `embeds` for `maps`. Hence we make the implementation of `embeds` for
+  ;; records point to `equals` instead of throwing an error, which would make
+  ;; more semantic sense (given that records can't be partial so taking the
+  ;; embeds of them doesn't make sense)
+  (->Point 1 2) => (match (->Point 1 2))
+  (->Point 1 2) => (match (m/embeds (->Point 1 2)))
+  (->Point 1 2) => (match (m/equals (->Point 1 2))))
 
 (fact "equals doesn't coerce like midje `just`"
   {:a 1 :b 2} => (midje/just [[:a 1] [:b 2]])
