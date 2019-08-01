@@ -29,7 +29,7 @@
 (defn tagged-for-pretty-printing [actual-summary result]
   (with-meta {:summary      actual-summary
               :match-result result}
-             {:type ::mismatch}))
+    {:type ::mismatch}))
 
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [args#              (list ~@(rest form))
@@ -79,10 +79,10 @@
                 :message  ~msg
                 :expected (symbol "`thrown-match?` expects 3 arguments: an exception class, a `matcher`, and the `actual`")
                 :actual   (symbol (str (count args#) " were provided: " '~form))})
-            (clojure.test/do-report {:type     :fail
-                                     :message  ~msg
-                                     :expected '~form
-                                     :actual   (symbol "the expected exception wasn't thrown")})))
+              (clojure.test/do-report {:type     :fail
+                                       :message  ~msg
+                                       :expected '~form
+                                       :actual   (symbol "the expected exception wasn't thrown")})))
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (clojure.test/do-report

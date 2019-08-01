@@ -397,8 +397,8 @@
 (fact "`absent` interaction with keys pointing to `nil` values"
   (core/match (equals {:a (equals 42)
                        :b absent})
-              {:a 42
-               :b nil})
+    {:a 42
+     :b nil})
   => (just {::result/type   :mismatch
             ::result/value  (just {:a 42
                                    :b {:actual nil}})
