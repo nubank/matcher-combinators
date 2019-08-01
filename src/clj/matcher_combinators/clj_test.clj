@@ -15,7 +15,7 @@
 
 (defn- core-or-this-class-name? [^StackTraceElement stacktrace]
   (let [cl-name (.getClassName stacktrace)]
-    (or (str/starts-with? cl-name "matcher_combinators.test$")
+    (or (str/starts-with? cl-name "matcher_combinators.clj-test$")
         (str/starts-with? cl-name "java.lang."))))
 
 ;; had to include this from `clojure.test` because there is no good way to run
@@ -25,6 +25,11 @@
        (drop-while core-or-this-class-name?)
        stacktrace-file-and-line
        (merge report)))
+
+(defn tagged-for-pretty-printing [actual-summary result]
+  (with-meta {:summary      actual-summary
+              :match-result result}
+             {:type ::mismatch}))
 
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [args#              (list ~@(rest form))
@@ -46,11 +51,11 @@
              :expected '~form
              :actual   (list 'match? matcher# actual#)}
             (with-file+line-info
-              {:type     :matcher-combinators/mismatch
+              {:type     :fail
                :message  ~msg
                :expected '~form
-               :actual   (list '~'not (list 'match? matcher# actual#))
-               :markup   (::result/value result#)}))))
+               :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
+                                                     result#)}))))
 
        :else
        (clojure.test/do-report
@@ -87,32 +92,14 @@
                   :expected '~form
                   :actual   (list 'thrown-match? ~klass ~matcher '~body)}
                  (with-file+line-info
-                   {:type     :matcher-combinators/exception-mismatch
+                   {:type     :fail
                     :message  ~msg
                     :expected '~form
-                    :actual   (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
-                    :ex-class ~klass
-                    :markup   (::result/value result#)}))))
+                    :actual   (tagged-for-pretty-printing (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                                                          result#)
+                    :ex-class ~klass}))))
             e#))))
 
-(defmethod clojure.test/report :matcher-combinators/exception-mismatch [m]
-  (clojure.test/with-test-out
-    (clojure.test/inc-report-counter :fail)
-    (println "\nFAIL in" (clojure.test/testing-vars-str m))
-    (when (seq clojure.test/*testing-contexts*)
-      (println (clojure.test/testing-contexts-str)))
-    (when-let [message (:message m)]
-      (println message))
-    (println (:ex-class m) "data mismatches:")
-    (printer/pretty-print (:markup m))))
-
-(defmethod clojure.test/report :matcher-combinators/mismatch [m]
-  (clojure.test/with-test-out
-    (clojure.test/inc-report-counter :fail)
-    (println "\nFAIL in" (clojure.test/testing-vars-str m))
-    (when (seq clojure.test/*testing-contexts*)
-      (println (clojure.test/testing-contexts-str)))
-    (when-let [message (:message m)]
-      (println message))
-    (println "mismatch:")
-    (printer/pretty-print (:markup m))))
+(defmethod clojure.core/print-method ::mismatch [{:keys [match-result]} out]
+  (binding [*out* out]
+    (printer/pretty-print (::result/value match-result))))
