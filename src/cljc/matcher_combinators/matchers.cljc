@@ -1,15 +1,21 @@
 (ns matcher-combinators.matchers
-  (:require [matcher-combinators.core :as core]))
+  (:require [clojure.string :as string]
+            [matcher-combinators.core :as core]))
+
+(defn- non-internal-record? [v]
+  (and (record? v)
+       (not (string/starts-with? (-> v type str) "class matcher_combinators.core"))))
 
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
   `expected`."
   [expected]
   (cond
-    (sequential? expected) (core/->EqualsSeq expected)
-    (set? expected)        (core/->SetEquals expected false)
-    (map? expected)        (core/->EqualsMap expected)
-    :else                  (core/->Value expected)))
+    (sequential? expected)          (core/->EqualsSeq expected)
+    (set? expected)                 (core/->SetEquals expected false)
+    (non-internal-record? expected) (core/->EqualsRecord expected)
+    (map? expected)                 (core/->EqualsMap expected)
+    :else                           (core/->Value expected)))
 
 (defn set-equals
   "Matches a set in the way `(equals some-set)` would, but accepts sequences as
@@ -23,10 +29,11 @@
   the `expected` map."
   [expected]
   (cond
-    (sequential? expected) (core/->EmbedsSeq expected)
-    (set? expected)        (core/->SetEmbeds expected false)
-    (map? expected)        (core/->EmbedsMap expected)
-    :else                  (core/->InvalidType expected "embeds" "seq, set, map")))
+    (sequential? expected)          (core/->EmbedsSeq expected)
+    (set? expected)                 (core/->SetEmbeds expected false)
+    (non-internal-record? expected) (core/->EqualsRecord expected)
+    (map? expected)                 (core/->EmbedsMap expected)
+    :else                           (core/->InvalidType expected "embeds" "seq, set, map")))
 
 (defn set-embeds
   "Matches a set in the way `(embeds some-set)` would, but accepts sequences
@@ -54,3 +61,7 @@
   "Matcher that will match when given value matches the `expected` regular expression."
   [expected]
   (core/->Regex expected))
+
+(def absent
+  "Value-position matcher for maps that matches when containing map doesn't have the key pointing to this matcher."
+  (core/->Absent))

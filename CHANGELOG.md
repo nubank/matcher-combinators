@@ -1,5 +1,65 @@
 # Change Log
-All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
+All notable changes to this project will be documented in this file. This
+change log follows the conventions of
+[keepachangelog.com](http://keepachangelog.com/).
+
+## [1.0.1]
+- Provide clearer message on incorrect arg count to `match?` and `thrown-match?`
+
+## [1.0.0]
+- [BREAKING] When a record is in the `expected` position of the matcher, the
+  `actual` value must be a record of the same type.
+
+  Previous behavior would match if the `actual` was a map with the same keys,
+  or a record of a different type with the same keys
+
+## [0.9.0]
+- matcher for asserting absence of key
+
+## [0.8.4]
+- fix cljs related warning in math.combinatorics
+
+## [0.8.3]
+- fix compatibility issue with shadow-cljs
+
+## [0.8.2]
+- fix slow matching behavior for `in-any-order` / `embeds`
+
+## [0.8.1]
+- declare `match?` to help avoid linters removing require
+
+## [0.8.0]
+- parser support for java classes
+
+## [0.7.0]
+- clojurescript support
+
+## [0.6.1]
+- parser support for vars
+
+## [0.6.0]
+- implement `throws-match` (midje) and `thrown-match?` (clojure.test) exception handling matchers
+
+## [0.5.1]
+- parser support for shorts
+
+## [0.5.0]
+- parser support for byte-arrays
+
+## [0.4.2]
+- parser support for LocalTime
+
+## [0.4.1]
+- multiple-arity fix for standalone matching api
+
+## [0.4.0]
+- api for using matching logic as a yes/no predicate, without access to mismatch info
+
+## [0.3.4]
+- fix typo in spec that causes errors when spec checking is enabled
+
+## [0.3.3]
+- make `in-any-order` choose smallest mismatch when same number of matchers one level down fail.
 
 ## [0.3.2]
 - fix for `embeds` sequence matching where some matches weren't found
