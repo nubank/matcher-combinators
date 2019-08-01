@@ -1,5 +1,6 @@
 (ns matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
@@ -30,6 +31,32 @@
                                (check-match matcher actual)
                                (checking/as-data-laden-falsehood
                                 {:notes [(str "Input wasn't a matcher: " matcher)]}))))
+
+(defmacro match-with
+  ""
+  [& args]
+  (let [arg-count (count args)]
+    (case arg-count
+      1 (let [[type->default-matcher] args]
+          (dispatch/match-with-inner
+            type->default-matcher 
+            `(checkers.defining/as-checker 
+               (fn [matcher#]
+                 (fn [actual#]
+                   (if (core/matcher? matcher#)
+                     (check-match matcher# actual#)
+                     (checking/as-data-laden-falsehood
+                       {:notes [(str "Input wasn't a matcher: " matcher#)]})))))))
+      2 (let [[type->default-matcher matcher] args]
+          (dispatch/match-with-inner
+            type->default-matcher 
+            `(checkers.defining/as-checker 
+               (fn [actual#]
+                 (if (core/matcher? ~matcher)
+                   (check-match ~matcher actual#)
+                   (checking/as-data-laden-falsehood
+                     {:notes [(str "Input wasn't a matcher: " ~matcher)]}))))))
+      (throw (ArityException. arg-count "expected 1 or 2 arguments")))))
 
 (defn- parse-throws-args! [args]
   (let [arg-count (count args)]

@@ -47,7 +47,7 @@
 
 ;; other
 (defn pattern-dispatch [expected] (matchers/regex expected))
-(defn function-dispatch [expected] (core/match-pred expected))
+(defn function-dispatch [expected] (partial core/match-pred expected))
 
 (def type->dispatch
   {nil                            #'nil-dispatch
@@ -95,9 +95,16 @@
             "/"
             (-> type-symbol->dispatch datatype meta :name))))
 
-(defmacro wrap-match-with [type->default-matcher body]
+(defn match-with-inner [type->default-matcher body]
+  (when-not (map? type->default-matcher)
+    (throw (ex-info "Override argument to `wrap-match-with` must be a base map value"
+                    {:expected-type 'map
+                     :provided-type (type type->default-matcher)})))
   (let [dispatch-vars+matcher-targets (mapcat
                                         (fn [[k v]] [(var->qualified-ref k) v])
                                         type->default-matcher)]
     `(with-redefs [~@dispatch-vars+matcher-targets]
       ~body)))
+
+(defmacro wrap-match-with [type->default-matcher body]
+  (match-with-inner type->default-matcher body))
