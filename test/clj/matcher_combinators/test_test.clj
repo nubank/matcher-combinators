@@ -46,3 +46,12 @@
     (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"
       (is (thrown-match? ExceptionInfo {:a 1})
           :in-wrong-place))))
+
+(defn greater-than-matcher [expected-long]
+  (core/->PredMatcher
+    (fn [actual] (> actual expected-long))))
+
+(deftest match-with-test
+  (is (match-with? {java.lang.Long greater-than-matcher}
+                   4
+                   5)))
