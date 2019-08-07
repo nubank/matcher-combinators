@@ -1,6 +1,7 @@
 (ns matcher-combinators.clj-test
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.dispatch :as dispatch]
+            [matcher-combinators.matchers :as matchers]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
@@ -142,6 +143,13 @@
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
 
+(defn- class->symbol [cls]
+  (-> cls
+      str
+      (clojure.string/replace #"^class " "")
+      (clojure.string/replace #"^interface " "")
+      symbol))
+
 (defn build-match-assert
   "Allows you to define a custom clojure.test match assert:
 
@@ -153,36 +161,42 @@
         [matcher actual] args
         ;; no idea why this is needed:
         type->matcher'   (->> type->matcher
-                              (map (fn [[k v]] [(-> k str (subs (count "class ")) symbol) v]))
+                              (map (fn [[k v]] [(class->symbol k) v]))
                               (into {}))]
     (dispatch/match-with-inner
-      type->matcher'
-      `(cond
-         (not (= 2 (count '~args)))
-         (clojure.test/do-report
-           {:type     :fail
-            :message  ~msg
-            :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
-            :actual   (symbol (str (count '~args) " were provided: " '~form))})
+     type->matcher'
+     `(cond
+        (not (= 2 (count '~args)))
+        (clojure.test/do-report
+         {:type     :fail
+          :message  ~msg
+          :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
+          :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
-         (core/matcher? ~matcher)
-         (let [result# (core/match ~matcher ~actual)]
-           (clojure.test/do-report
-             (if (core/match? result#)
-               {:type     :pass
+        (core/matcher? ~matcher)
+        (let [result# (core/match ~matcher ~actual)]
+          (clojure.test/do-report
+           (if (core/match? result#)
+             {:type     :pass
+              :message  ~msg
+              :expected '~form
+              :actual   (list 'match? ~matcher ~actual)}
+             (with-file+line-info
+               {:type     :fail
                 :message  ~msg
                 :expected '~form
-                :actual   (list 'match? ~matcher ~actual)}
-               (with-file+line-info
-                 {:type     :fail
-                  :message  ~msg
-                  :expected '~form
-                  :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
-                                                        result#)}))))
+                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
+                                                      result#)}))))
 
-         :else
-         (clojure.test/do-report
-           {:type     :fail
-            :message  ~msg
-            :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
-            :actual   '~form})))))
+        :else
+        (clojure.test/do-report
+         {:type     :fail
+          :message  ~msg
+          :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
+          :actual   '~form})))))
+
+(defmethod clojure.test/assert-expr 'match-equals? [msg form]
+  (build-match-assert 'match-equals?
+                      {clojure.lang.IPersistentMap matchers/equals}
+                      msg
+                      form))

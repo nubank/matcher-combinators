@@ -56,10 +56,12 @@
                    4
                    5)))
 
-(clojure.pprint/pprint (macroexpand `(build-match-assert foo? {java.lang.Long greater-than-matcher})))
-
-(defmethod clojure.test/assert-expr 'baz? [msg form]
-  (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))
+(defmethod clojure.test/assert-expr 'match-greather-than? [msg form]
+  (build-match-assert 'match-greather-than? {java.lang.Long greater-than-matcher} msg form))
 
 (deftest match-baz-test
-  (is (baz? 4 5)))
+  (is (match-greather-than? 4 5)))
+
+(deftest match-equals-test
+  (is (match-equals? {:a 1}
+                     {:a 1})))
