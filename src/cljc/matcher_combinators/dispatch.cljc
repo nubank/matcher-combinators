@@ -50,21 +50,7 @@
 (defn function-dispatch [expected] (partial core/match-pred expected))
 
 (def type->dispatch
-  #?(:cljs {nil                  #'nil-dispatch
-            number               #'integer-dispatch
-            string               #'string-dispatch
-            clojure.lang.Keyword #'keyword-dispatch
-            boolean              #'boolean-dispatch
-            java.util.UUID       #'uuid-dispatch
-            js/Date              #'date-dispatch
-            Var                  #'var-dispatch
-
-            ;; since there is no cljs map/vectore type, use a symbol stand-in
-            'map                 #'i-persistent-map-dispatch
-            'vector              #'i-persistent-vector-dispatch
-            clojure.lang.Cons    #'cons-dispatch
-            clojure.lang.Repeat  #'repeat-dispatch
-            js/RegExp            #'pattern-dispatch}
+  #?(:cljs {}
      :clj {nil                            #'nil-dispatch
            java.lang.Class                #'class-dispatch
            java.lang.Integer              #'integer-dispatch
