@@ -150,5 +150,5 @@ lein midje
 To run Clojurescript tests:
 
 ```
-lein node-test
+lein test-node
 ```

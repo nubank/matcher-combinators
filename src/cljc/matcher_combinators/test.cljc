@@ -6,3 +6,5 @@
        :clj  [matcher-combinators.clj-test])))
 
 (declare match?)
+(declare match-with?)
+(declare thrown-match?)

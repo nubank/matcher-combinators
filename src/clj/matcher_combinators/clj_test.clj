@@ -66,20 +66,19 @@
          :actual   '~form}))))
 
 (defmethod clojure.test/assert-expr 'match-with? [msg form]
-  (let [a              (rest form)
+  (let [args           (rest form)
         [type->matcher
          matcher
-         actual]       a]
-    (println a)
-    (dispatch/match-with-inner 
+         actual]       args]
+    (dispatch/match-with-inner
       type->matcher
      `(cond
-       (not (= 3 (do (println (list ~a)) (count (list ~a)))))
+       (not (= 3 (count '~args)))
        (clojure.test/do-report
-        {:type     :fail
-         :message  ~msg
-         :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
-         :actual   (symbol (str (count ~a) " were provided: " '~form))})
+         {:type     :fail
+          :message  ~msg
+          :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
+          :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
        (core/matcher? ~matcher)
        (let [result# (core/match ~matcher ~actual)]

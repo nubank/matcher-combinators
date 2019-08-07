@@ -50,39 +50,53 @@
 (defn function-dispatch [expected] (partial core/match-pred expected))
 
 (def type->dispatch
-  {nil                            #'nil-dispatch
-   java.lang.Class                #'class-dispatch
-   java.lang.Integer              #'integer-dispatch
-   java.lang.Short                #'short-dispatch
-   java.lang.Long                 #'long-dispatch
-   java.lang.Float                #'float-dispatch
-   java.lang.Double               #'double-dispatch
-   java.lang.String               #'string-dispatch
-   clojure.lang.Symbol            #'symbol-dispatch
-   clojure.lang.Keyword           #'keyword-dispatch
-   java.lang.Boolean              #'boolean-dispatch
-   java.util.UUID                 #'uuid-dispatch
-   java.util.Date                 #'date-dispatch
-   java.time.LocalDate            #'local-date-dispatch
-   java.time.LocalDateTime        #'local-date-time-dispatch
-   java.time.LocalTime            #'local-time-dispatch
-   java.time.YearMonth            #'year-month-dispatch
-   clojure.lang.Ratio             #'ratio-dispatch
-   java.math.BigDecimal           #'big-decimal-dispatch
-   java.math.BigInteger           #'big-integer-dispatch
-   clojure.lang.BigInt            #'big-int-dispatch
-   java.lang.Character            #'character-dispatch
-   clojure.lang.Var               #'var-dispatch
+  #?(:cljs {nil                  #'nil-dispatch
+            number               #'integer-dispatch
+            string               #'string-dispatch
+            clojure.lang.Keyword #'keyword-dispatch
+            boolean              #'boolean-dispatch
+            java.util.UUID       #'uuid-dispatch
+            js/Date              #'date-dispatch
+            Var                  #'var-dispatch
 
-   clojure.lang.IPersistentMap    #'i-persistent-map-dispatch
-   clojure.lang.IPersistentVector #'i-persistent-vector-dispatch
-   clojure.lang.IPersistentList   #'i-persistent-list-dispatch
-   clojure.lang.IPersistentSet    #'i-persistent-list-dispatch
-   clojure.lang.Cons              #'cons-dispatch
-   clojure.lang.Repeat            #'repeat-dispatch
-   clojure.lang.LazySeq           #'lazy-seq-dispatch
-   java.util.regex.Pattern        #'pattern-dispatch})
+            ;; since there is no cljs map/vectore type, use a symbol stand-in
+            'map                 #'i-persistent-map-dispatch
+            'vector              #'i-persistent-vector-dispatch
+            clojure.lang.Cons    #'cons-dispatch
+            clojure.lang.Repeat  #'repeat-dispatch
+            js/RegExp            #'pattern-dispatch}
+     :clj {nil                            #'nil-dispatch
+           java.lang.Class                #'class-dispatch
+           java.lang.Integer              #'integer-dispatch
+           java.lang.Short                #'short-dispatch
+           java.lang.Long                 #'long-dispatch
+           java.lang.Float                #'float-dispatch
+           java.lang.Double               #'double-dispatch
+           java.lang.String               #'string-dispatch
+           clojure.lang.Symbol            #'symbol-dispatch
+           clojure.lang.Keyword           #'keyword-dispatch
+           java.lang.Boolean              #'boolean-dispatch
+           java.util.UUID                 #'uuid-dispatch
+           java.util.Date                 #'date-dispatch
+           java.time.LocalDate            #'local-date-dispatch
+           java.time.LocalDateTime        #'local-date-time-dispatch
+           java.time.LocalTime            #'local-time-dispatch
+           java.time.YearMonth            #'year-month-dispatch
+           clojure.lang.Ratio             #'ratio-dispatch
+           java.math.BigDecimal           #'big-decimal-dispatch
+           java.math.BigInteger           #'big-integer-dispatch
+           clojure.lang.BigInt            #'big-int-dispatch
+           java.lang.Character            #'character-dispatch
+           clojure.lang.Var               #'var-dispatch
 
+           clojure.lang.IPersistentMap    #'i-persistent-map-dispatch
+           clojure.lang.IPersistentVector #'i-persistent-vector-dispatch
+           clojure.lang.IPersistentList   #'i-persistent-list-dispatch
+           clojure.lang.IPersistentSet    #'i-persistent-list-dispatch
+           clojure.lang.Cons              #'cons-dispatch
+           clojure.lang.Repeat            #'repeat-dispatch
+           clojure.lang.LazySeq           #'lazy-seq-dispatch
+           java.util.regex.Pattern        #'pattern-dispatch}))
 
 (def type-symbol->dispatch
   (->> type->dispatch
