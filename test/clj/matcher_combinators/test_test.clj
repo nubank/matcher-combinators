@@ -1,6 +1,6 @@
 (ns matcher-combinators.test-test
   (:require [clojure.test :refer :all]
-            [matcher-combinators.test]
+            [matcher-combinators.test :refer [build-match-assert]]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
   (:import [clojure.lang ExceptionInfo]))
@@ -55,3 +55,11 @@
   (is (match-with? {java.lang.Long greater-than-matcher}
                    4
                    5)))
+
+(clojure.pprint/pprint (macroexpand `(build-match-assert foo? {java.lang.Long greater-than-matcher})))
+
+(defmethod clojure.test/assert-expr 'baz? [msg form]
+  (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))
+
+(deftest match-baz-test
+  (is (baz? 4 5)))

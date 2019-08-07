@@ -57,41 +57,11 @@
           :actual   '~form}))))
 
 (defmethod t/assert-expr 'match-with? [_ msg form]
-  (let [args           (rest form)
-        [type->matcher
-         matcher
-         actual]       args]
-    (dispatch/match-with-inner
-      type->matcher
-     `(cond
-       (not (= 3 (count '~args)))
-       (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
-          :actual   (symbol (str (count '~args) " were provided: " '~form))})
-
-       (core/matcher? ~matcher)
-       (let [result# (core/match ~matcher ~actual)]
-         (clojure.test/do-report
-          (if (core/match? result#)
-            {:type     :pass
-             :message  ~msg
-             :expected '~form
-             :actual   (list 'match? ~matcher ~actual)}
-            (with-file+line-info
-              {:type     :fail
-               :message  ~msg
-               :expected '~form
-               :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
-                                                     result#)}))))
-
-       :else
-       (clojure.test/do-report
-        {:type     :fail
-         :message  ~msg
-         :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
-         :actual   '~form})))))
+  `(clojure.test/do-report
+     {:type     :fail
+      :message  ~msg
+      :expected (symbol "`match-with?` not yet implemented for cljs")
+      :actual   '~form}))
 
 (defmethod t/assert-expr 'thrown-match? [_ msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))

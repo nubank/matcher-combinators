@@ -99,7 +99,7 @@
         (clojure.test/do-report
          {:type     :fail
           :message  ~msg
-          :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
+          :expected (str "The second argument of match-with? needs to be a matcher (implement the match protocol)")
           :actual   '~form})))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
@@ -141,3 +141,48 @@
 (defmethod clojure.core/print-method ::mismatch [{:keys [match-result]} out]
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
+
+(defn build-match-assert
+  "Allows you to define a custom clojure.test match assert:
+
+
+  `(defmethod clojure.test/assert-expr 'baz? [msg form]
+    (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))`"
+  [match-assert-name type->matcher msg form]
+  (let [args             (rest form)
+        [matcher actual] args
+        ;; no idea why this is needed:
+        type->matcher'   (->> type->matcher
+                              (map (fn [[k v]] [(-> k str (subs (count "class ")) symbol) v]))
+                              (into {}))]
+    (dispatch/match-with-inner
+      type->matcher'
+      `(cond
+         (not (= 2 (count '~args)))
+         (clojure.test/do-report
+           {:type     :fail
+            :message  ~msg
+            :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
+            :actual   (symbol (str (count '~args) " were provided: " '~form))})
+
+         (core/matcher? ~matcher)
+         (let [result# (core/match ~matcher ~actual)]
+           (clojure.test/do-report
+             (if (core/match? result#)
+               {:type     :pass
+                :message  ~msg
+                :expected '~form
+                :actual   (list 'match? ~matcher ~actual)}
+               (with-file+line-info
+                 {:type     :fail
+                  :message  ~msg
+                  :expected '~form
+                  :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
+                                                        result#)}))))
+
+         :else
+         (clojure.test/do-report
+           {:type     :fail
+            :message  ~msg
+            :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
+            :actual   '~form})))))
