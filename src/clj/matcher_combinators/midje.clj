@@ -64,19 +64,19 @@
           `(fn [~matcher-var]
              (fn [~actual-var]
                ~(dispatch/match-with-inner
-                  type->default-matcher
-                  `(if (core/matcher? ~matcher-var)
-                     (check-match ~matcher-var ~actual-var)
-                     (checking/as-data-laden-falsehood
-                       {:notes [(str "Input wasn't a matcher: " ~matcher-var)]}))))))
+                 type->default-matcher
+                 `(if (core/matcher? ~matcher-var)
+                    (check-match ~matcher-var ~actual-var)
+                    (checking/as-data-laden-falsehood
+                     {:notes [(str "Input wasn't a matcher: " ~matcher-var)]}))))))
       2 (let [[type->default-matcher matcher] args]
           `(fn [~actual-var]
              ~(dispatch/match-with-inner
-                type->default-matcher
-                `(if (core/matcher? ~matcher)
-                   (check-match ~matcher ~actual-var)
-                   (checking/as-data-laden-falsehood
-                     {:notes [(str "Input wasn't a matcher: " ~matcher)]})))))
+               type->default-matcher
+               `(if (core/matcher? ~matcher)
+                  (check-match ~matcher ~actual-var)
+                  (checking/as-data-laden-falsehood
+                   {:notes [(str "Input wasn't a matcher: " ~matcher)]})))))
       (throw (ArityException. arg-count "expected 1 or 2 arguments")))))
 
 (defn- parse-throws-args! [args]
@@ -144,12 +144,12 @@
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
                                                     (core/roughly? expected actual delta))))]
       (match-with
-        {java.lang.Integer    func
-         java.lang.Short      func
-         java.lang.Long       func
-         java.lang.Float      func
-         java.lang.Double     func
-         java.math.BigDecimal func
-         java.math.BigInteger func
-         clojure.lang.BigInt  func}
-        matcher))))
+       {java.lang.Integer    func
+        java.lang.Short      func
+        java.lang.Long       func
+        java.lang.Float      func
+        java.lang.Double     func
+        java.math.BigDecimal func
+        java.math.BigInteger func
+        clojure.lang.BigInt  func}
+       matcher))))

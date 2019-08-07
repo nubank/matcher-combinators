@@ -35,8 +35,8 @@
 
   (fact "low-level invocation"
     (dispatch/wrap-match-with
-      {java.lang.Long ->AbsValue}
-      (s/match? -1 1))
+     {java.lang.Long ->AbsValue}
+     (s/match? -1 1))
     => true)
 
   (fact "using 2-arg match-with"
@@ -61,7 +61,7 @@
 
 (defn greater-than-matcher [expected-long]
   (matcher-combinators.core/->PredMatcher
-    (fn [actual] (> actual expected-long))))
+   (fn [actual] (> actual expected-long))))
 
 (fact "example from docstring"
   5 => (match-with {java.lang.Long greater-than-matcher}

@@ -71,36 +71,36 @@
          matcher
          actual]       args]
     (dispatch/match-with-inner
-      type->matcher
+     type->matcher
      `(cond
-       (not (= 3 (count '~args)))
-       (clojure.test/do-report
+        (not (= 3 (count '~args)))
+        (clojure.test/do-report
          {:type     :fail
           :message  ~msg
           :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
           :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
-       (core/matcher? ~matcher)
-       (let [result# (core/match ~matcher ~actual)]
-         (clojure.test/do-report
-          (if (core/match? result#)
-            {:type     :pass
-             :message  ~msg
-             :expected '~form
-             :actual   (list 'match? ~matcher ~actual)}
-            (with-file+line-info
-              {:type     :fail
-               :message  ~msg
-               :expected '~form
-               :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
-                                                     result#)}))))
+        (core/matcher? ~matcher)
+        (let [result# (core/match ~matcher ~actual)]
+          (clojure.test/do-report
+           (if (core/match? result#)
+             {:type     :pass
+              :message  ~msg
+              :expected '~form
+              :actual   (list 'match? ~matcher ~actual)}
+             (with-file+line-info
+               {:type     :fail
+                :message  ~msg
+                :expected '~form
+                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
+                                                      result#)}))))
 
-       :else
-       (clojure.test/do-report
-        {:type     :fail
-         :message  ~msg
-         :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
-         :actual   '~form})))))
+        :else
+        (clojure.test/do-report
+         {:type     :fail
+          :message  ~msg
+          :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
+          :actual   '~form})))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
