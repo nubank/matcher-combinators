@@ -5,6 +5,7 @@
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
+            [matcher-combinators.utils :as utils]
             [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
             [matcher-combinators.printer :as printer]
             [midje.checking.core :as checking]
@@ -142,7 +143,7 @@
   "match where all numbers match if they are within the delta of their expected value"
   (fn [delta matcher]
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
-                                                    (core/roughly? expected actual delta))))]
+                                                    (utils/roughly? expected actual delta))))]
       (match-with
        {java.lang.Integer    func
         java.lang.Short      func

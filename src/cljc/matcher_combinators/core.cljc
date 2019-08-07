@@ -397,11 +397,6 @@
      ::result/value (model/->FailedPredicate (str func) actual)
      ::result/weight 1}))
 
-(defn roughly? [expected actual delta]
-  (and (number? actual)
-       (>= expected (-' actual delta))
-       (<= expected (+' actual delta))))
-
 (defrecord PredMatcher [pred-fn]
   Matcher
   (match [this actual]
