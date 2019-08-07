@@ -59,7 +59,7 @@
 (defmethod clojure.test/assert-expr 'match-greather-than? [msg form]
   (build-match-assert 'match-greather-than? {java.lang.Long greater-than-matcher} msg form))
 
-(deftest match-baz-test
+(deftest match-greater-than-test
   (is (match-greather-than? 4 5)))
 
 (deftest match-equals-test
