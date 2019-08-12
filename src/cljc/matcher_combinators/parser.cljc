@@ -5,6 +5,7 @@
      (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
                IPersistentVector IPersistentList IPersistentSet
                LazySeq Repeat Cons Var]
+              [java.net URI]
               [java.util UUID Date]
               [java.util.regex Pattern]
               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
@@ -111,6 +112,7 @@
                Keyword
                Boolean
                UUID
+               URI
                Date
                LocalDate
                LocalDateTime
