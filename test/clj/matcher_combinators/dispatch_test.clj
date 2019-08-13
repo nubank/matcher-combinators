@@ -51,7 +51,18 @@
     {:a 1 :b 3 :c 1} => (match {:a 1 :b odd?}))
   (fact "match-equals is more strict"
     {:a 1 :b 3 :c 1} =not=> (match-equals {:a 1 :b odd?})
-    {:a 1 :b 3} => (match-equals {:a 1 :b odd?})))
+    {:a 1 :b 3} => (match-equals {:a 1 :b odd?}))
+  (let [payload {:a {:b {:c 1}
+                     :d {:e {:inner-e {:x 1 :y 2}}
+                         :f 5
+                         :g 17}}}]
+    (fact "nested maps inside of an `embeds` of a match-equals are treated as equals"
+      payload
+      =not=> (match-equals {:a {:b {:c 1}
+                                :d (m/embeds {:e {:inner-e {:x 1}}})}})
+      payload
+      => (match-equals {:a {:b {:c 1}
+                            :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}}))))
 
 (fact "match-roughly"
   {:a 1 :b 3.05} => (match-roughly 0.1
