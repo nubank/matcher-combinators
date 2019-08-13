@@ -202,6 +202,14 @@ Or if you want a one-off override of defaults, it can be done `match-with?`:
 - `match-roughly`
 - `match-equals`
 
+Or you can build your own, for example:
+
+```clojure
+(def match-equals
+  "match but using strict `equals` matching behavior for maps, even nested ones."
+  (match-with {clojure.lang.IPersistentMap matchers/equals}))
+```
+
 ## Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.
