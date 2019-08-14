@@ -2,6 +2,7 @@
   #?(:cljs
      (:require-macros [matcher-combinators.cljs-test]))
   (:require [matcher-combinators.core :as core]
+            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
@@ -54,6 +55,13 @@
           :message  ~msg
           :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
           :actual   '~form}))))
+
+(defmethod t/assert-expr 'match-with? [_ msg form]
+  `(clojure.test/do-report
+     {:type     :fail
+      :message  ~msg
+      :expected (symbol "`match-with?` not yet implemented for cljs")
+      :actual   '~form}))
 
 (defmethod t/assert-expr 'thrown-match? [_ msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))

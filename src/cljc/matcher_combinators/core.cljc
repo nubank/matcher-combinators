@@ -396,3 +396,8 @@
     {::result/type  :mismatch
      ::result/value (model/->FailedPredicate (str func) actual)
      ::result/weight 1}))
+
+(defrecord PredMatcher [pred-fn]
+  Matcher
+  (match [this actual]
+    (match-pred pred-fn actual)))

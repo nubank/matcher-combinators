@@ -314,14 +314,9 @@
 ;; Since the parser namespace needs to be loaded to interpret functions as
 ;; matchers, and we don't want to load the parser namespce, we need to manually
 ;; wrap functions in a predicate matcher
-(defrecord PredMatcher [expected]
-  core/Matcher
-  (match [this actual]
-    (core/match-pred expected actual)))
-
 (defn- pred-matcher [expected]
   (assert ifn? expected)
-  (->PredMatcher expected))
+  (core/->PredMatcher expected))
 
 (fact
  (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])

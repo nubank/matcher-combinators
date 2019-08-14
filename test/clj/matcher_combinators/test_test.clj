@@ -1,6 +1,6 @@
 (ns matcher-combinators.test-test
   (:require [clojure.test :refer :all]
-            [matcher-combinators.test]
+            [matcher-combinators.test :refer [build-match-assert]]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
   (:import [clojure.lang ExceptionInfo]))
@@ -46,3 +46,22 @@
     (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"
       (is (thrown-match? ExceptionInfo {:a 1})
           :in-wrong-place))))
+
+(defn greater-than-matcher [expected-long]
+  (core/->PredMatcher
+   (fn [actual] (> actual expected-long))))
+
+(deftest match-with-test
+  (is (match-with? {java.lang.Long greater-than-matcher}
+                   4
+                   5)))
+
+(defmethod clojure.test/assert-expr 'match-greather-than? [msg form]
+  (build-match-assert 'match-greather-than? {java.lang.Long greater-than-matcher} msg form))
+
+(deftest match-greater-than-test
+  (is (match-greather-than? 4 5)))
+
+(deftest match-equals-test
+  (is (match-equals? {:a 1}
+                     {:a 1})))

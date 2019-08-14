@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.2.0]
+Add new matching contexts:
+For Midje:
+- `match-with`: takes a class->matcher map and an expected matcher. The map defines what matcher will be used by default when a particular class instance is found.
+- `match-equals`: Allows for exact matching of datastructures by using the `equals` matcher instead of `embeds` for maps.
+- `match-roughly`: Matches all numerics as long as they are within a given delta of the expected.
+
+For `clojure.test`:
+- `match-with?`: same as the midje version above
+- `match-equals?`: same as the midje version above
+As well as `matcher-combinator.test/build-match-assert` to help build new matcher contexts
+
 ## [1.1.0]
 - Improve cider + cursive integration by using `:fail`, which is the standard in `clojure.test`
   for reporting mismatches. Thanks to Arne Brasseur (@plexus) for implementation
