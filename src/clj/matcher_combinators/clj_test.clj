@@ -17,7 +17,7 @@
 
 (defn- core-or-this-class-name? [^StackTraceElement stacktrace]
   (let [cl-name (.getClassName stacktrace)]
-    (or (str/starts-with? cl-name "matcher_combinators.clj-test$")
+    (or (str/starts-with? cl-name "matcher_combinators.clj_test$")
         (str/starts-with? cl-name "java.lang."))))
 
 ;; had to include this from `clojure.test` because there is no good way to run
