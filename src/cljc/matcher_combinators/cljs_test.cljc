@@ -29,7 +29,7 @@
          [matcher# actual#] args#]
      (cond
        (not (= 2 (count args#)))
-       (clojure.test/do-report
+       (t/do-report
         {:type     :fail
          :message  ~msg
          :expected (symbol "`match?` expects 2 arguments: a `matcher` and the `actual`")

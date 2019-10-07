@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.2.2]
+- Fix clojurescript import issue `No such namespace: clojure.test`
+
 ## [1.2.1]
 - Fix issue where clojure.test mismatches wouldn't report the correct line number or file
 
