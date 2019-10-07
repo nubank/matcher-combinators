@@ -320,6 +320,95 @@
       issue
       (match-any-order expected actual false))))
 
+
+;; InAnyOrderAlt
+(defn- matched-successfully-alt? [unmatched elements subset?]
+  (or (and subset? (empty? unmatched))
+      (and (not subset?) (empty? unmatched) (empty? elements))))
+
+(defn- residual-matching-weight-alt [matchers elements]
+  (reduce (fn [w {::result/keys [weight]}] (+ w weight))
+          0
+          (map match matchers elements)))
+
+(defn- matches-in-any-order-alt? [unmatched elements subset? matching]
+  (if (or (empty? unmatched) (empty? elements))
+    (let [matched? (matched-successfully-alt? unmatched elements subset?)]
+      {:matched?  matched?
+       :unmatched unmatched
+       :weight    (if matched? 0 (residual-matching-weight-alt unmatched elements))
+       :matched   matching})
+    (cond
+      (match? (match (first unmatched) (first elements)))
+      (recur (rest unmatched)
+             (rest elements)
+             subset?
+             (conj matching (first unmatched)))
+
+      subset?
+      (recur unmatched
+             (rest elements)
+             subset?
+             matching)
+
+      :else
+      {:matched?  false
+       :unmatched unmatched
+       :weight    (residual-matching-weight-alt unmatched elements)
+       :matched   matching})))
+
+(defn- better-mismatch-alt? [best candidate]
+  (let [best-matched      (-> best :matched count)
+        candidate-matched (-> candidate :matched count)
+        candidate-weight  (:weight candidate)
+        best-weight       (:weight best)]
+    (and (>= candidate-matched best-matched)
+         (<= candidate-weight best-weight))))
+
+(defn- matched-or-best-matchers-alt [elements subset?]
+  (fn [best matchers]
+    (let [{:keys [matched?] :as result} (matches-in-any-order-alt? matchers elements subset? [])]
+      (cond
+        matched?                           (reduced ::match-found)
+        (better-mismatch-alt? best result) (assoc result :elements elements)
+        :else                              best))))
+
+(defn- match-all-permutations-alt [expected elements subset?]
+  (let [[matchers elements] (if subset?
+                              [expected elements]
+                              (normalize-inputs-length expected elements))
+        matcher-perms       (combo/permutations matchers)
+        find-best-match     (matched-or-best-matchers-alt elements subset?)
+        result              (reduce find-best-match
+                                    {:matched   []
+                                     :weight    #?(:clj Integer/MAX_VALUE
+                                                   :cljs (.-MAX_SAFE_INTEGER js/Number))
+                                     :elements  elements
+                                     :unmatched matchers}
+                                    matcher-perms)]
+    (if (= ::match-found result)
+      {::result/type   :match
+       ::result/value  elements
+       ::result/weight 0}
+      (match (->EqualsSeq (concat (:matched result)
+                                  (:unmatched result)))
+        (:elements result)))))
+
+(defn- match-any-order-alt [expected actual subset?]
+  (if-not (sequential? actual)
+    {:result/type   :mismatch
+     :result/value  (model/->Mismatch expected actual)
+     :result/weight 1}
+    (match-all-permutations-alt expected actual subset?)))
+
+(defrecord InAnyOrderAlt [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [issue (validate-input
+                    expected actual sequential? 'in-any-order "sequential")]
+      issue
+      (match-any-order-alt expected actual false))))
+
 (defrecord SetEquals [expected accept-seq?]
   Matcher
   (match [_this actual]
