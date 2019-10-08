@@ -2,8 +2,8 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
-            [matcher-combinators.helpers :as helpers]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model]
+            [matcher-combinators.utils :as utils]))
 
 (defprotocol Matcher
   "For matching expected and actual values, providing helpful mismatch info on
@@ -252,8 +252,8 @@
        :elements  (concat (map second matching) elements)
        :matched   (map first matching)})
     (let [[matcher & unmatched-rest] unmatched
-          matching-elem              (helpers/find-first #(match? (match matcher %))
-                                                         elements)]
+          matching-elem              (utils/find-first #(match? (match matcher %))
+                                                       elements)]
       (if (nil? matching-elem)
         {:matched?  false
          :unmatched unmatched
@@ -261,7 +261,7 @@
          :elements  (concat (map second matching) elements)
          :matched   (map first matching)}
         (recur unmatched-rest
-               (helpers/remove-first #{matching-elem} elements)
+               (utils/remove-first #{matching-elem} elements)
                subset?
                (conj matching [matcher matching-elem]))))))
 
