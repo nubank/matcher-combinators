@@ -2,7 +2,8 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model]
+            [matcher-combinators.utils :as utils]))
 
 (defprotocol Matcher
   "For matching expected and actual values, providing helpful mismatch info on
@@ -248,25 +249,21 @@
       {:matched?  matched?
        :unmatched unmatched
        :weight    (if matched? 0 (residual-matching-weight unmatched elements))
-       :matched   matching})
-    (cond
-      (match? (match (first unmatched) (first elements)))
-      (recur (rest unmatched)
-             (rest elements)
-             subset?
-             (conj matching (first unmatched)))
-
-      subset?
-      (recur unmatched
-             (rest elements)
-             subset?
-             matching)
-
-      :else
-      {:matched?  false
-       :unmatched unmatched
-       :weight    (residual-matching-weight unmatched elements)
-       :matched   matching})))
+       :elements  (concat (map second matching) elements)
+       :matched   (map first matching)})
+    (let [[matcher & unmatched-rest] unmatched
+          matching-elem              (utils/find-first #(match? (match matcher %))
+                                                       elements)]
+      (if (nil? matching-elem)
+        {:matched?  false
+         :unmatched unmatched
+         :weight    (residual-matching-weight unmatched elements)
+         :elements  (concat (map second matching) elements)
+         :matched   (map first matching)}
+        (recur unmatched-rest
+               (utils/remove-first #{matching-elem} elements)
+               subset?
+               (conj matching [matcher matching-elem]))))))
 
 (defn- better-mismatch? [best candidate]
   (let [best-matched      (-> best :matched count)
@@ -281,7 +278,7 @@
     (let [{:keys [matched?] :as result} (matches-in-any-order? matchers elements subset? [])]
       (cond
         matched?                       (reduced ::match-found)
-        (better-mismatch? best result) (assoc result :elements elements)
+        (better-mismatch? best result) result
         :else                          best))))
 
 (defn- match-all-permutations [expected elements subset?]
@@ -303,7 +300,7 @@
        ::result/weight 0}
       (match (->EqualsSeq (concat (:matched result)
                                   (:unmatched result)))
-        (:elements result)))))
+             (:elements result)))))
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
