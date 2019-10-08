@@ -345,11 +345,11 @@
   (fact "subset will recur on matchers"
     (#'core/matches-in-any-order? matchers [5 4 1 2] true [])
     => (sweet/contains {:matched?  true
-                        :unmatched empty?
-                        :matched   vector?})
+                        :unmatched nil?
+                        :matched   (just [anything anything])})
     (#'core/matches-in-any-order? matchers [5 1 3 2] true [])
     => (sweet/contains {:matched?  true
-                        :unmatched (just [])
+                        :unmatched nil?
                         :matched   (just [anything anything])}))
   (fact "works well with identical matchers"
     (#'core/matches-in-any-order? [(equals 2) (equals 2)] [2 2] false [])

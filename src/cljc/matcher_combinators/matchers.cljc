@@ -49,13 +49,6 @@
   Similar to Midje's `(just expected :in-any-order)`"
   [expected] (core/->InAnyOrder expected))
 
-(defn in-any-order-alt
-  "Matcher that will match when the given a list that is the same as the
-  `expected` list but with elements in a different order.
-
-  Similar to Midje's `(just expected :in-any-order)`"
-  [expected] (core/->InAnyOrderAlt expected))
-
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`
   list.

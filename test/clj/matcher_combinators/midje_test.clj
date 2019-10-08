@@ -130,6 +130,23 @@
       big-list
       =not=> (match (m/embeds [[:jkl #{1 2}]])))
 
+(facts "test large-ish in-any-order matches"
+  (fact "7 items"
+    ["G" "A" "B" "C" "D" "E" "F"]
+    => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G"])))
+
+  (fact "8 items"
+    ["H" "A" "B" "C" "D" "E" "F" "G"]
+    => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G" "H"])))
+
+  (fact "9 items"
+    ["I" "A" "B" "C" "D" "E" "F" "G" "H"]
+    => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G" "H" "I"])))
+
+  (fact "10 items"
+    ["J" "A" "B" "C" "D" "E" "F" "G" "H" "I"]
+    => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"]))))
+
 (fact "Find optimal in-any-order matching just like midje"
   [1 3] => (midje/just [odd? 1] :in-any-order)
 

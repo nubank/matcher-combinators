@@ -212,19 +212,3 @@
                 ::result/value {:actual b
                                 :expected a}
                 ::result/weight 1}))))
-
-(fact "7 items: around miliseconds"
-  ["G" "A" "B" "C" "D" "E" "F"]
-  => (match (m/in-any-order-alt ["A" "B" "C" "D" "E" "F" "G"])))
-
-(fact "8 items: almost a second"
-  ["H" "A" "B" "C" "D" "E" "F" "G"]
-  => (match (m/in-any-order-alt ["A" "B" "C" "D" "E" "F" "G" "H"])))
-
-(fact "9 items: around 5 seconds"
-  ["I" "A" "B" "C" "D" "E" "F" "G" "H"]
-  => (match (m/in-any-order-alt ["A" "B" "C" "D" "E" "F" "G" "H" "I"])))
-
-#_(fact "10 items timeouts"
-  ["J" "A" "B" "C" "D" "E" "F" "G" "H" "I"]
-  => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"])))
