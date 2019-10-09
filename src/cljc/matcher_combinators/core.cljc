@@ -23,19 +23,22 @@
 (defn matcher? [x]
   (satisfies? Matcher x))
 
+(defn- value-match [expected actual]
+  (cond
+    (= ::missing actual) {::result/type   :mismatch
+                          ::result/value  (model/->Missing expected)
+                          ::result/weight 1}
+    (= expected actual)  {::result/type   :match
+                          ::result/value  actual
+                          ::result/weight 0}
+    :else                {::result/type   :mismatch
+                          ::result/value  (model/->Mismatch expected actual)
+                          ::result/weight 1}))
+
 (defrecord Value [expected]
   Matcher
   (match [_this actual]
-    (cond
-      (= ::missing actual) {::result/type   :mismatch
-                            ::result/value  (model/->Missing expected)
-                            ::result/weight 1}
-      (= expected actual)  {::result/type   :match
-                            ::result/value  actual
-                            ::result/weight 0}
-      :else                {::result/type   :mismatch
-                            ::result/value  (model/->Mismatch expected actual)
-                            ::result/weight 1})))
+    (value-match expected actual)))
 
 (defn- validate-input
   ([expected actual pred matcher-name type]
@@ -398,3 +401,12 @@
   Matcher
   (match [this actual]
     (match-pred pred-fn actual)))
+
+(defrecord CljsUriEquals [expected]
+  Matcher
+  (match [_this actual]
+    (if-let [issue (validate-input
+                    expected actual uri? 'equals "goog.Uri")]
+      issue
+      (value-match (.toString expected)
+                   (.toString actual)))))

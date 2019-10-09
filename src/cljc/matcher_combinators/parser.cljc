@@ -2,13 +2,14 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as matchers])
-  #?(:clj
-     (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
-               IPersistentVector IPersistentList IPersistentSet
-               LazySeq Repeat Cons Var]
-              [java.util UUID Date]
-              [java.util.regex Pattern]
-              [java.time LocalDate LocalDateTime LocalTime YearMonth])))
+  #?(:cljs (:import goog.Uri)
+     :clj  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
+                IPersistentVector IPersistentList IPersistentSet
+                LazySeq Repeat Cons Var]
+               [java.net URI]
+               [java.util UUID Date]
+               [java.util.regex Pattern]
+               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
 
 #?(:cljs
 (extend-protocol
@@ -43,6 +44,10 @@
   UUID
   (match [this actual]
     (core/match (dispatch/uuid-dispatch this) actual))
+
+  goog.Uri
+  (match [this actual]
+    (core/match (dispatch/uri-dispatch this) actual))
 
   js/Date
   (match [this actual]
@@ -111,6 +116,7 @@
 (mimic-matcher dispatch/keyword-dispatch Keyword)
 (mimic-matcher dispatch/boolean-dispatch Boolean)
 (mimic-matcher dispatch/uuid-dispatch UUID)
+(mimic-matcher dispatch/uri-dispatch URI)
 (mimic-matcher dispatch/date-dispatch Date)
 (mimic-matcher dispatch/local-date-dispatch LocalDate)
 (mimic-matcher dispatch/local-date-time-dispatch LocalDateTime)

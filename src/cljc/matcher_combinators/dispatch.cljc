@@ -9,6 +9,9 @@
               [java.util.regex Pattern]
               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
 
+(defn- cljs-uri [expected]
+  (core/->CljsUriEquals expected))
+
 ;; equals base types
 (defn nil-dispatch [expected] (matchers/equals expected))
 (defn class-dispatch [expected] (matchers/equals expected))
@@ -22,6 +25,9 @@
 (defn keyword-dispatch [expected] (matchers/equals expected))
 (defn boolean-dispatch [expected] (matchers/equals expected))
 (defn uuid-dispatch [expected] (matchers/equals expected))
+(defn uri-dispatch [expected]
+  #?(:clj  (matchers/equals expected)
+     :cljs (cljs-uri expected)))
 (defn date-dispatch [expected] (matchers/equals expected))
 (defn local-date-dispatch [expected] (matchers/equals expected))
 (defn local-date-time-dispatch [expected] (matchers/equals expected))

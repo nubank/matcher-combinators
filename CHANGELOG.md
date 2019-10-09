@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.2.4]
+- Default to `equals` matcher for URIs
+
 ## [1.2.3]
 - Fix performance regression with order-agnostic matchers (`in-any-order`, `embeds`, `set-{embeds|equals}`)
 

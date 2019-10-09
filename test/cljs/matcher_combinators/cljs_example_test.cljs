@@ -4,11 +4,13 @@
             [matcher-combinators.parser]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
-            [matcher-combinators.test]))
+            [matcher-combinators.test])
+  (:import [goog.Uri]))
 
 (def now-date (js/Date.))
 (def now-time (.getTime now-date))
 (def a-var (var now-time))
+(def uri (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento"))
 
 (deftest basic-examples
   (testing "does it work?"
@@ -21,6 +23,10 @@
     (is (match? 0.1 0.1))
     (is (match? (uuid "00000000-0000-0000-0000-000000000000")
                 (uuid "00000000-0000-0000-0000-000000000000")))
+    (is (match? uri
+                uri))
+    (is (match? (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento")
+                (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento")))
     (is (match? now-date
                 now-date))
     (is (match? now-time
