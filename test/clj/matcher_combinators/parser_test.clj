@@ -5,7 +5,8 @@
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.core :as core]
             [clojure.test.check.generators :as gen]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.model :as model])
+  (:import [java.net URI]))
 
 (def gen-big-decimal
   (gen/fmap (fn [[integral fractional]]
@@ -26,6 +27,28 @@
 
 (def gen-var (gen/elements (vals (ns-interns 'clojure.core))))
 
+(def query-gen
+  (gen/one-of [(gen/return nil) gen/string-alphanumeric]))
+
+(def gen-uri
+  ;; well actually generates a URL, but oh well
+  (let [scheme          (gen/elements #{"http" "https"})
+        authority       (gen/elements #{"www.foo.com" "www.bar.com:80"})
+        path            (gen/one-of [(gen/return nil)
+                                          (gen/fmap #(str "/" %) gen/string-alphanumeric)])
+        args-validation (fn [[_scheme authority path query fragment]]
+                          (not (or ;; a URI with just a scheme is invalid
+                                (every? nil? (list authority path query fragment))
+                                ;; a URI with just a scheme and fragment is invalid
+                                (and (not (nil? fragment))
+                                     (every? nil? (list authority path query))))))]
+
+  (gen/fmap
+    (fn [[scheme authority path query fragment]] (URI. scheme authority path query fragment))
+    (gen/such-that
+      args-validation
+      (gen/tuple scheme authority path query-gen query-gen)))))
+
 (def gen-scalar (gen/one-of [gen-java-integer
                              gen/int ;; really a Long
                              gen-short
@@ -37,6 +60,8 @@
                              gen/keyword
                              gen/boolean
                              gen/ratio
+                             gen/uuid
+                             gen-uri
                              gen-big-decimal
                              gen-big-int
                              gen/char
