@@ -7,7 +7,7 @@ _current version:_
 [![Current Version](https://img.shields.io/clojars/v/nubank/matcher-combinators.svg)](https://clojars.org/nubank/matcher-combinators)
 
 _docs:_
-[Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/0.3.1/doc/readme)
+[Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/)
 
 ## Motivation
 
@@ -137,6 +137,79 @@ You can extend your data-types to work with `matcher-combinators` by implemented
 
 An example of this in the wild can be seen in the `abracad` library [here](https://github.com/nubank/abracad/blob/b52e6a7114461f50bdacc2cf09a1de08f707b9f3/test/abracad/custom_types_test.clj#L15-L20).
 
+## Overriding default matchers
+
+Inside the context of `match?` (clojure.test) / `match` (midje), data-structures are assigned default matchers, which eliminates the need to wrap data-structures with matcher-combinators when your desired matching behavior matches the defaults.
+
+But what if your desired matching behavior deviates from the defaults?
+
+For example, if you want to do exact map matching you need to use a log of `m/equals`:
+
+```clojure
+(deftest exact-map-matching-by-hand
+  (is (match? (m/equals {:a (m/equals {:b (m/equals {:c odd?})})}))
+              {:a {:b {:c 1}}})
+  ;; without m/equals, the system defaults to m/embeds for maps,
+  ;; which has looser matching properties
+  (is (match? {:a {:b {:c odd?}}}
+              {:a {:b {:c 1 :extra-c 0} :extra-b 0} :extra-a 0})))
+```
+
+This verbosity can be avoided by redefining the matcher data-type defaults
+
+### clojure.test
+
+You can register a custom `clojure.test` match assert expression if you are going to use it a few times:
+
+```clojure
+(defmethod clojure.test/assert-expr 'match-equals? [msg form]
+  (matcher-combinators.test/build-match-assert 'match-equals? {clojure.lang.IPersistentMap m/equals} msg form))
+
+(deftest match-equals-test
+  (is (match-equals? {:a {:b {:c odd?}}}
+                     {:a {:b {:c 1}}})))
+```
+
+Or if you want a one-off override of defaults, it can be done `match-with?`:
+
+```
+(deftest one-off-match-equals
+  (is (match-with? {clojure.lang.IPersistentMap m/equals}
+                   {:a {:b {:c odd?}}}
+                   {:a {:b {:c 1}}})))
+```
+
+#### built-in matching context
+
+- `match?`
+- `match-with?`
+- `match-equals?`
+
+### midje
+
+```clojure
+(fact "match-with example"
+  {:a {:b {:c odd?}}} => (match-with {clojure.lang.IPersistentMap m/equals}
+                                     {:a {:b {:c odd?}}}))
+(fact "match-equals example"
+  {:a {:b {:c odd?}}} => (match-equals {:a {:b {:c odd?}}}))
+```
+
+#### built-in matching context
+
+- `match`
+- `match-with`
+- `match-roughly`
+- `match-equals`
+
+Or you can build your own, for example:
+
+```clojure
+(def match-equals
+  "match but using strict `equals` matching behavior for maps, even nested ones."
+  (match-with {clojure.lang.IPersistentMap matchers/equals}))
+```
+
 ## Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.
@@ -150,5 +223,5 @@ lein midje
 To run Clojurescript tests:
 
 ```
-lein node-test
+lein test-node
 ```
