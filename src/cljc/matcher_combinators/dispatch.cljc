@@ -42,6 +42,7 @@
 
 ;; equals compound types
 (defn i-persistent-vector-dispatch [expected] (matchers/equals expected))
+(defn chunked-seq-dispatch [expected] (matchers/equals expected))
 (defn i-persistent-list-dispatch [expected] (matchers/equals expected))
 (defn i-persistent-set-dispatch [expected] (matchers/equals expected))
 (defn cons-dispatch [expected] (matchers/equals expected))
@@ -81,14 +82,15 @@
            java.lang.Character            #'character-dispatch
            clojure.lang.Var               #'var-dispatch
 
-           clojure.lang.IPersistentMap    #'i-persistent-map-dispatch
-           clojure.lang.IPersistentVector #'i-persistent-vector-dispatch
-           clojure.lang.IPersistentList   #'i-persistent-list-dispatch
-           clojure.lang.IPersistentSet    #'i-persistent-list-dispatch
-           clojure.lang.Cons              #'cons-dispatch
-           clojure.lang.Repeat            #'repeat-dispatch
-           clojure.lang.LazySeq           #'lazy-seq-dispatch
-           java.util.regex.Pattern        #'pattern-dispatch}))
+           clojure.lang.IPersistentMap              #'i-persistent-map-dispatch
+           clojure.lang.IPersistentVector           #'i-persistent-vector-dispatch
+           clojure.lang.PersistentVector$ChunkedSeq #'chunked-seq-dispatch
+           clojure.lang.IPersistentList             #'i-persistent-list-dispatch
+           clojure.lang.IPersistentSet              #'i-persistent-list-dispatch
+           clojure.lang.Cons                        #'cons-dispatch
+           clojure.lang.Repeat                      #'repeat-dispatch
+           clojure.lang.LazySeq                     #'lazy-seq-dispatch
+           java.util.regex.Pattern                  #'pattern-dispatch}))
 
 (def type-symbol->dispatch
   (->> type->dispatch
