@@ -77,3 +77,13 @@
 (fact "example from docstring"
   5 => (match-with {java.lang.Long greater-than-matcher}
                    4))
+
+(def chunked-seq (seq [1]))
+(fact "chunked-seq remap"
+  (s/match? chunked-seq [1 2 3])
+  => false
+
+  (dispatch/wrap-match-with
+    {clojure.lang.PersistentVector$ChunkedSeq core/->EmbedsSeq}
+    (s/match? chunked-seq [1 2 3]))
+  => true)

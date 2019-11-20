@@ -4,7 +4,7 @@
             [matcher-combinators.matchers :as matchers])
   #?(:cljs (:import goog.Uri)
      :clj  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
-                IPersistentVector IPersistentList IPersistentSet
+                PersistentVector$ChunkedSeq IPersistentVector IPersistentList IPersistentSet
                 LazySeq Repeat Cons Var]
                [java.net URI]
                [java.util UUID Date]
@@ -131,6 +131,8 @@
 
 (mimic-matcher dispatch/i-persistent-map-dispatch IPersistentMap)
 (mimic-matcher dispatch/i-persistent-vector-dispatch IPersistentVector)
+(mimic-matcher dispatch/chunked-seq-dispatch PersistentVector$ChunkedSeq)
+(mimic-matcher dispatch/i-persistent-vector-dispatch Pattern)
 (mimic-matcher dispatch/i-persistent-list-dispatch IPersistentList)
 (mimic-matcher dispatch/i-persistent-list-dispatch IPersistentSet)
 (mimic-matcher dispatch/cons-dispatch Cons)

@@ -97,6 +97,10 @@
       (core/match [10] [10]))
     => truthy))
 
+(def chunked-seq (seq [1 2 3]))
+(fact "chunked sequences act as equals matchers"
+  (core/match chunked-seq [10])) => truthy
+
 (fact "lists also act as equals matchers"
   (fact
    (= (core/match (equals [(equals 10)]) [10])
