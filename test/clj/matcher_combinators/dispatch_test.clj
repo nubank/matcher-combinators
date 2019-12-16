@@ -87,3 +87,13 @@
     {clojure.lang.PersistentVector$ChunkedSeq core/->EmbedsSeq}
     (s/match? chunked-seq [1 2 3]))
   => true)
+
+
+(fact "array-seqs"
+  (s/match? (clojure.lang.ArraySeq/create (into-array [1 2]))
+            [2 2])
+  => false
+  (s/match? (clojure.lang.ArraySeq/create (into-array [1 2]))
+            [1 2])
+  => true)
+

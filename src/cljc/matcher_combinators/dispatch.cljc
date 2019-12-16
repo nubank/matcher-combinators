@@ -48,6 +48,7 @@
 (defn cons-dispatch [expected] (matchers/equals expected))
 (defn repeat-dispatch [expected] (matchers/equals expected))
 (defn lazy-seq-dispatch [expected] (matchers/equals expected))
+(defn array-seq-dispatch [expected] (matchers/equals expected))
 
 ;; embeds compound types
 (defn i-persistent-map-dispatch [expected] (matchers/embeds expected))
@@ -90,6 +91,7 @@
            clojure.lang.Cons                        #'cons-dispatch
            clojure.lang.Repeat                      #'repeat-dispatch
            clojure.lang.LazySeq                     #'lazy-seq-dispatch
+           clojure.lang.ArraySeq                    #'array-seq-dispatch
            java.util.regex.Pattern                  #'pattern-dispatch}))
 
 (def type-symbol->dispatch
