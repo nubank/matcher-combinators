@@ -4,6 +4,7 @@ change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [1.2.6]
+- replace `+'` with `+` and `-'` with `-` in roughly matching
 - Default to `equals` matcher for array-seq
 
 ## [1.2.5]
