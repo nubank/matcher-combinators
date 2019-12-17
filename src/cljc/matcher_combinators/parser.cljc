@@ -3,7 +3,7 @@
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as matchers])
   #?(:cljs (:import goog.Uri)
-     :clj  (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
+     :clj  (:import [clojure.lang ArraySeq Keyword Symbol Ratio BigInt IPersistentMap
                 PersistentVector$ChunkedSeq IPersistentVector IPersistentList IPersistentSet
                 LazySeq Repeat Cons Var]
                [java.net URI]
@@ -138,4 +138,5 @@
 (mimic-matcher dispatch/cons-dispatch Cons)
 (mimic-matcher dispatch/repeat-dispatch Repeat)
 (mimic-matcher dispatch/lazy-seq-dispatch LazySeq)
+(mimic-matcher dispatch/array-seq-dispatch ArraySeq)
 (mimic-matcher dispatch/pattern-dispatch Pattern)))

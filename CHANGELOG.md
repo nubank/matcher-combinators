@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.2.6]
+- Default to `equals` matcher for array-seq
+
 ## [1.2.5]
 - Default to `equals` matcher for chunked-sequences
 
