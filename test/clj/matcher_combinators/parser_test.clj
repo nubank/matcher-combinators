@@ -35,7 +35,7 @@
   (let [scheme          (gen/elements #{"http" "https"})
         authority       (gen/elements #{"www.foo.com" "www.bar.com:80"})
         path            (gen/one-of [(gen/return nil)
-                                          (gen/fmap #(str "/" %) gen/string-alphanumeric)])
+                                     (gen/fmap #(str "/" %) gen/string-alphanumeric)])
         args-validation (fn [[_scheme authority path query fragment]]
                           (not (or ;; a URI with just a scheme is invalid
                                 (every? nil? (list authority path query fragment))
@@ -43,9 +43,9 @@
                                 (and (not (nil? fragment))
                                      (every? nil? (list authority path query))))))]
 
-  (gen/fmap
-    (fn [[scheme authority path query fragment]] (URI. scheme authority path query fragment))
-    (gen/such-that
+    (gen/fmap
+     (fn [[scheme authority path query fragment]] (URI. scheme authority path query fragment))
+     (gen/such-that
       args-validation
       (gen/tuple scheme authority path query-gen query-gen)))))
 

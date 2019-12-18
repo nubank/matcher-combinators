@@ -29,7 +29,7 @@
                                   [org.clojure/clojurescript "1.10.520"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}}
 
-  :aliases {"lint"     ["do" "cljfmt"]
+  :aliases {"lint"     ["do" "cljfmt" "check,"]
             "lint-fix" ["do" "cljfmt" "fix,"]
             "test-clj" ["all" "do" ["test"] ["check"]]
             "test-phantom" ["doo" "phantom" "test"]
