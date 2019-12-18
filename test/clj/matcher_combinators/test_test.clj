@@ -30,8 +30,7 @@
       "Predicates can be used in matchers")
   (is (match? {:a {:b 1}} {:a {:b 1 :c 2}}))
   (are [data-matcher data]
-       (with-redefs [match-data data]
-         (is (match? data-matcher match-data)))
+       (match? data-matcher (with-redefs [match-data data] match-data))
     {:foo 4 :bar 5} {:foo 4 :bar 5}
     {:foo 2 :bar 3} {:foo 2 :bar 3}))
 
@@ -47,8 +46,7 @@
       {:bar 2}))
   (testing "are with redefs"
     (are [data-matcher data]
-         (with-redefs [match-data data]
-           (is (thrown-match? ExceptionInfo data-matcher (bang!))))
+         (thrown-match? ExceptionInfo data-matcher (with-redefs [match-data data] (bang!)))
       {:foo 4} {:foo 4 :bar 5}
       {:foo 2} {:foo 2 :bar 3}
       {:bar 3} {:foo 2 :bar 3})))
