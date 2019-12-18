@@ -1,6 +1,6 @@
 (ns matcher-combinators.test
   (:require
-    [matcher-combinators.dispatch :as dispatch]
+    [matcher-combinators.dispatch]
     #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
        :clj  [clojure.test :as t :refer        [is are deftest testing]])
     #?(:cljs [matcher-combinators.cljs-test]
