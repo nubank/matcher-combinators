@@ -1,6 +1,6 @@
 (ns matcher-combinators.test-test
   (:require [clojure.test :refer :all]
-            [matcher-combinators.test :refer [build-match-assert]]
+            [matcher-combinators.test :refer :all]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
   (:import [clojure.lang ExceptionInfo]))
@@ -15,26 +15,43 @@
                                 :open-date  "25-02-1997"
                                 :extra-data 'blah}})
 
+(def match-data {:foo 1 :bar 2})
+
 (deftest basic-matching
   (is (match? example-matcher example-actual)
       "In 'match?', the matcher argument comes first")
   (is (match? (m/equals example-matcher)
               (dissoc example-actual :device))
-      "wrapping the matcher in 'equals' means the top level of 'actual'
-      must have the exact same key/values")
+      "wrapping the matcher in 'equals' means the top level of 'actual' must have the exact same key/values")
   (is (match? 1 1))
   (is (match? (m/equals [1 odd?]) [1 3]))
   (is (match? {:a {:b odd?}}
               {:a {:b 1}})
       "Predicates can be used in matchers")
-  (is (match? {:a {:b 1}} {:a {:b 1 :c 2}})))
+  (is (match? {:a {:b 1}} {:a {:b 1 :c 2}}))
+  (are [data-matcher data]
+       (with-redefs [match-data data]
+         (is (match? data-matcher match-data)))
+    {:foo 4 :bar 5} {:foo 4 :bar 5}
+    {:foo 2 :bar 3} {:foo 2 :bar 3}))
 
-(defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
+(defn bang! [] (throw (ex-info "an exception" match-data)))
 
 (deftest exception-matching
-  (is (thrown-match? ExceptionInfo
-                     {:foo 1}
-                     (bang!))))
+  (testing "is"
+    (is (thrown-match? ExceptionInfo {:foo 1} (bang!))))
+  (testing "are"
+    (are [data-matcher]
+         (thrown-match? ExceptionInfo data-matcher (bang!))
+      {:foo 1}
+      {:bar 2}))
+  (testing "are with redefs"
+    (are [data-matcher data]
+         (with-redefs [match-data data]
+           (is (thrown-match? ExceptionInfo data-matcher (bang!))))
+      {:foo 4} {:foo 4 :bar 5}
+      {:foo 2} {:foo 2 :bar 3}
+      {:bar 3} {:foo 2 :bar 3})))
 
 (comment
   (deftest match?-no-actual-arg
