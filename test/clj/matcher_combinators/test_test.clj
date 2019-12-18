@@ -3,7 +3,7 @@
             [matcher-combinators.test :refer :all]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
-  (:import [clojure.lang ExceptionInfo IExceptionInfo]))
+  (:import [clojure.lang ExceptionInfo]))
 
 (def example-matcher {:username string?
                       :account  {:id        integer?
