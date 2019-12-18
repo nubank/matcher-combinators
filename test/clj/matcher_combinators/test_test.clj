@@ -3,7 +3,7 @@
             [matcher-combinators.test :refer :all]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
-  (:import [clojure.lang ExceptionInfo]))
+  (:import [clojure.lang ExceptionInfo IExceptionInfo]))
 
 (def example-matcher {:username string?
                       :account  {:id        integer?
@@ -39,9 +39,11 @@
 (deftest exception-matching
   (testing "is"
     (is (thrown-match? ExceptionInfo {:foo 1} (bang!))))
+  (testing "is with default ExceptionInfo class"
+    (is (thrown-match? {:foo 1} (bang!))))
   (testing "are"
     (are [data-matcher]
-         (thrown-match? ExceptionInfo data-matcher (bang!))
+         (thrown-match? data-matcher (bang!))
       {:foo 1}
       {:bar 2}))
   (testing "are with redefs"
@@ -57,10 +59,15 @@
       (is (match? 1)
           :in-wrong-place)))
 
-  (deftest thrown-match?-no-actual-arg
-    (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"
+  (deftest thrown-match?-incorrect-args
+    (testing "fails with nice message when you don't provide an `actual` arg"
       (is (thrown-match? ExceptionInfo {:a 1})
-          :in-wrong-place))))
+          :in-wrong-place))
+    (testing "fails with a nice message when you don't provide enough arguments"
+      (is (thrown-match? {:a 1})
+          :in-wrong-place))
+    (testing "fails with a nice message when you provide too many arguments"
+      (is (thrown-match? ExceptionInfo {:a 1} (bang!) :extra-arg)))))
 
 (defn greater-than-matcher [expected-long]
   (core/->PredMatcher
