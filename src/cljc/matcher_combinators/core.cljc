@@ -410,3 +410,21 @@
       issue
       (value-match (.toString expected)
                    (.toString actual)))))
+
+(defrecord Every [matchers]
+  Matcher
+  (match [_this actual]
+    (loop [matchers matchers
+           result   {::result/type   :match
+                     ::result/value  []
+                     ::result/weight 0}]
+      (if-let [matcher (first matchers)]
+        (let [res (match matcher actual)]
+          (recur (rest matchers)
+                 (-> result
+                     (cond->
+                         (= :mismatch (::result/type res))
+                       (assoc ::result/type :mismatch))
+                     (update ::result/value conj (::result/value res))
+                     (update ::result/weight + (::result/weight res)))))
+        result))))

@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.spec.test.alpha :as spec.test]
             [matcher-combinators.core :as core :refer :all]
-            [matcher-combinators.matchers :refer :all]
+            [matcher-combinators.matchers :as m :refer :all]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]))
 
@@ -572,4 +572,68 @@
                                   :in-any-order)
             ::result/weight 2}))
 
-(spec.test/unstrument)
+(fact "the every matcher works when empty"
+      (core/match
+       (m/every)
+       "the first and second")
+      => {::result/type   :match
+          ::result/value  []
+          ::result/weight 0})
+
+(fact "the every matcher works with one matcher"
+      (core/match
+       (m/every
+        (m/regex #"first"))
+       "the first and second")
+      => {::result/type   :match
+          ::result/value  ["first"]
+          ::result/weight 0})
+
+(fact "the every matcher checks every matcher"
+      (core/match
+       (m/every
+        (m/regex #"first")
+        (m/regex #"second"))
+       "the first and second")
+      => {::result/type   :match
+          ::result/value  ["first" "second"]
+          ::result/weight 0})
+
+(fact "the every matcher can fail on the first matcher"
+      (core/match
+       (m/every
+        (m/regex #"foist")
+        (m/regex #"second"))
+       "the first and second")
+      =>
+      (just {::result/type   :mismatch
+             ::result/value  (just
+                              [(just (model/->Mismatch (fn [actual] (= "foist" (str actual))) "the first and second"))
+                               "second"])
+             ::result/weight 1}))
+
+(fact "the every matcher can fail on a later  matcher"
+      (core/match
+       (m/every
+        (m/regex #"first")
+        (m/regex #"segundo"))
+       "the first and second")
+      => (just {::result/type   :mismatch
+                ::result/value  (just
+                                 ["first"
+                                  (just (model/->Mismatch (fn [actual] (= "segundo" (str actual))) "the first and second"))])
+                ::result/weight 1}))
+
+(fact "the every matcher can nest"
+      (core/match
+       (m/every
+        (m/regex #"first")
+        (m/every
+         (m/regex #"segundo")))
+       "the first and second")
+      => (just {::result/type   :mismatch
+                ::result/value  (just
+                                 ["first"
+                                  (just
+                                   [(just (model/->Mismatch (fn [actual] (= "segundo" (str actual))) "the first and second"))])])
+                ::result/weight 1}))
