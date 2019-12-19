@@ -205,7 +205,6 @@
 (def now (java.time.LocalDateTime/now))
 (def now-local-time (java.time.LocalTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
-(def an-id (java.util.UUID/fromString an-id-string))
 (def another-id (java.util.UUID/fromString "8f488446-374e-4975-9670-35ca0a633da1"))
 (def response-time (java.time.LocalDateTime/now))
 

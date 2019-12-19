@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.2.7]
+- Optionally allow omitting the first argument to `thrown-match?`: `(thrown-match? {:foo 1} (bang!)`
+
 ## [1.2.6]
 - replace `+'` with `+` and `-'` with `-` in roughly matching
 - Default to `equals` matcher for array-seq

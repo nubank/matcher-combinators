@@ -104,40 +104,47 @@
           :actual   '~form})))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
-  ;; (is (thrown-with-match? exception-class matcher expr))
+  ;; 2-arity: (is (thrown-with-match? matcher expr))
+  ;; 3-arity: (is (thrown-with-match? exception-class matcher expr))
   ;; Asserts that evaluating expr throws an exception of class c.
   ;; Also asserts that the exception data satisfies the provided matcher.
-  (let [klass   (nth form 1)
-        matcher (nth form 2)
-        body    (nthnext form 3)]
-    `(try ~@body
-          (let [args# (list ~@(rest form))]
-            (if (not (= 3 (count args#)))
+  (let [arity   (count (rest form))
+        klass   (if (<= arity 2) 'clojure.lang.ExceptionInfo (nth form 1))
+        matcher (nth form (dec arity))
+        body    (nthnext form (dec arity))]
+    `(if (not (<= 2 ~arity 3))
+       (clojure.test/do-report
+        {:type     :fail
+         :message  ~msg
+         :expected (symbol "`thrown-match?` expects 2 or 3 arguments: an optional exception class, a `matcher`, and the `actual`")
+         :actual   (symbol (str ~arity " argument(s) provided: " '~form))})
+       (try ~@body
+            (if (isa? ~matcher Throwable)
               (clojure.test/do-report
                {:type     :fail
                 :message  ~msg
-                :expected (symbol "`thrown-match?` expects 3 arguments: an exception class, a `matcher`, and the `actual`")
-                :actual   (symbol (str (count args#) " were provided: " '~form))})
+                :expected (symbol "an exception class has been provided, but one of the `matcher` or `actual` arguments is missing")
+                :actual   (symbol (str ~arity " argument(s) provided: " '~form))})
               (clojure.test/do-report {:type     :fail
                                        :message  ~msg
                                        :expected '~form
-                                       :actual   (symbol "the expected exception wasn't thrown")})))
-          (catch ~klass e#
-            (let [result# (core/match ~matcher (ex-data e#))]
-              (clojure.test/do-report
-               (if (core/match? result#)
-                 {:type     :pass
-                  :message  ~msg
-                  :expected '~form
-                  :actual   (list 'thrown-match? ~klass ~matcher '~body)}
-                 (with-file+line-info
-                   {:type     :fail
+                                       :actual   (symbol "the expected exception wasn't thrown")}))
+            (catch ~klass e#
+              (let [result# (core/match ~matcher (ex-data e#))]
+                (clojure.test/do-report
+                 (if (core/match? result#)
+                   {:type     :pass
                     :message  ~msg
                     :expected '~form
-                    :actual   (tagged-for-pretty-printing (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
-                                                          result#)
-                    :ex-class ~klass}))))
-            e#))))
+                    :actual   (list 'thrown-match? ~klass ~matcher '~body)}
+                   (with-file+line-info
+                     {:type     :fail
+                      :message  ~msg
+                      :expected '~form
+                      :actual   (tagged-for-pretty-printing (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                                                            result#)
+                      :ex-class ~klass}))))
+              e#)))))
 
 (defmethod clojure.core/print-method ::mismatch [{:keys [match-result]} out]
   (binding [*out* out]
