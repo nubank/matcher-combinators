@@ -1,7 +1,8 @@
 (ns matcher-combinators.cljs-test
   #?(:cljs
      (:require-macros [matcher-combinators.cljs-test]))
-  (:require [matcher-combinators.core :as core]
+  (:require [clojure.string :as str]
+            [matcher-combinators.core :as core]
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
@@ -20,11 +21,30 @@
   ;;  cljs compilation.
 
 (defmacro maybedefmethod [multifn & rest]
-  (let [ns (symbol (namespace multifn))]
-    (try
-      (require ns)
-      `(clojure.core/defmethod ~multifn ~@rest)
-      (catch Exception e))))
+  #?(:clj  (let [ns (symbol (namespace multifn))]
+             (try
+               (require ns)
+               `(clojure.core/defmethod ~multifn ~@rest)
+               (catch Exception e)))
+     :cljs `(defmethod ~multifn ~@rest)))
+
+(defn- stacktrace-file-and-line
+  [stacktrace]
+  (if (seq stacktrace)
+    (let [^StackTraceElement s (first stacktrace)]
+      {:file (.getFileName s) :line (.getLineNumber s)})
+    {:file nil :line nil}))
+
+(defn- core-or-this-class-name? [^StackTraceElement stacktrace]
+  (let [cl-name (.getClassName stacktrace)]
+    (or (str/starts-with? cl-name "matcher_combinators.clj_test$")
+        (str/starts-with? cl-name "java.lang."))))
+
+(defn with-file+line-info [report]
+  #?(:clj (->> (.getStackTrace (Thread/currentThread))
+               (drop-while core-or-this-class-name?)
+               stacktrace-file-and-line
+               (merge report))))
 
 #?(:clj (do
 (maybedefmethod cljs.test/assert-expr 'match? [_ msg form]
@@ -103,7 +123,7 @@
             e#))))))
 
 #?(:cljs (do
-(maybedefmethod cljs.test/report [:cljs.test/default :matcher-combinators/exception-mismatch] [m]
+(defmethod cljs.test/report [:cljs.test/default :matcher-combinators/exception-mismatch] [m]
   (cljs.test/inc-report-counter! :fail)
   (println "\nFAIL in" (cljs.test/testing-vars-str m))
   (when (seq (:testing-contexts (cljs.test/get-current-env)))
@@ -113,7 +133,7 @@
   (println (:ex-class m) "data mismatches:")
   (printer/pretty-print (:markup m)))
 
-(maybedefmethod cljs.test/report [:cljs.test/default :matcher-combinators/mismatch] [m]
+(defmethod cljs.test/report [:cljs.test/default :matcher-combinators/mismatch] [m]
   (cljs.test/inc-report-counter! :fail)
   (println "\nFAIL in" (cljs.test/testing-vars-str m))
   (when (seq (:testing-contexts (cljs.test/get-current-env)))
