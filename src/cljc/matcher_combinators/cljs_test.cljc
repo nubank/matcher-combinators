@@ -5,31 +5,34 @@
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
-            [matcher-combinators.result :as result]
-            [cljs.test :as t :refer-macros [deftest is]]))
+            [matcher-combinators.result :as result]))
 
-(defn with-file+line-info [report]
-  #?(:cljs (merge (t/file-and-line (js/Error.) 4) report)))
+(when (find-ns 'cljs.test)
+  (require '[cljs.test :as t :refer-macros [deftest is]]))
 
-;; This technique was copied from https://github.com/tonsky/datascript
-;; below is the reasoning from the datascript repo:
+  ;;  The matcher-combinators.cljs-test namespace exists only for the side
+  ;;  effect of extending the cljs.test/assert-expr multimethod.
 
-;;  The matcher-combinators.cljs-test namespace exists only for the side
-;;  effect of extending the cljs.test/assert-expr multimethod.
+  ;;  This has to be done on the clj side of cljs compilation, and
+  ;;  so we have a separate namespace that is only loaded by cljs
+  ;;  via a :require-macros clause in datascript.test.core. This
+  ;;  means we have a clj namespace that should only be loaded by
+  ;;  cljs compilation.
 
-;;  This has to be done on the clj side of cljs compilation, and
-;;  so we have a separate namespace that is only loaded by cljs
-;;  via a :require-macros clause in datascript.test.core. This
-;;  means we have a clj namespace that should only be loaded by
-;;  cljs compilation.
+(defmacro maybedefmethod [multifn & rest]
+  (let [ns (symbol (namespace multifn))]
+    (try
+      (require ns)
+      `(clojure.core/defmethod ~multifn ~@rest)
+      (catch Exception e))))
 
 #?(:clj (do
-(defmethod t/assert-expr 'match? [_ msg form]
+(maybedefmethod cljs.test/assert-expr 'match? [_ msg form]
   `(let [args#              (list ~@(rest form))
          [matcher# actual#] args#]
      (cond
        (not (= 2 (count args#)))
-       (t/do-report
+       (cljs.test/do-report
         {:type     :fail
          :message  ~msg
          :expected (symbol "`match?` expects 2 arguments: a `matcher` and the `actual`")
@@ -37,7 +40,7 @@
 
        (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
-         (t/do-report
+         (cljs.test/do-report
            (if (core/match? result#)
              {:type     :pass
               :message  ~msg
@@ -50,20 +53,20 @@
                 :actual   (list '~'not (list 'match? matcher# actual#))
                 :markup   (::result/value result#)}))))
        :else
-       (t/do-report
+       (cljs.test/do-report
          {:type     :fail
           :message  ~msg
           :expected (str "The first argument of match? needs to be a matcher (implement the match protocol)")
           :actual   '~form}))))
 
-(defmethod t/assert-expr 'match-with? [_ msg form]
+(maybedefmethod cljs.test/assert-expr 'match-with? [_ msg form]
   `(clojure.test/do-report
      {:type     :fail
       :message  ~msg
       :expected (symbol "`match-with?` not yet implemented for cljs")
       :actual   '~form}))
 
-(defmethod t/assert-expr 'thrown-match? [_ msg form]
+(maybedefmethod cljs.test/assert-expr 'thrown-match? [_ msg form]
   ;; (is (thrown-with-match? exception-class matcher expr))
   ;; Asserts that evaluating expr throws an exception of class c.
   ;; Also asserts that the exception data satisfies the provided matcher.
@@ -78,13 +81,13 @@
                 :message  ~msg
                 :expected (symbol "`thrown-match?` expects 3 arguments: an exception class, a `matcher`, and the `actual`")
                 :actual   (symbol (str (count args#) " were provided: " '~form))})
-              (t/do-report {:type     :fail
+              (cljs.test/do-report {:type     :fail
                             :message  ~msg
                             :expected '~form
                             :actual   (symbol "the expected exception wasn't thrown")})))
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
-              (t/do-report
+              (cljs.test/do-report
                (if (core/match? result#)
                  {:type     :pass
                   :message  ~msg
@@ -100,21 +103,21 @@
             e#))))))
 
 #?(:cljs (do
-(defmethod t/report [::t/default :matcher-combinators/exception-mismatch] [m]
-  (t/inc-report-counter! :fail)
-  (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq (:testing-contexts (t/get-current-env)))
-    (println (t/testing-contexts-str)))
+(maybedefmethod cljs.test/report [:cljs.test/default :matcher-combinators/exception-mismatch] [m]
+  (cljs.test/inc-report-counter! :fail)
+  (println "\nFAIL in" (cljs.test/testing-vars-str m))
+  (when (seq (:testing-contexts (cljs.test/get-current-env)))
+    (println (cljs.test/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))
   (println (:ex-class m) "data mismatches:")
   (printer/pretty-print (:markup m)))
 
-(defmethod t/report [::t/default :matcher-combinators/mismatch] [m]
-  (t/inc-report-counter! :fail)
-  (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq (:testing-contexts (t/get-current-env)))
-    (println (t/testing-contexts-str)))
+(maybedefmethod cljs.test/report [:cljs.test/default :matcher-combinators/mismatch] [m]
+  (cljs.test/inc-report-counter! :fail)
+  (println "\nFAIL in" (cljs.test/testing-vars-str m))
+  (when (seq (:testing-contexts (cljs.test/get-current-env)))
+    (println (cljs.test/testing-contexts-str)))
   (when-let [message (:message m)]
     (println message))
   (println "mismatch:")
