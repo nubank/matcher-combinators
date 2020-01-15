@@ -316,7 +316,7 @@
 ;; wrap functions in a predicate matcher
 (defn- pred-matcher [expected]
   (assert ifn? expected)
-  (core/->PredMatcher expected))
+  (core/->PredMatcher expected (str expected)))
 
 (fact
  (match (equals [(pred-matcher odd?) (pred-matcher even?)]) [1 2])
@@ -498,27 +498,27 @@
 (fact "embeds /set-equals mismatches due to content"
   (core/match (set-embeds pred-set) #{1 -2})
   => (just {::result/type  :mismatch
-            ::result/value (just #{1 (just {:actual -2
-                                            :form   anything})})
+            ::result/value (just #{1 (just {:actual   -2
+                                            :expected anything})})
             ::result/weight 1})
 
   (core/match (set-embeds pred-seq) #{1 -2})
   => (just {::result/type :mismatch
             ::result/weight 1
-            ::result/value (just #{1 (just {:actual -2
-                                            :form   anything})})})
+            ::result/value (just #{1 (just {:actual   -2
+                                            :expected anything})})})
 
   (core/match (equals pred-set) #{1 -2})
   => (just {::result/type :mismatch
             ::result/weight 1
-            ::result/value (just #{1 (just {:actual -2
-                                            :form   anything})})})
+            ::result/value (just #{1 (just {:actual   -2
+                                            :expected anything})})})
 
   (core/match (set-equals pred-seq) #{1 -2})
   => (just {::result/type :mismatch
             ::result/weight 1
-            ::result/value (just #{1 (just {:actual -2
-                                            :form   anything})})}))
+            ::result/value (just #{1 (just {:actual   -2
+                                            :expected anything})})}))
 
 (def even-odd-set #{(pred-matcher #(and (odd? %) (pos? %)))
                     (pred-matcher even?)})

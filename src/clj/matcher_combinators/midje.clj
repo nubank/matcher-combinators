@@ -45,7 +45,8 @@
 
                  `(defn greater-than-matcher [expected-long]
                     (matcher-combinators.core/->PredMatcher
-                      (fn [actual] (> actual expected-long))))
+                      (fn [actual] (> actual expected-long))
+                      (str \"greater than \" expected-long)))
 
                  (match-with {java.lang.Long greater-than-matcher})`
 
