@@ -45,7 +45,8 @@
 
                  `(defn greater-than-matcher [expected-long]
                     (matcher-combinators.core/->PredMatcher
-                      (fn [actual] (> actual expected-long))))
+                      (fn [actual] (> actual expected-long))
+                      (str \"greater than \" expected-long)))
 
                  (match-with {java.lang.Long greater-than-matcher})`
 
@@ -143,7 +144,8 @@
   "match where all numbers match if they are within the delta of their expected value"
   (fn [delta matcher]
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
-                                                    (utils/roughly? expected actual delta))))]
+                                                    (utils/roughly? expected actual delta))
+                                                  (str "roughly " expected " (+/- " delta ")")))]
       (match-with
        {java.lang.Integer    func
         java.lang.Short      func

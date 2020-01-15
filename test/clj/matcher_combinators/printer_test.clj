@@ -56,13 +56,7 @@
              {:num-tests 100}
              (printer/markup-expression (model/->Unexpected actual))
              => (list 'unexpected
-                      (printer/->ColorTag :red actual))))
-
-  (fact "Failed predicate"
-    (printer/markup-expression (model/->FailedPredicate '(roughly 1) 2))
-    => (list 'predicate
-             (printer/->ColorTag :yellow '(roughly 1))
-             (printer/->ColorTag :red 2))))
+                      (printer/->ColorTag :red actual)))))
 
 (midje.config/with-augmented-config {:partial-prerequisites true}
   (facts "On printing"

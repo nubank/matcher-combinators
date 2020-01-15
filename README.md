@@ -184,6 +184,14 @@ Or if you want a one-off override of defaults, it can be done `match-with?`:
 - `match?`
 - `match-with?`
 - `match-equals?`
+- `match-roughly?`:
+
+```clojure
+(deftest match-roughly-test
+  (is (match-roughly? 0.1
+                      {:a 1 :b 3.0}
+                      {:a 1 :b 3.05})))
+```
 
 ### midje
 

@@ -5,6 +5,7 @@
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
+            [matcher-combinators.utils :as utils]
             [clojure.string :as str]
             [clojure.test :as clojure.test]))
 
@@ -207,3 +208,30 @@
                       {clojure.lang.IPersistentMap matchers/equals}
                       msg
                       form))
+
+(defmethod clojure.test/assert-expr 'match-roughly? [msg form]
+  (let [directive (first form)
+        delta     (second form)
+        the-rest  (rest (rest form))
+        roughly-delta?  `(fn [expected#]
+                           (core/->PredMatcher (fn [actual#]
+                                                 (utils/roughly? expected# actual# ~delta))
+                                               (str "roughly " expected# " (+/- " ~delta ")")))
+        form' (concat [directive] the-rest)]
+    `(if (not (= 3 (count '~(rest form))))
+       (clojure.test/do-report
+         {:type     :fail
+          :message  ~msg
+          :expected (symbol (str "`" '~directive "` expects 3 arguments: a `delta` number, a `matcher`, and the `actual`"))
+          :actual   (symbol (str (count '~(rest form)) " were provided: " '~form))})
+       ~(build-match-assert 'match-roughly?
+                            {java.lang.Integer    roughly-delta?
+                             java.lang.Short      roughly-delta?
+                             java.lang.Long       roughly-delta?
+                             java.lang.Float      roughly-delta?
+                             java.lang.Double     roughly-delta?
+                             java.math.BigDecimal roughly-delta?
+                             java.math.BigInteger roughly-delta?
+                             clojure.lang.BigInt  roughly-delta?}
+                            msg
+                            form'))))

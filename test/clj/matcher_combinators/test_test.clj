@@ -71,7 +71,8 @@
 
 (defn greater-than-matcher [expected-long]
   (core/->PredMatcher
-   (fn [actual] (> actual expected-long))))
+   (fn [actual] (> actual expected-long))
+   (str "greater than " expected-long)))
 
 (deftest match-with-test
   (is (match-with? {java.lang.Long greater-than-matcher}
@@ -87,3 +88,8 @@
 (deftest match-equals-test
   (is (match-equals? {:a 1}
                      {:a 1})))
+
+(deftest match-roughly-test
+  (is (match-roughly? 0.1
+                      {:a 1 :b 3.0}
+                      {:a 1 :b 3.05})))
