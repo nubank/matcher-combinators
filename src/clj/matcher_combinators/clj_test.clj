@@ -215,9 +215,8 @@
         the-rest  (rest (rest form))
         roughly-delta?  `(fn [expected#]
                            (core/->PredMatcher (fn [actual#]
-                                                 (println expected#)
-                                                 (println actual#)
-                                                 (utils/roughly? expected# actual# ~delta))))
+                                                 (utils/roughly? expected# actual# ~delta))
+                                               (str "roughly " expected# " (+/- " ~delta ")")))
         form' (concat [directive] the-rest)]
     (build-match-assert 'match-roughly?
                         {java.lang.Integer    roughly-delta?

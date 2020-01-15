@@ -380,11 +380,11 @@
          ::result/value  (set value)
          ::result/weight weight}))))
 
-(defn match-pred [func actual]
+(defn match-pred [func func-desc actual]
   (cond
     (= actual ::missing)
     {::result/type  :mismatch
-     ::result/value (model/->Missing func)
+     ::result/value (model/->Missing func-desc)
      ::result/weight 1}
 
     (func actual)
@@ -394,13 +394,13 @@
 
     :else
     {::result/type  :mismatch
-     ::result/value (model/->FailedPredicate (str func) actual)
+     ::result/value (model/->Mismatch func-desc actual)
      ::result/weight 1}))
 
-(defrecord PredMatcher [pred-fn]
+(defrecord PredMatcher [pred-fn desc]
   Matcher
   (match [this actual]
-    (match-pred pred-fn actual)))
+    (match-pred pred-fn desc actual)))
 
 (defrecord CljsUriEquals [expected]
   Matcher
