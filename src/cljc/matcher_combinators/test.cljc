@@ -6,9 +6,11 @@
     #?(:cljs [matcher-combinators.cljs-test]
        :clj  [matcher-combinators.clj-test])))
 
-(declare match?)
-(declare match-with?)
-(declare thrown-match?)
+(declare ^{:arglists '([matcher actual])} match?)
+(declare ^{:arglists '([type->matcher matcher actual])} match-with?)
+(declare ^{:arglists '([matcher actual]
+                       [exception-class matcher actual])}
+         thrown-match?)
 
 #?(:clj
    (def build-match-assert
