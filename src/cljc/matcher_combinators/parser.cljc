@@ -76,10 +76,6 @@
           (satisfies? ISequential this))
       (core/match (dispatch/i-persistent-vector-dispatch this) actual)))
 
-  js/Object
-  (match [this actual]
-    (core/match (dispatch/object-dispatch this) actual))
-
   js/RegExp
   (match [this actual]
     (core/match (dispatch/pattern-dispatch this) actual))))

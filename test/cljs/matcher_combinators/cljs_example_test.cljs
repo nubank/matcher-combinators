@@ -16,8 +16,6 @@
   (testing "does it work?"
     (is (match? "foo" "foo"))
     (is (match? 3 3))
-    (is (match? (js-obj "foo" 1)
-                (js-obj "foo" 1)))
     (is (match? nil nil))
     (is (match? :foo :foo))
     (is (match? a-var
