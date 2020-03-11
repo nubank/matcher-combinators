@@ -14,7 +14,7 @@
   Return map includes the following keys:
 
   - :match/result    - either :match or :mismatch
-  - :mismatch/detail - only when :match/result is :mismatch"
+  - :mismatch/detail - the actual value with mismatch annotations. Only present when :match/result is :mismatch"
   [matcher actual]
   (let [{:keys [matcher-combinators.result/type
                 matcher-combinators.result/value]}
