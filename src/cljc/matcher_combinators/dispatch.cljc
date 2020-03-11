@@ -15,6 +15,7 @@
 ;; equals base types
 (defn nil-dispatch [expected] (matchers/equals expected))
 (defn class-dispatch [expected] (matchers/equals expected))
+(defn object-dispatch [expected] (matchers/equals expected))
 (defn integer-dispatch [expected] (matchers/equals expected))
 (defn short-dispatch [expected] (matchers/equals expected))
 (defn long-dispatch [expected] (matchers/equals expected))
@@ -61,6 +62,7 @@
   #?(:cljs {}
      :clj {nil                            #'nil-dispatch
            java.lang.Class                #'class-dispatch
+           Object                         #'object-dispatch
            java.lang.Integer              #'integer-dispatch
            java.lang.Short                #'short-dispatch
            java.lang.Long                 #'long-dispatch

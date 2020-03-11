@@ -76,6 +76,10 @@
           (satisfies? ISequential this))
       (core/match (dispatch/i-persistent-vector-dispatch this) actual)))
 
+  js/Object
+  (match [this actual]
+    (core/match (dispatch/object-dispatch this) actual))
+
   js/RegExp
   (match [this actual]
     (core/match (dispatch/pattern-dispatch this) actual))))
@@ -106,6 +110,7 @@
 
 (mimic-matcher dispatch/nil-dispatch nil)
 (mimic-matcher dispatch/class-dispatch java.lang.Class)
+(mimic-matcher dispatch/object-dispatch Object)
 (mimic-matcher dispatch/integer-dispatch Integer)
 (mimic-matcher dispatch/short-dispatch Short)
 (mimic-matcher dispatch/long-dispatch Long)

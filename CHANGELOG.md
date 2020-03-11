@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.4.0]
+- Implement default equality matching for objects. If classes don't explicity
+  implement the `match` protocol, they now default to using equality matching.
+
 ## [1.3.1]
 - add arglist for cljtest assert expressions
 
