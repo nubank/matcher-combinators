@@ -7,6 +7,9 @@ change log follows the conventions of
 - Implement default equality matching for objects. If classes don't explicity
   implement the `match` protocol, they now default to using equality matching.
 
+## [1.4.0]
+- add `matcher-combinators.standalone/match` (test-framework independent)
+
 ## [1.3.1]
 - add arglist for cljtest assert expressions
 
