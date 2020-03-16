@@ -116,3 +116,16 @@
   (fact
    (= (core/match (equals java.lang.String) java.lang.String)
       (core/match java.lang.String java.lang.String)) => truthy))
+
+(def an-object (Object.))
+(def another-object (RuntimeException.))
+(fact "Objects default to equality matching"
+  (= (core/match (equals an-object)
+                 an-object)
+     (core/match an-object
+                 an-object))
+  => truthy
+  (= (core/match? (core/match another-object
+                              (Object.)))
+     (= another-object (Object.)))
+  => truthy)

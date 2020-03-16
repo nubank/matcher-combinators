@@ -242,13 +242,6 @@
   {:a nil} => (match {:a nil})
   {:a 1} =not=> (match {:a nil}))
 
-(def an-object (Object.))
-(fact "Objects aren't matchers, so matching on them shouldn't work and produce
-       an informative error"
-  an-object => (match (m/equals an-object))
-  an-object =not=> (match an-object)
-  (Object.) =not=> (match (Object.)))
-
 (defn x [a] a)
 (defn f [b] (x b))
 
