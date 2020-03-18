@@ -1,6 +1,6 @@
 (ns matcher-combinators.parser-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [matcher-combinators.parser]
+            [matcher-combinators.parser :as parser]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.core :as core]
             [clojure.test.check.generators :as gen]
@@ -129,3 +129,12 @@
       (is (= (core/match? (core/match another-object
                                       (Object.)))
              (= another-object (Object.)))))))
+
+(deftest mimic-matcher-macro-regression-test
+  ;; this is a regression test for https://github.com/nubank/matcher-combinators/pull/104
+  (testing "mimic-matcher uses non-namespaced symbol for `match`"
+    (is (= 'match
+           (-> (macroexpand `(parser/mimic-matcher dispatch/integer-dispatch Integer))
+               last
+               last
+               first)))))
