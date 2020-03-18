@@ -1,10 +1,11 @@
 (ns matcher-combinators.parser-test
-  (:require [midje.sweet :refer :all :exclude [exactly contains]]
-            [midje.experimental :refer [for-all]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [matcher-combinators.parser]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.core :as core]
             [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [matcher-combinators.model :as model])
   (:import [java.net URI]))
 
@@ -50,7 +51,7 @@
       (gen/tuple scheme authority path query-gen query-gen)))))
 
 (def gen-scalar (gen/one-of [gen-java-integer
-                             gen/int ;; really a Long
+                             gen/small-integer ;; really a long
                              gen-short
                              gen/string
                              gen/symbol
@@ -74,58 +75,57 @@
 (def gen-scalar-pair
   (gen-distinct-pair gen-scalar))
 
-(facts "scalar values act as equals matchers"
-  (for-all [i gen-scalar]
-           {:num-tests 50}
-           (core/match i i) => (core/match (equals i) i))
+(defspec test-scalars
+  (testing "scalar values act as equals matchers"
+    (prop/for-all [i gen-scalar]
+                  (= (core/match i i)
+                     (core/match (equals i) i)))
 
-  (for-all [[i j] gen-scalar-pair]
-           {:num-tests 50}
-           (core/match i j) => (core/match (equals i) j)))
+    (prop/for-all [[i j] gen-scalar-pair]
+                  (= (core/match i j)
+                     (core/match (equals i) j)))))
 
-(fact "maps act as equals matcher"
-  (fact
-   (= (core/match (equals {:a (equals 10)}) {:a 10})
-      (core/match (equals {:a 10}) {:a 10})
-      (core/match {:a 10} {:a 10}))
-    => truthy))
+(deftest test-maps
+  (testing "act as equals matcher"
+    (is (= (core/match (equals {:a (equals 10)}) {:a 10})
+           (core/match (equals {:a 10}) {:a 10})
+           (core/match {:a 10} {:a 10})))))
 
-(fact "vectors act as equals matchers"
-  (fact
-   (= (core/match (equals [(equals 10)]) [10])
-      (core/match (equals [10]) [10])
-      (core/match [10] [10]))
-    => truthy))
+(deftest test-vectors
+  (testing "vectors act as equals matchers"
+    (is (= (core/match (equals [(equals 10)]) [10])
+           (core/match (equals [10]) [10])
+           (core/match [10] [10])))))
 
-(def chunked-seq (seq [1 2 3]))
-(fact "chunked sequences act as equals matchers"
-  (core/match chunked-seq [10])) => truthy
+(deftest test-chunked-seq
+  (testing "chunked sequences act as equals matchers"
+    (is (core/match (seq [1 2 3]) [10]))))
 
-(fact "lists also act as equals matchers"
-  (fact
-   (= (core/match (equals [(equals 10)]) [10])
-      (core/match (equals '(10)) [10])
-      (core/match '(10) [10])) => truthy))
+(deftest test-lists
+  (testing "lists act as equals matchers"
+    (is (= (core/match (equals [(equals 10)]) [10])
+           (core/match (equals '(10)) [10])
+           (core/match '(10) [10])))))
 
-(fact "`nil` is parsed as an equals"
-  (fact
-   (= (core/match (equals nil) nil)
-      (core/match nil nil)) => truthy))
+(deftest test-nil
+  (testing "`nil` is parsed as an equals"
+    (is (= (core/match (equals nil) nil)
+           (core/match nil nil)))))
 
-(fact "java classes are parsed as an equals"
-  (fact
-   (= (core/match (equals java.lang.String) java.lang.String)
-      (core/match java.lang.String java.lang.String)) => truthy))
+(deftest test-classes
+  (testing "java classes are parsed as an equals"
+    (is
+     (= (core/match (equals java.lang.String) java.lang.String)
+        (core/match java.lang.String java.lang.String)))))
 
-(def an-object (Object.))
-(def another-object (RuntimeException.))
-(fact "Objects default to equality matching"
-  (= (core/match (equals an-object)
-                 an-object)
-     (core/match an-object
-                 an-object))
-  => truthy
-  (= (core/match? (core/match another-object
-                              (Object.)))
-     (= another-object (Object.)))
-  => truthy)
+(deftest test-object
+  (let [an-object (Object.)
+        another-object (RuntimeException.)]
+    (testing "Objects default to equality matching"
+      (is (= (core/match (equals an-object)
+                         an-object)
+             (core/match an-object
+                         an-object)))
+      (is (= (core/match? (core/match another-object
+                                      (Object.)))
+             (= another-object (Object.)))))))
