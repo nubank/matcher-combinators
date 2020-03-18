@@ -3,8 +3,10 @@
   :url "https://github.com/nubank/matcher-combinators"
   :license {:name "Apache License, Version 2.0"}
 
-  :repositories [["central" {:url "https://repo1.maven.org/maven2/" :snapshots false}]
-                 ["clojars" {:url "https://clojars.org/repo/"}]]
+  :repositories [["publish" {:url "https://clojars.org/repo"
+                             :username :env/clojars_username
+                             :password :env/clojars_passwd
+                             :sign-releases false}]]
 
   :cljfmt {:indents {facts    [[:block 1]]
                      fact     [[:block 1]]
