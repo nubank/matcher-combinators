@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.5.1]
+- refactor macro to align w/ Clojure docs (no behavioural change)
+
 ## [1.5.0]
 - Implement default equality matching for objects. If classes don't explicity
   implement the `match` protocol, they now default to using equality matching.
