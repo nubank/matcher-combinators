@@ -22,7 +22,8 @@
   :test-paths ["test/clj"]
   :source-paths ["src/cljc" "src/cljs" "src/clj"]
 
-  :profiles {:dev {:plugins [[lein-midje "3.2.1"]
+  :profiles {:dev {:plugins [[lein-project-version "0.1.0"]
+                             [lein-midje "3.2.1"]
                              [lein-cljfmt "0.5.7"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-ancient "0.6.15"]
