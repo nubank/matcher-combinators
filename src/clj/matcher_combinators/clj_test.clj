@@ -46,9 +46,10 @@
          :actual   (symbol (str (count args#) " were provided: " '~form))})
 
        (core/matcher? matcher#)
-       (let [result# (core/match matcher# actual#)]
+       (let [result# (core/match matcher# actual#)
+             match?# (core/match? result#)]
          (clojure.test/do-report
-          (if (core/match? result#)
+          (if match?#
             {:type     :pass
              :message  ~msg
              :expected '~form
@@ -58,7 +59,8 @@
                :message  ~msg
                :expected '~form
                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
-                                                     result#)}))))
+                                                     result#)})))
+         match?#)
 
        :else
        (clojure.test/do-report
