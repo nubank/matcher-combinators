@@ -17,12 +17,22 @@
 
 (def match-data {:foo 1 :bar 2})
 
+(defmacro shhh!
+  "Evals and returns the value of body without reporting failures."
+  [& body]
+  `(with-redefs [clojure.test/do-report (constantly nil)]
+     ~@body))
+
 (deftest basic-matching
   (is (match? example-matcher example-actual)
       "In 'match?', the matcher argument comes first")
   (is (match? (m/equals example-matcher)
               (dissoc example-actual :device))
       "wrapping the matcher in 'equals' means the top level of 'actual' must have the exact same key/values")
+  (is (true? (is (match? 1 1)))
+      "match? should return true for a :match")
+  (is (false? (shhh! (is (match? 1 2))))
+      "match? should return false for a :mismatch")
   (is (match? 1 1))
   (is (match? (m/equals [1 odd?]) [1 3]))
   (is (match? {:a {:b odd?}}
