@@ -1,4 +1,6 @@
 (ns matcher-combinators.cljs-test
+  "Internal use. Require `matcher-combinators.test` instead of this
+  namespace."
   #?(:cljs
      (:require-macros [matcher-combinators.cljs-test]))
   (:require [matcher-combinators.core :as core]
