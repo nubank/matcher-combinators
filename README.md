@@ -11,7 +11,7 @@ _docs:_
 
 ## Motivation
 
-Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missinng a comprehensive yet extensible way to assert that the data fits a particular structure.
+Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missing a comprehensive yet extensible way to assert that the data fits a particular structure.
 
 This library addresses this issue by providing composable matcher combinators that can be used as building blocks to test functions that evaluate to nested data-structures more effectively.
 
