@@ -119,7 +119,6 @@ For example:
 (fact "you can assert an exception is thrown "
   ;; Assert _some_ exception is raised and the ex-data inside satisfies the matcher
   (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
-1
   ;; Assert _a specific_ exception is raised and the ex-data inside satisfies the matcher
   (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match ExceptionInfo {:foo 1}))
 ```
