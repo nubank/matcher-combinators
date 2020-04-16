@@ -1,6 +1,6 @@
 # matcher-combinators
 
-Library for creating matcher combinator to compare nested data structures
+Library for making assertions about nested data structures.
 
 _current version:_
 
@@ -11,25 +11,91 @@ _docs:_
 
 ## Motivation
 
-Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: a comprehensive yet extensible way to assert that the data fits a particular structure seems to be lacking.
+Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missing a comprehensive yet extensible way to assert that the data fits a particular structure.
 
-This library addresses this issue by providing composable matcher combinators that can be used as building blocks to effectively test functions that evaluate to nested data-structures.
+This library addresses this issue by providing composable matcher combinators that can be used as building blocks to test functions that evaluate to nested data-structures more effectively.
 
 ## Features
 
+- Matchers for scalar and structural values
+  - Good readability supported by default interpretations of Clojure types as matchers
 - Pretty-printed diffs when the actual result doesn't match the expected matcher
-- Integrates with `clojure.test` and `midje`
-- Good readability by providing default interpretations of core Clojure data-structures as matcher combinators
-
-| Midje checkers | Matcher combinators |
-| ------- | ----- |
-| ![midje checkers](doc/images/midje_check.png) | ![matcher combinators check](doc/images/matcher_check.png) |
-
-| Midje checkers failure output | Matcher combinators failure output |
-| ------- | ----- |
-| ![midje checker failure output](doc/images/midje_failure.png) | ![matcher combinators failure output](doc/images/matcher_output.png) |
+- Integration with `clojure.test` and `midje`
 
 ## Usage
+
+### `clojure.test`
+
+Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
+
+ - `match?`: The first argument should be the matcher-combinator represented the expected value, and the second argument should be the expression being checked.
+ - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinators, and the third the expression being checked.
+
+For example:
+
+```clojure
+(require '[clojure.test :refer [deftest is]]
+         '[matcher-combinators.test] ;; adds support for `match?` and `thrown-match?` in `is` expressions
+         '[matcher-combinators.matchers :as m])
+
+(deftest test-matching-with-explicit-matchers
+  (is (match? (m/equals 37) (+ 29 8)))
+  (is (match? (m/regex #"fox") "The quick brown fox jumps over the lazy dog")))
+
+(deftest test-matching-scalars
+  ;; most scalar values are interpreted as an `equals` matcher
+  (is (match? 37 (+ 29 8)))
+  (is (match? "this string" (str "this" " " "string")))
+  (is (match? :this/keyword (keyword "this" "keyword")))
+  ;; regular expressions are handled specially
+  (is (match? #"fox" "The quick brown fox jumps over the lazy dog")))
+
+(deftest test-matching-sequences
+  ;; A sequence is interpreted as an `equals` matcher, which specifies
+  ;; count and order of matching elements. The elements, themselves,
+  ;; are matched based on their types.
+  (is (match? [1 3] [1 3]))
+  (is (match? [1 odd?] [1 3]))
+  (is (match? [#"red" #"violet"] ["Roses are red" "Violets are ... violet"]))
+
+  ;; use m/prefix when you only care about the first n items
+  (is (match? (m/prefix [odd? 3]) [1 3 5]))
+
+  ;; use m/in-any-order when order doesn't matter
+  (is (match? (m/in-any-order [odd? odd? even?]) [1 2 3])))
+
+(deftest test-matching-sets
+  ;; A set is also interpreted as an `equals` matcher.
+  (is (match? #{1 2 3} #{3 2 1}))
+  (is (match? #{odd? even?} #{1 2}))
+  ;; use m/set-equals to repeat predicates
+  (is (match? (m/set-equals [odd? odd? even?]) #{1 2 3})))
+
+(deftest test-matching-maps
+  ;; A map is interpreted as an `embeds` matcher, which ignores
+  ;; un-specified keys
+  (is (match? {:name/first "Alfredo"}
+              {:name/first  "Alfredo"
+               :name/last   "da Rocha Viana"
+               :name/suffix "Jr."})))
+
+(deftest test-matching-nested-datastructures
+  ;; Maps, sequences, and sets follow the same semantics whether at
+  ;; the top level or nested within a structure.
+  (is (match? {:band/members [{:name/first "Alfredo"}
+                              {:name/first "Benedito"}]}
+              {:band/members [{:name/first  "Alfredo"
+                               :name/last   "da Rocha Viana"
+                               :name/suffix "Jr."}
+                              {:name/first "Benedito"
+                               :name/last  "Lacerda"}]
+               :band/recordings []})))
+
+(deftest exception-matching
+  (is (thrown-match? clojure.lang.ExceptionInfo
+                     {:foo 1}
+                     (throw (ex-info "Boom!" {:foo 1 :bar 2})))))
+```
 
 ### Midje:
 
@@ -53,7 +119,6 @@ For example:
 (fact "you can assert an exception is thrown "
   ;; Assert _some_ exception is raised and the ex-data inside satisfies the matcher
   (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
-
   ;; Assert _a specific_ exception is raised and the ex-data inside satisfies the matcher
   (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match ExceptionInfo {:foo 1}))
 ```
@@ -66,32 +131,6 @@ Note that you can also use the `match` checker to match arguments within midje's
   (f [1 2 3]) => 1
   (provided
     (f (match [odd? even? odd?])) => 1))
-```
-
-### `clojure.test`
-
-Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
-
- - `match?`: The first argument should be the matcher-combinator represented the expected value, and the second argument should be the expression being checked.
- - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinators, and the third the expression being checked.
-
-For example:
-
-```clojure
-(require '[clojure.test :refer :all]
-         '[matcher-combinators.test] ;; needed for defining `match?`
-         '[matcher-combinators.matchers :as m])
-(deftest basic-sequence-matching
-  ;; by default a sequentials are interpreted as a `equals` matcher
-  (is (match? [1 odd?] [1 3]))
-  (is (match? (m/prefix [1 odd?]) [1 1 2 3])))
-
-(defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
-
-(deftest exception-matching
-  (is (thrown-match? ExceptionInfo
-                     {:foo 1}
-                     (bang!))))
 ```
 
 ## Matchers
