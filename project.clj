@@ -29,7 +29,8 @@
                              [lein-ancient "0.6.15"]
                              [lein-doo "0.1.11"]]
                    :dependencies [[org.clojure/test.check "1.0.0"]
-                                  [org.clojure/clojurescript "1.10.597"]]}
+                                  [org.clojure/clojurescript "1.10.597"]]
+                   :source-paths ["dev"]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}}
 
   :aliases {"lint"     ["do" "cljfmt" "check,"]
