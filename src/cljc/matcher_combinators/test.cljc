@@ -15,6 +15,8 @@
 (declare ^{:arglists '([matcher actual]
                        [exception-class matcher actual])}
          thrown-match?)
+(declare ^{:arglists '([delta matcher actual])}
+         match-roughly?)
 
 #?(:clj
    (def build-match-assert
