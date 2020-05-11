@@ -99,6 +99,16 @@
   (is (match-equals? {:a 1}
                      {:a 1})))
 
+(deftest match-equals-single-eval
+  (testing "in presence of macro expansion, arguments to match-equals? are only evaluated once"
+    (let [arg-count     (atom 0)
+          matcher-count (atom 0)]
+      (is (match-equals? (do (swap! matcher-count inc)
+                             {:a 1})
+                         (do (swap! arg-count inc)
+                             {:a 1})))
+      (is (= 1 @matcher-count @arg-count)))))
+
 (deftest match-roughly-test
   (is (match-roughly? 0.1
                       {:a 1 :b 3.0}
