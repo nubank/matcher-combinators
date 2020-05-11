@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [1.5.2]
+- fix double eval of `clojure.test` `match-equals?` arguments
+
 ## [1.5.1]
 - refactor macro to align w/ Clojure docs (no behavioural change)
 
