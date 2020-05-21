@@ -1,7 +1,7 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly contains] :as sweet]
             [clojure.string :as str]
-            [clojure.spec.test.alpha :as spec.test]
+            [orchestra.spec.test :as spec.test]
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :refer :all]
             [matcher-combinators.model :as model]
