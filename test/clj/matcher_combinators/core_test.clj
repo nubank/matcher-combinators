@@ -1,11 +1,17 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly contains] :as sweet]
+            [clojure.test :refer [deftest testing is]]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.string :as str]
             [orchestra.spec.test :as spec.test]
             [matcher-combinators.core :as core :refer :all]
-            [matcher-combinators.matchers :refer :all]
+            [matcher-combinators.matchers :as matchers :refer :all]
             [matcher-combinators.model :as model]
-            [matcher-combinators.result :as result]))
+            [matcher-combinators.result :as result]
+            [matcher-combinators.dispatch :as dispatch]
+            [matcher-combinators.parser]))
 
 (spec.test/instrument)
 
@@ -571,5 +577,27 @@
                                    {:a "1" :x (model/->Mismatch "12" "12=")}]
                                   :in-any-order)
             ::result/weight 2}))
+
+(deftest matcher-for-special-cases
+  (testing "matcher for a fn is a fn"
+    (is (fn? (core/matcher-for (fn [])))))
+  (testing "matcher for a map is embeds"
+    (is (= (class (matchers/embeds {}))
+           (class (core/matcher-for {})))))
+  (testing "matcher for a regex"
+    (is (= (class (matchers/regex #"abc"))
+           (class (core/matcher-for #"abc"))))))
+
+(defspec matcher-for-most-cases
+  {:doc "matchers/equals is the default matcher for everything but functions, regexen, and maps."
+   :num-tests 1000
+   :max-size  10}
+  (prop/for-all [v (gen/such-that
+                    (fn [v] (and (not (map? v))
+                                 (not (instance? java.util.regex.Pattern v))
+                                 (not (fn? v))))
+                    gen/any)]
+                (= (class (matchers/equals v))
+                   (class (core/matcher-for v)))))
 
 (spec.test/unstrument)
