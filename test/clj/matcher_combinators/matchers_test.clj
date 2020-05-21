@@ -1,10 +1,9 @@
 (ns matcher-combinators.matchers-test
-  (:require [clojure.math.combinatorics :as combo]
-            [midje.sweet :as midje :refer [fact facts => falsey contains just anything future-fact has]]
-            [matcher-combinators.midje :refer [match]]
+  (:require [clojure.test :refer [deftest testing is]]
+            [clojure.math.combinatorics :as combo]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.model :as model]
             [matcher-combinators.core :as c]
+            [matcher-combinators.test]
             [matcher-combinators.result :as result])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
@@ -38,177 +37,177 @@
 (defn invalid-type? [actual]
   (instance? InvalidMatcherType actual))
 
-(fact "in-any-order using matcher ordering with maximum matchings for diff"
-  (c/match (m/in-any-order [a-nested-map b-nested-map])
-    [a-nested-map a-nested-map])
-  => (just {::result/type   :mismatch
-            ::result/value  (just [a-nested-map (contains {:id map? :model mismatch?})]
-                                  :in-any-order)
-            ::result/weight number?}))
-
 (defn one-mismatch? [mismatch-list]
   (= 1 (count (filter #(or (mismatch? %) (missing? %)) mismatch-list))))
 
-(fact "Ensure that in-any-order always prints the match with the fewest
-       number of matchers that don't match"
-  (map #(->> %
-             (c/match (m/in-any-order [1 2 3 4]))
-             ::result/value)
-       (combo/permutations [1 2 3 500]))
-  => (has every? one-mismatch?))
+(deftest in-any-order
+  (testing "matcher ordering with maximum matchings for diff"
+    (is (match?
+         {::result/type   :mismatch
+          ::result/value  (m/embeds [a-nested-map {:id map? :model mismatch?}])
+          ::result/weight number?}
+         (c/match (m/in-any-order [a-nested-map b-nested-map])
+                  [a-nested-map a-nested-map]))))
 
-(facts "Show how input ordering affects diff size (when it ideally shouldn't)"
-  (fact "Given a particular input ordering, in-any-order shows the smallest diff"
-    (->> [{:a 2} {:b 2}]
-         (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
-         ::result/value
-         (map vals))
-    => (has every? one-mismatch?))
+  (testing "always prints the match with the fewest number of matchers that don't match"
+    (is (every? one-mismatch?
+                (map #(::result/value (c/match (m/in-any-order [1 2 3 4]) %))
+                     (combo/permutations [1 2 3 500]))))))
 
-  (fact "in-any-order minimization doesn't find the match ordering that leads
+(deftest ordering
+  (testing "Show how input ordering affects diff size (when it ideally shouldn't)"
+    (testing "Given a particular input ordering, in-any-order shows the smallest diff"
+      (is (every? one-mismatch?
+                  (->> [{:a 2} {:b 2}]
+                       (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
+                       ::result/value
+                       (map vals)))))
+
+    (testing "in-any-order minimization doesn't find the match ordering that leads
         to the smallest diff, but rather the match ordering that leads to the
         smallest number of immediately passing matchers."
-    (->> [{:b 2} {:a 2}]
-         (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
-         ::result/value
-         (map vals))
-    => (has every? one-mismatch?)))
+      (is (every? one-mismatch?
+                  (->> [{:b 2} {:a 2}]
+                       (c/match (m/in-any-order [{:a 1} {:a 1 :b 2}]))
+                       ::result/value
+                       (map vals)))))))
 
-(fact "Regex matching and mismatching"
-  (c/match (m/equals {:one (m/regex #"1")})
-    {:one "1"})
-  => (just {::result/type   :match
-            ::result/value  (just {:one "1"})
-            ::result/weight 0})
+(deftest regex-matching
+  (is (match? {::result/type   :match
+               ::result/value  {:one "1"}
+               ::result/weight 0}
+              (c/match (m/equals {:one (m/regex #"1")})
+                       {:one "1"})))
 
-  (c/match #"^pref" "prefix")
-  => {::result/type   :match
-      ::result/value  "pref"
-      ::result/weight 0}
+  (is (match? {::result/type   :match
+               ::result/value  "pref"
+               ::result/weight 0}
+              (c/match #"^pref" "prefix")))
 
-  (c/match #"hello, (.*)" "hello, world")
-  => (just {::result/type :match
-            ::result/value (just ["hello, world" "world"])
-            ::result/weight 0})
+  (is (match? {::result/type :match
+               ::result/value ["hello, world" "world"]
+               ::result/weight 0}
+              (c/match #"hello, (.*)" "hello, world")))
 
-  (c/match (m/equals {:one (m/regex #"1")})
-    {:one "2"})
-  => (just {::result/type   :mismatch
-            ::result/value  (just {:one mismatch?})
-            ::result/weight number?})
+  (is (match? {::result/type   :mismatch
+               ::result/value  {:one mismatch?}
+               ::result/weight number?}
+              (c/match (m/equals {:one (m/regex #"1")})
+                       {:one "2"})))
 
-  (c/match (m/equals {:one (m/regex "1")})
-    {:one "1"})
-  => (just {::result/type :mismatch
-            ::result/value (just {:one invalid-type?})
-            ::result/weight number?})
+  (is (match? {::result/type :mismatch
+               ::result/value {:one invalid-type?}
+               ::result/weight number?}
+              (c/match (m/equals {:one (m/regex "1")})
+                       {:one "1"})))
 
-  (c/match (m/equals {:one (m/regex #"1")})
-    {:one 2})
-  => (just {::result/type :mismatch
-            ::result/value (just {:one invalid-type?})
-            ::result/weight number?}))
+  (is (match? {::result/type :mismatch
+               ::result/value {:one invalid-type?}
+               ::result/weight number?}
+              (c/match (m/equals {:one (m/regex #"1")})
+                       {:one 2}))))
 
-(fact "mismatch that includes a matching regex shows the match data"
-  (c/match (m/equals {:two 2
-                      :one (m/regex #"hello, (.*)")})
-    {:two 1
-     :one "hello, world"})
-  => (just {::result/type :mismatch
-            ::result/value (just {:two mismatch?
-                                  :one (just ["hello, world" "world"])})
-            ::result/weight number?}))
+(deftest mismatch-with-regex
+  (testing "mismatch that includes a matching regex shows the match data"
+    (is (match? {::result/type :mismatch
+                 ::result/value {:two mismatch?
+                                 :one (m/embeds ["hello, world" "world"])}
+                 ::result/weight number?}
+                (c/match (m/equals {:two 2
+                                    :one (m/regex #"hello, (.*)")})
+                         {:two 1
+                          :one "hello, world"})))))
 
-(facts "java classes"
-  (fact "matching"
-    (c/match (m/equals java.lang.String)
-      java.lang.String)
-    => (just {::result/type :match
-              ::result/value java.lang.String
-              ::result/weight 0}))
-  (fact "mismatching"
-    (c/match (m/equals java.lang.Number)
-      java.lang.String)
-    => (just {::result/type :mismatch
-              ::result/value {:actual   java.lang.String
-                              :expected java.lang.Number}
-              ::result/weight 1})))
+(deftest java-classes
+  (testing "matching"
+    (is (match? {::result/type :match
+                 ::result/value java.lang.String
+                 ::result/weight 0}
+                (c/match (m/equals java.lang.String)
+                         java.lang.String))))
+  (testing "mismatching"
+    (is (match? {::result/type :mismatch
+                 ::result/value {:actual   java.lang.String
+                                 :expected java.lang.Number}
+                 ::result/weight 1}
+                (c/match (m/equals java.lang.Number)
+                         java.lang.String)))))
 
-(fact "handling primitive java types"
-  (fact "byte-arrays"
+(deftest java-primitives
+  (testing "byte-arrays"
     (let [a (byte-array [(byte 0x43) (byte 0x42)])
           b (byte-array [(byte 0x42) (byte 0x43)])]
-      (c/match (m/equals a) a)
-      => (just {::result/type :match
-                ::result/value a
-                ::result/weight 0})
-      (c/match (m/equals a) b)
-      => (just {::result/type :mismatch
-                ::result/value {:actual   b
-                                :expected a}
-                ::result/weight 1}))))
+      (is (match? {::result/type :match
+                   ::result/value a
+                   ::result/weight 0}
+                  (c/match (m/equals a) a)))
+      (is (match? {::result/type :mismatch
+                   ::result/value {:actual   b
+                                   :expected a}
+                   ::result/weight 1}
+                  (c/match (m/equals a) b))))))
 
 (defrecord Point [x y])
 (defrecord BluePoint [x y])
 
-(facts "records equals"
-  (fact "matching"
-    (let [a (->Point 1 2)]
-      (c/match (m/equals a) a)
-      => (just {::result/type :match
-                ::result/value a
-                ::result/weight 0})))
+(deftest equals-with-records
+  (testing "matching"
+        (let [a (->Point 1 2)]
+          (is (match? {::result/type :match
+                       ::result/value a
+                       ::result/weight 0}
+                      (c/match (m/equals a) a)))))
 
-  (fact "mismatching with same type and different values"
-    (let [a (->Point 1 2)
-          b (->Point 2 2)]
-      (c/match (m/equals a) b)
-      => (just {::result/type :mismatch
-                ::result/value (just {:x {:actual 2
-                                          :expected 1}
-                                      :y 2})
-                ::result/weight 1})))
+  (testing "mismatching with same type and different values"
+        (let [a (->Point 1 2)
+              b (->Point 2 2)]
+          (is (match? {::result/type :mismatch
+                       ::result/value {:x {:actual 2
+                                           :expected 1}
+                                       :y 2}
+                       ::result/weight 1}
+                      (c/match (m/equals a) b)))))
 
-  (fact "mismatching with same values and different type"
-    (let [a (->Point 1 2)
-          b (->BluePoint 1 2)]
-      (c/match (m/equals a) b)
-      => (just {::result/type :mismatch
-                ::result/value {:actual b
-                                :expected a}
-                ::result/weight 1}))))
+  (testing "mismatching with same values and different type"
+        (let [a (->Point 1 2)
+              b (->BluePoint 1 2)]
+          (is (match? {::result/type :mismatch
+                          ::result/value {:actual b
+                                          :expected a}
+                          ::result/weight 1}
+                      (c/match (m/equals a) b))))))
 
-(facts "records embeds"
-  (fact "matching"
+(deftest embeds-with-records
+  (testing "matching"
     (let [a (->Point 1 2)
           b (->Point 1 2)]
-      (c/match (m/embeds b) a)
-      => (just {::result/type :match
-                ::result/value a
-                ::result/weight 0})))
+      (is (match? {::result/type :match
+                   ::result/value a
+                   ::result/weight 0}
+                  (c/match (m/embeds b) a)))))
 
-  (fact "matching when a map is expected"
+  (testing "matching when a map is expected"
     (let [a (->Point 1 2)
           b {:x 1}]
-      (c/match (m/embeds b) a)
-      => (just {::result/type :match
-                ::result/value a
-                ::result/weight 0})))
+      (is (match? {::result/type :match
+                   ::result/value a
+                   ::result/weight 0}
+                  (c/match (m/embeds b) a)))))
 
-  (fact "mismatching as records are not allowed to have missing properties"
+  (testing "mismatching as records are not allowed to have missing properties"
     (let [a (->Point 1 2)
           b (map->Point {:x 1})]
-      (c/match (m/equals a) b)
-      => (just {::result/type :mismatch
-                ::result/value (just {:x 1
-                                      :y {:actual nil :expected 2}})
-                ::result/weight 1})))
+      (is (match? {::result/type :mismatch
+                   ::result/value {:x 1
+                                   :y {:actual nil :expected 2}}
+                   ::result/weight 1}
+                  (c/match (m/equals a) b)))))
 
-  (fact "mismatching with same values and different type"
+  (testing "mismatching with same values and different type"
     (let [a (->Point 1 2)
           b (->BluePoint 1 2)]
-      (c/match (m/equals a) b)
-      => (just {::result/type :mismatch
-                ::result/value {:actual b
-                                :expected a}
-                ::result/weight 1}))))
+      (is (match? {::result/type :mismatch
+                   ::result/value {:actual b
+                                   :expected a}
+                   ::result/weight 1}
+                  (c/match (m/equals a) b))))))
