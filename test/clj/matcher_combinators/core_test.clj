@@ -6,6 +6,7 @@
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.string :as str]
             [orchestra.spec.test :as spec.test]
+            [matcher-combinators.clj-test]
             [matcher-combinators.core :as core :refer :all]
             [matcher-combinators.matchers :as matchers :refer :all]
             [matcher-combinators.model :as model]
@@ -599,5 +600,15 @@
                     gen/any)]
                 (= (class (matchers/equals v))
                    (class (core/matcher-for v)))))
+
+(defn greater-than-matcher [expected-long]
+  (core/->PredMatcher
+   (fn [actual] (> actual expected-long))
+   (str "greater than " expected-long)))
+
+(deftest matcher-for-works-within-match-with
+  (is (match-with? {java.lang.Long greater-than-matcher}
+                   (core/matcher-for 4)
+                   5)))
 
 (spec.test/unstrument)
