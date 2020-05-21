@@ -1,4 +1,6 @@
 (ns matcher-combinators.dispatch
+  "core/Matchers$match gets bound to dispatch functions defined in this namespace
+  so that we can override them at runtime."
   (:require [matcher-combinators.matchers :as matchers]
             [matcher-combinators.core :as core])
   #?(:clj

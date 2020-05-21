@@ -85,6 +85,8 @@
   `(extend-protocol
     core/Matcher
      ~@(mapcat (fn [t] `(~t
+                         (~'matcher-for [this#]
+                          (~matcher-builder this#))
                          (~'match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
 
@@ -92,17 +94,20 @@
   (let [type-pairs (->> type-strings
                         (map symbol)
                         (mapcat (fn [t] `(~t
+                                          (~'matcher-for [this#]
+                                           (~matcher-builder this#))
                                           (~'match [this# actual#]
                                             (core/match (~matcher-builder this#) actual#))))))]
     `(extend-protocol core/Matcher ~@type-pairs)))
 
-(extend-type clojure.lang.Fn
-  core/Matcher
-  (match [this actual]
-    ((dispatch/function-dispatch this) actual)))
-
 (mimic-matcher-java-primitives matchers/equals
                                "[B")
+
+(extend-type clojure.lang.Fn
+  core/Matcher
+  (matcher-for [this] (dispatch/function-dispatch this))
+  (match [this actual]
+    ((dispatch/function-dispatch this) actual)))
 
 (mimic-matcher dispatch/nil-dispatch nil)
 (mimic-matcher dispatch/class-dispatch java.lang.Class)
@@ -140,4 +145,5 @@
 (mimic-matcher dispatch/repeat-dispatch Repeat)
 (mimic-matcher dispatch/lazy-seq-dispatch LazySeq)
 (mimic-matcher dispatch/array-seq-dispatch ArraySeq)
-(mimic-matcher dispatch/pattern-dispatch Pattern)))
+(mimic-matcher dispatch/pattern-dispatch Pattern)
+))
