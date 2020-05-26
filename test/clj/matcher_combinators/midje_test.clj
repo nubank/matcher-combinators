@@ -5,7 +5,7 @@
             [matcher-combinators.midje :refer [match throws-match] :as ch]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
-            [clojure.spec.test.alpha :as spec.test]
+            [orchestra.spec.test :as spec.test]
             [midje.emission.api :as emission])
   (:import [clojure.lang ExceptionInfo]))
 

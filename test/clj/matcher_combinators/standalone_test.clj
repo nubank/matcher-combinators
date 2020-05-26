@@ -1,5 +1,5 @@
 (ns matcher-combinators.standalone-test
-  (:require [clojure.spec.test.alpha :as spec.test]
+  (:require [orchestra.spec.test :as spec.test]
             [clojure.test :refer [deftest testing is use-fixtures]]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]

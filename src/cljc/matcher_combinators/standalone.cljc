@@ -27,7 +27,8 @@
   :args (s/alt :partial (s/cat :matcher (partial satisfies? core/Matcher))
                :full    (s/cat :matcher (partial satisfies? core/Matcher)
                                :actual any?))
-  :ret boolean?)
+  :ret (s/or :partial fn?
+             :full boolean?))
 
 (defn match?
   "Given a `matcher` and `actual`, returns `true` if
