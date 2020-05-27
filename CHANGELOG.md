@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [2.0.0]
+
+- add `matchers/matcher-for` [#123](https://github.com/nubank/matcher-combinators/pull/123)
+
+### BREAKING CHANGE
+
+matcher-combinators-2.0.0 includes a breaking change for custom implementations of the
+`matcher-combinators.core/Matcher` protocol:
+
+- change the implementation of `match` to `-match` (required)
+- add an implementation of `-matcher-for` (optional, but recommended)
+  - should just return `this` e.g. `(-matcher-for [this] this)
+
 ## [1.5.2]
 - fix double eval of `clojure.test` `match-equals?` arguments
 
