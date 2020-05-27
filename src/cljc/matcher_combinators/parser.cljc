@@ -18,7 +18,7 @@
   ;; function as predicate
   function
   (match [this actual]
-    ((dispatch/function-dispatch this) actual))
+    (core/match (dispatch/function-dispatch this) actual))
 
   ;; equals base types
   nil
@@ -107,7 +107,7 @@
   core/Matcher
   (matcher-for [this] (dispatch/function-dispatch this))
   (match [this actual]
-    ((dispatch/function-dispatch this) actual)))
+    (core/match (dispatch/function-dispatch this) actual)))
 
 (mimic-matcher dispatch/nil-dispatch nil)
 (mimic-matcher dispatch/class-dispatch java.lang.Class)

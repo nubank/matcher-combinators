@@ -61,7 +61,8 @@
 
 ;; other
 (defn pattern-dispatch [expected] (matchers/regex expected))
-(defn function-dispatch [expected] (partial core/match-pred expected (str "predicate: " expected)))
+(defn function-dispatch [expected] (core/->PredMatcher expected
+                                                       (str "predicate: " expected)))
 
 (def type->dispatch
   #?(:cljs {}
