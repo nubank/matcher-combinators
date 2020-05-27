@@ -43,9 +43,10 @@
 (deftest in-any-order
   (testing "matcher ordering with maximum matchings for diff"
     (is (match?
-         {::result/type   :mismatch
-          ::result/value  (m/embeds [a-nested-map {:id map? :model mismatch?}])
-          ::result/weight number?}
+         (m/equals
+          {::result/type   :mismatch
+           ::result/value  (m/in-any-order [a-nested-map {:id map? :model mismatch?}])
+           ::result/weight number?})
          (c/match (m/in-any-order [a-nested-map b-nested-map])
                   [a-nested-map a-nested-map]))))
 

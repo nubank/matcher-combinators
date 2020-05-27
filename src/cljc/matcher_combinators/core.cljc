@@ -8,7 +8,10 @@
 (defprotocol Matcher
   "For matching expected and actual values, providing helpful mismatch info on
   unsucessful matches"
-  (matcher-for [this])
+  (matcher-for [expected]
+    "Returns the type-specific matcher object for an expected value. This is
+    useful for discovery when you want to know which Matcher type is associated
+    to a value.")
   (match [this actual]
     "determine if a concrete `actual` value satisfies this matcher"))
 

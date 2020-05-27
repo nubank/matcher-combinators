@@ -1,6 +1,9 @@
 (ns matcher-combinators.dispatch
-  "core/Matchers$match gets bound to dispatch functions defined in this namespace
-  so that we can override them at runtime."
+  "Type-specific implementations of the `match` function of the
+  matcher-combinators.core/Match protocol invoke dispatch functions defined in
+  this namespace, which provide a layer of indirection between `match`
+  and the specific matcher implementation for each type. This indirection allows
+  for redefinition at runtime, necessary for the `match-with` feature."
   (:require [matcher-combinators.matchers :as matchers]
             [matcher-combinators.core :as core])
   #?(:clj
