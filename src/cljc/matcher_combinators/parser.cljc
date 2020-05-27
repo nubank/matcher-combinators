@@ -17,57 +17,57 @@
 
   ;; function as predicate
   function
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/function-dispatch this) actual))
 
   ;; equals base types
   nil
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/nil-dispatch this) actual))
 
   number
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/integer-dispatch this) actual))
 
   string
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/string-dispatch this) actual))
 
   boolean
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/boolean-dispatch this) actual))
 
   Keyword
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/keyword-dispatch this) actual))
 
   UUID
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/uuid-dispatch this) actual))
 
   goog.Uri
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/uri-dispatch this) actual))
 
   js/Date
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/date-dispatch this) actual))
 
   Var
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/var-dispatch this) actual))
 
   ;; equals nested types
   Cons
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/cons-dispatch this) actual))
 
   Repeat
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/repeat-dispatch this) actual))
 
   default
-  (match [this actual]
+  (-match [this actual]
     (cond
       (satisfies? IMap this)
       (core/match (dispatch/i-persistent-map-dispatch this) actual)
@@ -77,7 +77,7 @@
       (core/match (dispatch/i-persistent-vector-dispatch this) actual)))
 
   js/RegExp
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/pattern-dispatch this) actual))))
 
 #?(:clj (do
@@ -87,7 +87,7 @@
      ~@(mapcat (fn [t] `(~t
                          (~'-matcher-for [this#]
                           (~matcher-builder this#))
-                         (~'match [this# actual#]
+                         (~'-match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
 
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
@@ -96,7 +96,7 @@
                         (mapcat (fn [t] `(~t
                                           (~'-matcher-for [this#]
                                            (~matcher-builder this#))
-                                          (~'match [this# actual#]
+                                          (~'-match [this# actual#]
                                             (core/match (~matcher-builder this#) actual#))))))]
     `(extend-protocol core/Matcher ~@type-pairs)))
 
@@ -106,7 +106,7 @@
 (extend-type clojure.lang.Fn
   core/Matcher
   (-matcher-for [this] (dispatch/function-dispatch this))
-  (match [this actual]
+  (-match [this actual]
     (core/match (dispatch/function-dispatch this) actual)))
 
 (mimic-matcher dispatch/nil-dispatch nil)

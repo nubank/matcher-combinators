@@ -120,7 +120,7 @@
 
 (extend-protocol core/Matcher
   Metaconstant
-  (match [this actual]
+  (-match [this actual]
     (if (and (or (symbol? actual)
                  (= (type actual) Metaconstant)
                  (= actual thread-safe-var-nesting/unbound-marker))

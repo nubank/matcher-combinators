@@ -282,7 +282,7 @@
 
 (defrecord AbsValue [expected]
   core/Matcher
-  (match [_this actual]
+  (-match [_this actual]
     (cond
       (= ::missing actual)    {::result/type   :mismatch
                                ::result/value  (model/->Missing expected)
