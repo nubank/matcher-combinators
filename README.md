@@ -150,7 +150,7 @@ for a specific value, e.g.
 ``` clojure
 (require '[matcher-combinators.matchers :as matchers])
 
-(matcher-combinators/matcher-for {:this :map})
+(matchers/matcher-for {:this :map})
 ;; => {:expected {:this :map}}
 
 (class *1)
