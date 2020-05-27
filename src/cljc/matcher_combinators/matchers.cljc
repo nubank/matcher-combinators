@@ -67,6 +67,6 @@
   (core/->Absent))
 
 (defn pred
-  "Matcher that match when `pred` of the actual value returns true."
+  "Matcher that will match when `pred` of the actual value returns true."
   [pred]
   (core/->PredMatcher pred (str "predicate: " pred)))
