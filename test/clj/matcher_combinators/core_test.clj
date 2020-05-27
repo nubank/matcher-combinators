@@ -1,10 +1,11 @@
 (ns matcher-combinators.core-test
   (:require [midje.sweet :refer :all :exclude [exactly contains] :as sweet]
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.string :as str]
+            [clojure.walk :as walk]
             [orchestra.spec.test :as spec.test]
             [matcher-combinators.clj-test]
             [matcher-combinators.core :as core :refer :all]
@@ -16,79 +17,71 @@
 
 (spec.test/instrument)
 
-(facts "on the leaf values matcher: v"
-  (match (equals 42) 42) => {::result/type   :match
-                             ::result/value  42
-                             ::result/weight 0}
-  (match (equals 42) 43) => {::result/type   :mismatch
-                             ::result/value  (model/->Mismatch 42 43)
-                             ::result/weight 1})
+(use-fixtures :once
+  (fn [t]
+    (spec.test/instrument)
+    (t)
+    (spec.test/unstrument)))
 
-(fact "on map matchers"
-  (tabular
-    (facts "on common behaviors among all map matchers"
-      (fact "matches when given a map with matching values for every key"
-        (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 42, :b 1337})
-        => {::result/type   :match
-            ::result/value  {:a 42, :b 1337}
-            ::result/weight 0})
+(defspec equals-matchers-with-equal-scalar-values
+  {:max-size 10}
+  (prop/for-all [v gen/simple-type-equatable]
+                (core/match? (core/match (matchers/equals v) v))))
 
-      (fact "when actual values fail to match expected matchers for
-            corresponding keys, mismatch marking each value Mismatch"
-        (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 43, :b 1337})
-        => {::result/type   :mismatch
-            ::result/value  {:a (model/->Mismatch 42 43), :b 1337}
-            ::result/weight 1}
+(defspec equals-matchers-with-unequal-scalar-values
+  {:max-size 10}
+  (prop/for-all [[a b] (gen/such-that (fn [[a b]] (not= a b))
+                                      (gen/tuple gen/simple-type-equatable
+                                                 gen/simple-type-equatable))]
+                (= (model/->Mismatch a b)
+                   (::result/value (core/match (matchers/equals a) b)))))
 
-        (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 42, :b 13373})
-        => {::result/type   :mismatch
-            ::result/value  {:a 42, :b (model/->Mismatch 1337 13373)}
-            ::result/weight 1}
+(defspec map-matchers-with-failures-at-one-key
+  {:doc      "One key in ::reult/value is a mismatch when the value at that key fails to match"
+   :max-size 10}
+  (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
+                 m        (gen/elements [matchers/equals matchers/embeds])]
+                (let [k      (first (keys expected))
+                      actual (update expected k inc)
+                      res    (core/match (m expected) actual)]
+                  (and (not (core/match? res))
+                       (= (model/->Mismatch (k expected) (k actual))
+                          (get-in res [::result/value k]))))))
 
-        (match (?map-matcher {:a (equals 42), :b (equals 1337)}) {:a 43, :b 13373})
-        => {::result/type   :mismatch
-            ::result/value  {:a (model/->Mismatch 42 43), :b (model/->Mismatch 1337 13373)}
-            ::result/weight 2})
+(defspec map-matchers-with-failures-at-multiple-keys
+  {:doc      "Every key in ::result/value is a mismatch when every key fails to match"
+   :max-size 10}
+  (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
+                 m        (gen/elements [matchers/equals matchers/embeds])]
+                (let [actual (reduce-kv (fn [m k v] (assoc m k (inc v))) {} expected)
+                      res    (core/match (m expected) actual)]
+                  (and (not (core/match? res))
+                       (every? (fn [k]
+                                 (= (model/->Mismatch (k expected) (k actual))
+                                    (get-in res [::result/value k])))
+                               (keys actual))))))
 
-      (fact "when actual input map doesn't contain values for expected keys,
-            mismatch marking each key with a Missing value"
-        (match (?map-matcher {:a (equals 42)}) {})
-        => {::result/type   :mismatch
-            ::result/value  {:a (model/->Missing 42)}
-            ::result/weight 1}
+(defspec map-matchers-with-failures-due-to-missing-keys
+  {:doc      "One key in ::reult/value is a mismatch when the value at that key fails to match"
+   :max-size 10}
+  (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
+                 m        (gen/elements [matchers/equals matchers/embeds])]
+                (let [k      (first (keys expected))
+                      actual (dissoc expected k)
+                      res    (core/match (m expected) actual)]
+                  (and (not (core/match? res))
+                       (= (model/->Missing (get expected k))
+                          (get-in res [::result/value k]))))))
 
-        (match (?map-matcher {:a (equals 42) :b (equals 42)}) {:b 42})
-        => {::result/type   :mismatch
-            ::result/value  {:b 42, :a (model/->Missing 42)}
-            ::result/weight 1})
-
-      (tabular
-        (fact "mismatch when given an actual input that is not a map"
-          (match (?map-matcher {:a (equals 1)}) ?actual)
-          => {::result/type   :mismatch
-              ::result/value  (model/->Mismatch {:a (equals 1)} ?actual)
-              ::result/weight 1})
-        ?actual
-        1
-        "a1"
-        [[:a 1]]))
-    ?map-matcher
-    embeds
-    equals)
-
-  (facts "on the equals matcher for maps"
-    (fact "when the actual input map contains keys for which there are no
-          corresponding matchers specified, mismatch marking each key with an
-          Unexpected value"
-      (match (equals {:a (equals 42)}) {:a 42 :b 1337})
-      => {::result/type   :mismatch
-          ::result/value  {:a 42, :b (model/->Unexpected 1337)}
-          ::result/weight 1}
-
-      (match (equals {:a (equals 42)}) {:b 42})
-      => {::result/type   :mismatch
-          ::result/value  {:b (model/->Unexpected 42), :a (model/->Missing 42)}
-          ::result/weight 2})))
+(defspec map-matchers-with-failures-due-to-incorrect-type
+  {:max-size 10}
+  (prop/for-all [m        (gen/elements [matchers/equals matchers/embeds])
+                 expected (gen/map gen/keyword gen/any)
+                 actual   (gen/such-that (comp not map?) gen/any)]
+                (let [res (core/match (m expected) actual)]
+                  (and (not (core/match? res))
+                       (= (model/->Mismatch expected actual)
+                          (::result/value res))))))
 
 (facts "on sequence matchers"
   (tabular
