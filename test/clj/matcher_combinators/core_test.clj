@@ -23,9 +23,21 @@
     (t)
     (spec.test/unstrument)))
 
-(defspec equals-matchers-with-equal-scalar-values
-  {:max-size 10}
-  (prop/for-all [v gen/simple-type-equatable]
+(defn default-tree-seq [v]
+  (tree-seq coll? #(if (map? %) (keys %) %) v))
+
+(def gen-any-equatable
+  (gen/such-that
+   (fn [v]
+     (or (not (coll? v))
+         (every? (fn [node] (not (and (map? node) (contains? node false))))
+                 (default-tree-seq v))))
+   gen/any-equatable))
+
+(defspec equals-matcher-matches-when-values-are-equal
+  {:doc "For any scalar or structural value, "
+   :max-size 10}
+  (prop/for-all [v gen-any-equatable]
                 (core/match? (core/match (matchers/equals v) v))))
 
 (defspec equals-matchers-with-unequal-scalar-values
