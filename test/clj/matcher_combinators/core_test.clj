@@ -579,37 +579,4 @@
                                   :in-any-order)
             ::result/weight 2}))
 
-(deftest matcher-for-special-cases
-  (testing "matcher for a fn is a fn"
-    (is (= (class (matchers/pred (fn [])))
-           (class (core/matcher-for (fn []))))))
-  (testing "matcher for a map is embeds"
-    (is (= (class (matchers/embeds {}))
-           (class (core/matcher-for {})))))
-  (testing "matcher for a regex"
-    (is (= (class (matchers/regex #"abc"))
-           (class (core/matcher-for #"abc"))))))
-
-(defspec matcher-for-most-cases
-  {:doc "matchers/equals is the default matcher for everything but functions, regexen, and maps."
-   :num-tests 1000
-   :max-size  10}
-  (prop/for-all [v (gen/such-that
-                    (fn [v] (and (not (map? v))
-                                 (not (instance? java.util.regex.Pattern v))
-                                 (not (fn? v))))
-                    gen/any)]
-                (= (class (matchers/equals v))
-                   (class (core/matcher-for v)))))
-
-(defn greater-than-matcher [expected-long]
-  (core/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
-
-(deftest matcher-for-works-within-match-with
-  (is (match-with? {java.lang.Long greater-than-matcher}
-                   (core/matcher-for 4)
-                   5)))
-
 (spec.test/unstrument)

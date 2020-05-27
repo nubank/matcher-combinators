@@ -85,7 +85,7 @@
   `(extend-protocol
     core/Matcher
      ~@(mapcat (fn [t] `(~t
-                         (~'matcher-for [this#]
+                         (~'-matcher-for [this#]
                           (~matcher-builder this#))
                          (~'match [this# actual#]
                            (core/match (~matcher-builder this#) actual#)))) types)))
@@ -94,7 +94,7 @@
   (let [type-pairs (->> type-strings
                         (map symbol)
                         (mapcat (fn [t] `(~t
-                                          (~'matcher-for [this#]
+                                          (~'-matcher-for [this#]
                                            (~matcher-builder this#))
                                           (~'match [this# actual#]
                                             (core/match (~matcher-builder this#) actual#))))))]
@@ -105,7 +105,7 @@
 
 (extend-type clojure.lang.Fn
   core/Matcher
-  (matcher-for [this] (dispatch/function-dispatch this))
+  (-matcher-for [this] (dispatch/function-dispatch this))
   (match [this actual]
     (core/match (dispatch/function-dispatch this) actual)))
 

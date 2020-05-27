@@ -1,5 +1,8 @@
 (ns matcher-combinators.matchers-test
   (:require [clojure.test :refer [deftest testing is]]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.math.combinatorics :as combo]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
@@ -212,3 +215,36 @@
                                    :expected a}
                    ::result/weight 1}
                   (c/match (m/equals a) b))))))
+
+(deftest matcher-for-special-cases
+  (testing "matcher for a fn is a fn"
+    (is (= (class (m/pred (fn [])))
+           (class (m/matcher-for (fn []))))))
+  (testing "matcher for a map is embeds"
+    (is (= (class (m/embeds {}))
+           (class (m/matcher-for {})))))
+  (testing "matcher for a regex"
+    (is (= (class (m/regex #"abc"))
+           (class (m/matcher-for #"abc"))))))
+
+(defspec matcher-for-most-cases
+  {:doc "matchers/equals is the default matcher for everything but functions, regexen, and maps."
+   :num-tests 1000
+   :max-size  10}
+  (prop/for-all [v (gen/such-that
+                    (fn [v] (and (not (map? v))
+                                 (not (instance? java.util.regex.Pattern v))
+                                 (not (fn? v))))
+                    gen/any)]
+                (= (class (m/equals v))
+                   (class (m/matcher-for v)))))
+
+(defn greater-than-matcher [expected-long]
+  (c/->PredMatcher
+   (fn [actual] (> actual expected-long))
+   (str "greater than " expected-long)))
+
+(deftest matcher-for-works-within-match-with
+  (is (match-with? {java.lang.Long greater-than-matcher}
+                   (m/matcher-for 4)
+                   5)))
