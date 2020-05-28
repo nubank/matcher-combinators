@@ -30,7 +30,7 @@
   (gen/such-that
    (fn [v]
      (or (not (coll? v))
-         (every? (fn [node] (not (and (map? node) (contains? node false))))
+         (every? (fn [node] (not (and (set? node) (contains? node false))))
                  (default-tree-seq v))))
    gen/any-equatable))
 
