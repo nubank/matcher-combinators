@@ -14,5 +14,5 @@
    (fn [v]
      (every? (fn [node] (or (not (set? node))
                             (not (contains? node false))))
-             (tree-seq coll? #(if (map? %) (keys %) %) v)))
+             (tree-seq coll? #(if (map? %) (vals %) %) v)))
    gen/any-equatable))
