@@ -12,19 +12,19 @@
 (def gen-big-decimal
   (gen/fmap (fn [[integral fractional]]
               (BigDecimal. (str integral "." fractional)))
-            (gen/tuple gen/int gen/pos-int)))
+            (gen/tuple gen/small-integer gen/nat)))
 
 (def gen-big-int
-  (gen/fmap #(* 1N %) gen/int))
+  (gen/fmap #(* 1N %) gen/small-integer))
 
 (def gen-java-integer
-  (gen/fmap #(Integer. %) gen/int))
+  (gen/fmap #(Integer. %) gen/small-integer))
 
 (def gen-float
-  (gen/fmap #(float %) gen/int))
+  (gen/fmap #(float %) gen/small-integer))
 
 (def gen-short
-  (gen/fmap short gen/int))
+  (gen/fmap short gen/small-integer))
 
 (def gen-var (gen/elements (vals (ns-interns 'clojure.core))))
 
@@ -130,10 +130,17 @@
                                       (Object.)))
              (= another-object (Object.)))))))
 
-(deftest mimic-matcher-macro-regression-test
+(deftest mimic-matcher-macro
+  (testing "mimic-matcher uses non-namespaced symbol for `-matcher-for`"
+    (is (= '-matcher-for
+           (->> (macroexpand `(parser/mimic-matcher dispatch/integer-dispatch Integer))
+                last
+                butlast
+                last
+                first))))
   ;; this is a regression test for https://github.com/nubank/matcher-combinators/pull/104
-  (testing "mimic-matcher uses non-namespaced symbol for `match`"
-    (is (= 'match
+  (testing "mimic-matcher uses non-namespaced symbol for `-match`"
+    (is (= '-match
            (-> (macroexpand `(parser/mimic-matcher dispatch/integer-dispatch Integer))
                last
                last

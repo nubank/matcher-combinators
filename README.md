@@ -135,14 +135,37 @@ Note that you can also use the `match` checker to match arguments within midje's
 
 ## Matchers
 
-### default matchers
+### Default matchers
 
-If a data-structure isn't wrapped in a specific matcher-combinator the default interpretation is:
-- map: `embeds`
+When an expected value isn't wrapped in a specific matcher the default interpretation is:
+- number, date, and other scalar values: `equals`
+- regex: `regex`
 - sequential: `equals`
 - set: `equals`
-- number, date, and other base data-structure: `equals`
-- regex: `regex`
+- map: `embeds`
+
+You can use the `matcher-for` function to discover which matcher would be used
+for a specific value, e.g.
+
+``` clojure
+(require '[matcher-combinators.matchers :as matchers])
+
+(matchers/matcher-for {:this :map})
+;; => {:expected {:this :map}}
+
+(class *1)
+;; => matcher_combinators.core.EmbedsMap
+```
+
+You can then use that matcher in place of a value, e.g.
+
+``` clojure
+(require '[matcher-combinators.standalone :as matcher-combinators])
+(matcher-combinators/match
+  (matchers/matcher-for {:this :map})
+  {:this :map :and :then-some})
+;; => {:match/result :match}
+```
 
 ### built-in matchers
 

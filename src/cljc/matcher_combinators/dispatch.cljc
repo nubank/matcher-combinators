@@ -1,4 +1,9 @@
 (ns matcher-combinators.dispatch
+  "Type-specific implementations of the `match` function of the
+  matcher-combinators.core/Match protocol invoke dispatch functions defined in
+  this namespace, which provide a layer of indirection between `match`
+  and the specific matcher implementation for each type. This indirection allows
+  for redefinition at runtime, necessary for the `match-with` feature."
   (:require [matcher-combinators.matchers :as matchers]
             [matcher-combinators.core :as core])
   #?(:clj
@@ -56,7 +61,7 @@
 
 ;; other
 (defn pattern-dispatch [expected] (matchers/regex expected))
-(defn function-dispatch [expected] (partial core/match-pred expected (str "predicate: " expected)))
+(defn function-dispatch [f] (matchers/pred f))
 
 (def type->dispatch
   #?(:cljs {}

@@ -4,12 +4,9 @@
             [matcher-combinators.parser]))
 
 (defn match
-  "Returns a map indicating whether the `actual` value matches the `matcher`.
+  "Returns a map indicating whether the `actual` value matches `expected`.
 
-  `matcher` can be a matcher-combinators matcher, a predicate function of
-  actual, an expression that returns a value, or a literal value.
-
-  `actual` can be an expression that returns the actual value, or a literal.
+  `expected` can be the expected value, a matcher, or a predicate fn of actual.
 
   Return map includes the following keys:
 

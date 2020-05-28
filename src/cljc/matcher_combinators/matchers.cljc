@@ -65,3 +65,15 @@
 (def absent
   "Value-position matcher for maps that matches when containing map doesn't have the key pointing to this matcher."
   (core/->Absent))
+
+(defn pred
+  "Matcher that will match when `pred` of the actual value returns true."
+  [pred]
+  (core/->PredMatcher pred (str "predicate: " pred)))
+
+(defn matcher-for
+  "Returns the type-specific matcher object for an expected value. This is
+  useful for discovery when you want to know which Matcher type is associated
+  to a value."
+  [expected]
+  (core/-matcher-for expected))
