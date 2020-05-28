@@ -109,9 +109,10 @@
   (-match [this actual]
     (core/match (dispatch/function-dispatch this) actual)))
 
-(mimic-matcher dispatch/nil-dispatch nil)
-(mimic-matcher dispatch/class-dispatch java.lang.Class)
+;; scalars
 (mimic-matcher dispatch/object-dispatch Object)
+(mimic-matcher dispatch/class-dispatch java.lang.Class)
+(mimic-matcher dispatch/nil-dispatch nil)
 (mimic-matcher dispatch/integer-dispatch Integer)
 (mimic-matcher dispatch/short-dispatch Short)
 (mimic-matcher dispatch/long-dispatch Long)
@@ -134,16 +135,15 @@
 (mimic-matcher dispatch/big-int-dispatch BigInt)
 (mimic-matcher dispatch/character-dispatch Character)
 (mimic-matcher dispatch/var-dispatch Var)
+(mimic-matcher dispatch/pattern-dispatch Pattern)
 
+;; collections
 (mimic-matcher dispatch/i-persistent-map-dispatch IPersistentMap)
 (mimic-matcher dispatch/i-persistent-vector-dispatch IPersistentVector)
 (mimic-matcher dispatch/chunked-seq-dispatch PersistentVector$ChunkedSeq)
-(mimic-matcher dispatch/i-persistent-vector-dispatch Pattern)
 (mimic-matcher dispatch/i-persistent-list-dispatch IPersistentList)
 (mimic-matcher dispatch/i-persistent-list-dispatch IPersistentSet)
 (mimic-matcher dispatch/cons-dispatch Cons)
 (mimic-matcher dispatch/repeat-dispatch Repeat)
 (mimic-matcher dispatch/lazy-seq-dispatch LazySeq)
-(mimic-matcher dispatch/array-seq-dispatch ArraySeq)
-(mimic-matcher dispatch/pattern-dispatch Pattern)
-))
+(mimic-matcher dispatch/array-seq-dispatch ArraySeq)))
