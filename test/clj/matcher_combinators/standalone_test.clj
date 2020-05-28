@@ -2,14 +2,11 @@
   (:require [orchestra.spec.test :as spec.test]
             [clojure.test :refer [deftest testing is use-fixtures]]
             [matcher-combinators.matchers :as m]
+            [matcher-combinators.test-helpers :as test-helpers]
             [matcher-combinators.result :as result]
             [matcher-combinators.standalone :as standalone]))
 
-(use-fixtures :once
-  (fn [f]
-    (spec.test/instrument)
-    (f)
-    (spec.test/unstrument)))
+(use-fixtures :once test-helpers/instrument)
 
 (deftest test-match
   (testing "parser defaults"
