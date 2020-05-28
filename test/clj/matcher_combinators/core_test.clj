@@ -13,7 +13,8 @@
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.dispatch :as dispatch]
-            [matcher-combinators.parser]))
+            [matcher-combinators.parser]
+            [matcher-combinators.standalone :as standalone]))
 
 (spec.test/instrument)
 
@@ -23,42 +24,41 @@
     (t)
     (spec.test/unstrument)))
 
-(defn default-tree-seq [v]
-  (tree-seq coll? #(if (map? %) (keys %) %) v))
-
 (def gen-any-equatable
   (gen/such-that
    (fn [v]
-     (or (not (coll? v))
-         (every? (fn [node] (not (and (set? node) (contains? node false))))
-                 (default-tree-seq v))))
+     (every? (fn [node] (or (not (set? node))
+                            (not (contains? node false))))
+             (tree-seq coll? #(if (map? %) (keys %) %) v)))
    gen/any-equatable))
 
 (defspec equals-matcher-matches-when-values-are-equal
-  {:doc "For any scalar or structural value, "
+  {:doc      "For any scalar value or data structure, the equals matcher matches the same value"
    :max-size 10}
   (prop/for-all [v gen-any-equatable]
-                (core/match? (core/match (matchers/equals v) v))))
+                (standalone/match? (matchers/equals v) v)))
 
 (defspec equals-matchers-with-unequal-scalar-values
   {:max-size 10}
   (prop/for-all [[a b] (gen/such-that (fn [[a b]] (not= a b))
                                       (gen/tuple gen/simple-type-equatable
                                                  gen/simple-type-equatable))]
-                (= (model/->Mismatch a b)
-                   (::result/value (core/match (matchers/equals a) b)))))
+                (standalone/match?
+                 {::result/value (model/->Mismatch a b)}
+                 (core/match (matchers/equals a) b))))
 
 (defspec map-matchers-with-failures-at-one-key
-  {:doc      "One key in ::reult/value is a mismatch when the value at that key fails to match"
+  {:doc      "One key in ::result/value has a mismatch when the value at that key fails to match"
    :max-size 10}
   (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
                  m        (gen/elements [matchers/equals matchers/embeds])]
                 (let [k      (first (keys expected))
                       actual (update expected k inc)
                       res    (core/match (m expected) actual)]
-                  (and (not (core/match? res))
-                       (= (model/->Mismatch (k expected) (k actual))
-                          (get-in res [::result/value k]))))))
+                  (standalone/match?
+                   {::result/type  :mismatch
+                    ::result/value (assoc actual k (model/->Mismatch (k expected) (k actual)))}
+                   res))))
 
 (defspec map-matchers-with-failures-at-multiple-keys
   {:doc      "Every key in ::result/value is a mismatch when every key fails to match"
@@ -67,11 +67,14 @@
                  m        (gen/elements [matchers/equals matchers/embeds])]
                 (let [actual (reduce-kv (fn [m k v] (assoc m k (inc v))) {} expected)
                       res    (core/match (m expected) actual)]
-                  (and (not (core/match? res))
-                       (every? (fn [k]
-                                 (= (model/->Mismatch (k expected) (k actual))
-                                    (get-in res [::result/value k])))
-                               (keys actual))))))
+                  (standalone/match?
+                   {::result/type :mismatch
+                    ::result/value
+                    (reduce (fn [m [k]]
+                              (assoc m k (model/->Mismatch (k expected) (k actual))))
+                            {}
+                            actual)}
+                   res))))
 
 (defspec map-matchers-with-failures-due-to-missing-keys
   {:doc      "One key in ::reult/value is a mismatch when the value at that key fails to match"
@@ -81,19 +84,21 @@
                 (let [k      (first (keys expected))
                       actual (dissoc expected k)
                       res    (core/match (m expected) actual)]
-                  (and (not (core/match? res))
-                       (= (model/->Missing (get expected k))
-                          (get-in res [::result/value k]))))))
+                  (standalone/match?
+                   {::result/type :mismatch
+                    ::result/value (assoc actual k (model/->Missing (get expected k)))}
+                   res))))
 
 (defspec map-matchers-with-failures-due-to-incorrect-type
   {:max-size 10}
   (prop/for-all [m        (gen/elements [matchers/equals matchers/embeds])
-                 expected (gen/map gen/keyword gen/any)
-                 actual   (gen/such-that (comp not map?) gen/any)]
+                 expected (gen/map gen/keyword gen-any-equatable)
+                 actual   (gen/such-that (comp not map?) gen-any-equatable)]
                 (let [res (core/match (m expected) actual)]
-                  (and (not (core/match? res))
-                       (= (model/->Mismatch expected actual)
-                          (::result/value res))))))
+                  (standalone/match?
+                   {::result/type  :mismatch
+                    ::result/value (model/->Mismatch expected actual)}
+                   res))))
 
 (facts "on sequence matchers"
   (tabular
