@@ -33,12 +33,11 @@
    gen/any-equatable))
 
 (defspec equals-matcher-matches-when-values-are-equal
-  {:doc      "For any scalar value or data structure, the equals matcher matches the same value"
-   :max-size 10}
+  {:max-size 10}
   (prop/for-all [v gen-any-equatable]
                 (standalone/match? (matchers/equals v) v)))
 
-(defspec equals-matchers-with-unequal-scalar-values
+(defspec equals-matcher-mismatches-when-scalar-values-are-not-equal
   {:max-size 10}
   (prop/for-all [[a b] (gen/such-that (fn [[a b]] (not= a b))
                                       (gen/tuple gen/simple-type-equatable
@@ -47,9 +46,8 @@
                  {::result/value (model/->Mismatch a b)}
                  (core/match (matchers/equals a) b))))
 
-(defspec map-matchers-with-failures-at-one-key
-  {:doc      "One key in ::result/value has a mismatch when the value at that key fails to match"
-   :max-size 10}
+(defspec map-matchers-mismatches-when-one-key-has-a-mismatched-value
+  {:max-size 10}
   (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
                  m        (gen/elements [matchers/equals matchers/embeds])]
                 (let [k      (first (keys expected))
@@ -60,9 +58,8 @@
                     ::result/value (assoc actual k (model/->Mismatch (k expected) (k actual)))}
                    res))))
 
-(defspec map-matchers-with-failures-at-multiple-keys
-  {:doc      "Every key in ::result/value is a mismatch when every key fails to match"
-   :max-size 10}
+(defspec map-matchers-mismatches-when-all-keys-have-a-mismatched-value
+  {:max-size 10}
   (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
                  m        (gen/elements [matchers/equals matchers/embeds])]
                 (let [actual (reduce-kv (fn [m k v] (assoc m k (inc v))) {} expected)
@@ -76,9 +73,8 @@
                             actual)}
                    res))))
 
-(defspec map-matchers-with-failures-due-to-missing-keys
-  {:doc      "One key in ::reult/value is a mismatch when the value at that key fails to match"
-   :max-size 10}
+(defspec map-matchers-mismatch-when-expected-keys-are-missing
+  {:max-size 10}
   (prop/for-all [expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))
                  m        (gen/elements [matchers/equals matchers/embeds])]
                 (let [k      (first (keys expected))
@@ -89,7 +85,7 @@
                     ::result/value (assoc actual k (model/->Missing (get expected k)))}
                    res))))
 
-(defspec map-matchers-with-failures-due-to-incorrect-type
+(defspec map-matchers-mismatch-any-non-map-value
   {:max-size 10}
   (prop/for-all [m        (gen/elements [matchers/equals matchers/embeds])
                  expected (gen/map gen/keyword gen-any-equatable)
