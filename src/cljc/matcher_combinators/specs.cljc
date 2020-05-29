@@ -13,7 +13,7 @@
 (s/def :matcher-combinators/match-args
   (s/alt :match-result        (s/alt :standalone ::standalone-match-result
                                      :core       ::result/result)
-         :expected-and-actual (s/cat :expected (partial satisfies? core/Matcher)
+         :expected-and-actual (s/cat :expected (fn [v] (satisfies? core/Matcher v))
                                      :actual   any?)))
 
 (s/fdef matcher-combinators.core/match?

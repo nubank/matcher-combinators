@@ -20,8 +20,14 @@
       (= :mismatch type)
       (assoc :mismatch/detail value))))
 
-(def
-  ^{:doc      (-> #'core/match? meta :doc)
-    :arglists (-> #'core/match? meta :arglists)}
-  match?
-  core/match?)
+#?(:clj
+   (def
+     ^{:doc      (-> #'core/match? meta :doc)
+       :arglists (-> #'core/match? meta :arglists)}
+     match?
+     core/match?))
+
+#?(:cljs
+   (def match?
+     "See matcher-combinators.core/match?"
+     core/match?))
