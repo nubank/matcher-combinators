@@ -1,6 +1,5 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
             [matcher-combinators.utils :as utils]))
@@ -26,12 +25,17 @@
   [expected actual]
   (-match expected actual))
 
-(s/fdef match?
-  :args (s/cat :match-result ::result/result)
-  :ret boolean?)
+(defn match?
+  "Given a `matcher` and `actual`, returns `true` if
+  `(match matcher actual)` results in a match. Else, returns `false.`
 
-(defn match? [{::result/keys [type]}]
-  (= :match type))
+  Given a `match-result`, returns `true` if it indicates a match, else
+  `false`."
+  ([match-result]
+   (or (= :match (::result/type match-result))
+       (= :match (:match/result match-result))))
+  ([expected actual]
+   (match? (match expected actual))))
 
 (defn- mismatch? [{::result/keys [type]}]
   (= :mismatch type))

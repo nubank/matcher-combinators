@@ -6,28 +6,27 @@
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.string :as str]
             [orchestra.spec.test :as spec.test]
-            [matcher-combinators.test-helpers :as test-helpers :refer [gen-any-equatable]]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.model :as model]
+            [matcher-combinators.parser]
             [matcher-combinators.result :as result]
-            [matcher-combinators.standalone :as standalone]))
-
-(spec.test/instrument)
+            [matcher-combinators.specs] ;; to load specs
+            [matcher-combinators.test-helpers :as test-helpers :refer [gen-any-equatable]]))
 
 (use-fixtures :once test-helpers/instrument)
 
 (defspec equals-matcher-matches-when-values-are-equal
   {:max-size 10}
   (prop/for-all [v gen-any-equatable]
-                (standalone/match? (m/equals v) v)))
+                (core/match? (m/equals v) v)))
 
 (defspec equals-matcher-mismatches-when-scalar-values-are-not-equal
   {:max-size 10}
   (prop/for-all [[a b] (gen/such-that (fn [[a b]] (not= a b))
                                       (gen/tuple gen/simple-type-equatable
                                                  gen/simple-type-equatable))]
-                (standalone/match?
+                (core/match?
                  {::result/value (model/->Mismatch a b)}
                  (core/match (m/equals a) b))))
 
@@ -38,7 +37,7 @@
                 (let [k      (first (keys expected))
                       actual (update expected k inc)
                       res    (core/match (matcher expected) actual)]
-                  (standalone/match?
+                  (core/match?
                    {::result/type  :mismatch
                     ::result/value (assoc actual k (model/->Mismatch (k expected) (k actual)))}
                    res))))
@@ -49,7 +48,7 @@
                  expected (gen/such-that not-empty (gen/map gen/keyword gen/small-integer))]
                 (let [actual (reduce-kv (fn [m k v] (assoc m k (inc v))) {} expected)
                       res    (core/match (matcher expected) actual)]
-                  (standalone/match?
+                  (core/match?
                    {::result/type :mismatch
                     ::result/value
                     (reduce (fn [m [k]]
@@ -65,7 +64,7 @@
                 (let [k      (first (keys expected))
                       actual (dissoc expected k)
                       res    (core/match (matcher expected) actual)]
-                  (standalone/match?
+                  (core/match?
                    {::result/type :mismatch
                     ::result/value (assoc actual k (model/->Missing (get expected k)))}
                    res))))
@@ -76,10 +75,12 @@
                  expected (gen/map gen/keyword gen-any-equatable)
                  actual   (gen/such-that (comp not map?) gen-any-equatable)]
                 (let [res (core/match (matcher expected) actual)]
-                  (standalone/match?
+                  (core/match?
                    {::result/type  :mismatch
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
+
+(spec.test/instrument)
 
 (facts "on sequence matchers"
   (tabular
