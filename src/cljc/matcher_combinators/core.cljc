@@ -359,7 +359,7 @@
                                      "set or sequential")
                      (validate-input expected
                                      actual
-                                     set?
+                                     (fn [s] (or (set? s) (instance? java.util.Set s)))
                                      'equals
                                      "set"))]
       issue
