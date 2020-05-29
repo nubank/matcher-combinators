@@ -23,14 +23,3 @@
 (s/fdef matcher-combinators.standalone/match?
   :args :matcher-combinators/match-args
   :ret boolean?)
-
-(comment
-
-  (def args-spec)
-
-  (s/valid? :matcher-combinators/match-args [1 2])
-  (s/valid? :matcher-combinators/match-args [{:match/result :match}])
-  (s/valid? :matcher-combinators/match-args [{:match/result :mismatch}])
-  (s/valid? :matcher-combinators/match-args [{:match/result :mismatch} {:match/result :mismatch}])
-  (s/valid? :matcher-combinators/match-args [{:match/result :mismatch} {:a :b}])
-  )
