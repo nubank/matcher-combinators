@@ -80,68 +80,47 @@
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
 
-(spec.test/instrument)
+(defspec sequence-matchers-match-when-sequences-are-equal
+  {:max-size 10}
+  (prop/for-all [s (gen/such-that sequential? gen-any-equatable)
+                 m (gen/elements [m/equals m/in-any-order])]
+                (core/match? (m s) s)))
+
+(defspec sequence-matchers-mismatch-when-no-element-matches-any-one-matcher
+  {:max-size 10}
+  (prop/for-all [s (gen/vector gen/nat 1 4)
+                 e (gen/elements ['() []])
+                 m (gen/elements [m/equals m/in-any-order])]
+                (let [actual   (into e s)
+                      expected (into [neg?] (drop 1 s))]
+                  (not (core/match? (m expected) actual)))))
+
+(defspec sequence-matchers-mismatch-when-there-is-extra-input
+  {:max-size 10}
+  (prop/for-all [s (gen/vector gen/nat 1 4)
+                 e (gen/elements ['() []])
+                 m (gen/elements [m/equals m/in-any-order])]
+                (let [actual   (into e s)
+                      expected (butlast s)]
+                  (not (core/match? (m expected) actual)))))
+
+(defspec sequence-matchers-mismatch-when-there-is-missing-input
+  {:max-size 10}
+  (prop/for-all [s (gen/vector gen/nat 1 4)
+                 e (gen/elements ['() []])
+                 m (gen/elements [m/equals m/in-any-order])]
+                (let [actual   (into e (butlast s))
+                      expected s]
+                  (not (core/match? (m expected) actual)))))
+
+(defspec sequence-matchers-match-when-sequences-are-equal
+  {:max-size 10}
+  (prop/for-all [expected (gen/such-that sequential? gen-any-equatable)
+                 actual   gen/simple-type-equatable
+                 m        (gen/elements [m/equals m/in-any-order])]
+                (not (core/match? (m expected) actual))))
 
 (facts "on sequence matchers"
-  (tabular
-    (facts "on common behaviors among all sequence matchers"
-      (fact "matches when actual sequence elements match each matcher, in order and in total"
-        (core/match (?sequence-matcher [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                        (m/equals {:id (m/equals 2) :a (m/equals 2)})])
-          [{:id 1, :a 1} {:id 2, :a 2}])
-        => {::result/type   :match
-            ::result/value  [{:id 1, :a 1} {:id 2, :a 2}]
-            ::result/weight 0})
-
-      (fact "mismatch when none of the expected matchers is a match for one
-             element of the given sequence"
-        (core/match (?sequence-matcher [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                        (m/equals {:id (m/equals 2) :a (m/equals 2)})])
-          [{:id 1 :a 1} {:id 2 :a 200}])
-        => (just {::result/type   :mismatch
-                  ::result/value  anything
-                  ::result/weight number?}))
-
-      (fact "only matches when all expected matchers are matched by elements of
-             the given sequence"
-        (core/match (?sequence-matcher [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                        (m/equals {:id (m/equals 2) :a (m/equals 2)})
-                                        (m/equals {:id (m/equals 3) :a (m/equals 3)})])
-          [{:id 1 :a 1} {:id 2 :a 2}])
-        => (just {::result/type   :mismatch
-                  ::result/value  anything
-                  ::result/weight number?}))
-
-      (fact "only matches when all of the input sequence elements are matched
-             by an expected matcher"
-        (core/match (?sequence-matcher [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                        (m/equals {:id (m/equals 2) :a (m/equals 2)})])
-          [{:id 1 :a 1} {:id 2 :a 2} {:id 3 :a 3}])
-        => (just {::result/type   :mismatch
-                  ::result/value  anything
-                  ::result/weight number?}))
-
-      (tabular
-        (fact "mismatches when the actual input is not a sequence"
-          (core/match (?sequence-matcher [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                          (m/equals {:id (m/equals 2) :a (m/equals 2)})]) ?actual)
-          => {::result/type   :mismatch
-              ::result/value  (model/->Mismatch [(m/equals {:id (m/equals 1) :a (m/equals 1)})
-                                                 (m/equals {:id (m/equals 2) :a (m/equals 2)})]
-                                                ?actual)
-              ::result/weight 1})
-        ?actual
-        12
-        "12"
-        '12
-        :12
-        {:x 12}
-        #{1 2}))
-
-    ?sequence-matcher
-    m/equals
-    m/in-any-order)
-
   (facts "on the equals matcher for sequences"
     (fact "on element mismatches, marks each mismatch"
       (core/match (m/equals [(m/equals 1) (m/equals 2)]) [2 1])
@@ -226,6 +205,8 @@
                   ::result/value  (just [1 2 (model/->Missing 3)]
                                         :in-any-order)
                   ::result/weight 1})))))
+
+(spec.test/instrument)
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
