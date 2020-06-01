@@ -1,6 +1,7 @@
 (ns matcher-combinators.test-test
   (:require [clojure.test :refer :all]
             [matcher-combinators.test :refer :all]
+            [matcher-combinators.test-helpers :refer [greater-than-matcher]]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m])
   (:import [clojure.lang ExceptionInfo]))
@@ -78,11 +79,6 @@
           :in-wrong-place))
     (testing "fails with a nice message when you provide too many arguments"
       (is (thrown-match? ExceptionInfo {:a 1} (bang!) :extra-arg)))))
-
-(defn greater-than-matcher [expected-long]
-  (core/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
 
 (deftest match-with-test
   (is (match-with? {java.lang.Long greater-than-matcher}

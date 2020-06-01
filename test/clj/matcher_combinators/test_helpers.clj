@@ -1,6 +1,7 @@
 (ns matcher-combinators.test-helpers
   (:require [clojure.test.check.generators :as gen]
-            [orchestra.spec.test :as spec.test]))
+            [orchestra.spec.test :as spec.test]
+            [matcher-combinators.core :as core]))
 
 (defn instrument
   "Test fixture to turn on clojure.spec instrumentation."
@@ -23,3 +24,8 @@
                             (not (contains? node false))))
              (tree-seq coll? #(if (map? %) (vals %) %) v)))
    gen/any-equatable))
+
+(defn greater-than-matcher [expected-long]
+  (core/->PredMatcher
+   (fn [actual] (> actual expected-long))
+   (str "greater than " expected-long)))
