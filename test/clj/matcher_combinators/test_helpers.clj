@@ -20,8 +20,11 @@
   See https://github.com/nubank/matcher-combinators/issues/124"
   (gen/such-that
    (fn [v]
-     (every? (fn [node] (or (not (set? node))
-                            (not (contains? node false))))
+     (every? (fn [node]
+               (if (or (set? node)
+                       (sequential? node))
+                 (not (contains? (into #{} node) false))
+                 true))
              (tree-seq coll? #(if (map? %) (vals %) %) v)))
    gen/any-equatable))
 
