@@ -82,7 +82,7 @@
 
 (defspec sequence-matchers-match-when-sequences-are-equal
   {:max-size 10}
-  (prop/for-all [s (gen/such-that sequential? gen-any-equatable)
+  (prop/for-all [s (gen/such-that sequential? gen-any-equatable {:max-tries 100})
                  m (gen/elements [m/equals m/in-any-order])]
                 (core/match? (m s) s)))
 
@@ -113,9 +113,9 @@
                       expected s]
                   (not (core/match? (m expected) actual)))))
 
-(defspec sequence-matchers-match-when-sequences-are-equal
+(defspec sequence-matchers-mismatch-when-actual-is-not-sequential
   {:max-size 10}
-  (prop/for-all [expected (gen/such-that sequential? gen-any-equatable)
+  (prop/for-all [expected (gen/such-that sequential? gen-any-equatable {:max-tries 100})
                  actual   gen/simple-type-equatable
                  m        (gen/elements [m/equals m/in-any-order])]
                 (not (core/match? (m expected) actual))))
