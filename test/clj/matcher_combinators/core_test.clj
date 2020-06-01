@@ -120,6 +120,8 @@
                  m        (gen/elements [m/equals m/in-any-order])]
                 (not (core/match? (m expected) actual))))
 
+(spec.test/instrument)
+
 (facts "on sequence matchers"
   (facts "on the equals matcher for sequences"
     (fact "on element mismatches, marks each mismatch"
@@ -205,8 +207,6 @@
                   ::result/value  (just [1 2 (model/->Missing 3)]
                                         :in-any-order)
                   ::result/weight 1})))))
-
-(spec.test/instrument)
 
 (facts "on nesting multiple matchers"
   (facts "on nesting equals matchers for sequences"
