@@ -7,6 +7,7 @@
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
             [matcher-combinators.test]
+            [matcher-combinators.test-helpers :refer [greater-than-matcher]]
             [matcher-combinators.result :as result])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
@@ -238,11 +239,6 @@
                     gen/any)]
                 (= (class (m/equals v))
                    (class (m/matcher-for v)))))
-
-(defn greater-than-matcher [expected-long]
-  (c/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
 
 (deftest matcher-for-works-within-match-with
   (is (match-with? {java.lang.Long greater-than-matcher}

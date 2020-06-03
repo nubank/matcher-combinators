@@ -7,15 +7,19 @@ change log follows the conventions of
 
 - add `matchers/matcher-for` [#123](https://github.com/nubank/matcher-combinators/pull/123)
 - use set matching logic for `java.util.Set` [#125](https://github.com/nubank/matcher-combinators/pull/125)
+- align `standalone/match?` and `core/match?` fns [#126](https://github.com/nubank/matcher-combinators/pull/126)
 
-### BREAKING CHANGE
+### BREAKING CHANGES
 
-matcher-combinators-2.0.0 includes a breaking change for custom implementations of the
-`matcher-combinators.core/Matcher` protocol:
+matcher-combinators-2.0.0 includes the following breaking changes:
 
-- change the implementation of `match` to `-match` (required)
-- add an implementation of `-matcher-for` (optional, but recommended)
-  - should just return `this` e.g. `(-matcher-for [this] this)
+* for custom implementations of the `matcher-combinators.core/Matcher` protocol:
+    * change the implementation of `match` to `-match` (required)
+    * add an implementation of `-matcher-for` (optional, but recommended)
+        * should just return `this` e.g. `(-matcher-for [this] this)`
+* for users of `matcher-combinators.standalone/match?` with one argument:
+    * this now expects a match result instead of a matcher, and returns a boolean
+        * there is no built-in solution for the previous behavior
 
 ## [1.5.2]
 - fix double eval of `clojure.test` `match-equals?` arguments

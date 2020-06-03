@@ -55,11 +55,8 @@
 
 (deftest standalone
   (is (standalone/match? (m/in-any-order [1 2]) [1 2]))
-  (is (not (standalone/match? (m/in-any-order [1 2]) [1 3]))))
-
-(deftest partial-standalone
-  (testing "using partial version of match?"
-    (is ((standalone/match? (m/embeds {:a odd?})) {:a 1 :b 2}))))
+  (is (not (standalone/match? (m/in-any-order [1 2]) [1 3])))
+  (is (standalone/indicates-match? (standalone/match (m/embeds {:a odd?}) {:a 1 :b 2}))))
 
 (defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
 

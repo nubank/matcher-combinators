@@ -1,6 +1,5 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
             [matcher-combinators.utils :as utils]))
@@ -26,15 +25,19 @@
   [expected actual]
   (-match expected actual))
 
-(s/fdef match?
-  :args (s/cat :match-result ::result/result)
-  :ret boolean?)
+(defn indicates-match?
+  "Returns `true` if `match-result` indicates a match, else `false`"
+  [match-result]
+  (or (= :match (::result/type match-result))
+      (= :match (:match/result match-result))))
 
-(defn match? [{::result/keys [type]}]
-  (= :match type))
-
-(defn- mismatch? [{::result/keys [type]}]
-  (= :mismatch type))
+(defn match?
+  "Returns `true` if `(match matcher actual)` results in a match, else `false.`"
+  ([match-result]
+   (println "DEPRECATION NOTICE: the arity-1 branch of match? is deprecated. Use indicates-match? instead.")
+   (indicates-match? match-result))
+  ([expected actual]
+   (indicates-match? (match expected actual))))
 
 (defn matcher? [x]
   (satisfies? Matcher x))
@@ -158,7 +161,7 @@
                                    (when-not (find-unexpected expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
-    (if (and (every? (comp match? second) entry-results)
+    (if (and (every? (comp indicates-match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
       {::result/type   :match
        ::result/value  actual
@@ -243,7 +246,7 @@
                            (count expected)
                            (max (count actual) (count expected)))
           match-results  (take match-size match-results')]
-      (if (some mismatch? match-results)
+      (if (some (complement indicates-match?) match-results)
         {::result/type   :mismatch
          ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
          ::result/weight (->> match-results
@@ -280,7 +283,7 @@
        :elements  (concat (map second matching) elements)
        :matched   (map first matching)})
     (let [[matcher & unmatched-rest] unmatched
-          matching-elem              (utils/find-first #(match? (match matcher %))
+          matching-elem              (utils/find-first #(match? matcher %)
                                                        elements)]
       (if (nil? matching-elem)
         {:matched?  false
