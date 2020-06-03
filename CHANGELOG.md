@@ -6,6 +6,7 @@ change log follows the conventions of
 ## [2.0.0]
 
 - add `matchers/matcher-for` [#123](https://github.com/nubank/matcher-combinators/pull/123)
+- use set matching logic for `java.util.Set` [#125](https://github.com/nubank/matcher-combinators/pull/125)
 
 ### BREAKING CHANGE
 
