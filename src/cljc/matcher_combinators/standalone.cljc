@@ -36,4 +36,4 @@
   ([matcher]
    (fn [actual] (match? matcher actual)))
   ([matcher actual]
-   (core/match? (core/match matcher actual))))
+   (core/indicates-match? (core/match matcher actual))))

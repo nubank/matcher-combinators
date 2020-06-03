@@ -26,15 +26,23 @@
   [expected actual]
   (-match expected actual))
 
-(s/fdef match?
+(s/fdef indicates-match?
   :args (s/cat :match-result ::result/result)
   :ret boolean?)
 
-(defn match? [{::result/keys [type]}]
-  (= :match type))
+(defn indicates-match?
+  "Returns true if match-result (the map returned by `(match expected actual)`) indicates a match."
+  [match-result]
+  (= :match (::result/type match-result)))
 
-(defn- mismatch? [{::result/keys [type]}]
-  (= :mismatch type))
+(defn
+  ^{:deprecated true
+    :doc "DEPRECATED! Use `indicates-match?` instead."}
+  match?
+  [match-result]
+  (println (str "DEPRECATION WARNING: matcher-combinators.core/match? is deprecated.\n"
+                "                     Use matcher-combinators.core/indicates-match? instead."))
+  `(indicates-match? ~match-result))
 
 (defn matcher? [x]
   (satisfies? Matcher x))
@@ -158,7 +166,7 @@
                                    (when-not (find-unexpected expected key)
                                      [key (unexpected-handler val)]))
                                  actual)]
-    (if (and (every? (comp match? second) entry-results)
+    (if (and (every? (comp indicates-match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
       {::result/type   :match
        ::result/value  actual
@@ -243,7 +251,7 @@
                            (count expected)
                            (max (count actual) (count expected)))
           match-results  (take match-size match-results')]
-      (if (some mismatch? match-results)
+      (if (some (complement indicates-match?) match-results)
         {::result/type   :mismatch
          ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
          ::result/weight (->> match-results
@@ -280,7 +288,7 @@
        :elements  (concat (map second matching) elements)
        :matched   (map first matching)})
     (let [[matcher & unmatched-rest] unmatched
-          matching-elem              (utils/find-first #(match? (match matcher %))
+          matching-elem              (utils/find-first #(indicates-match? (match matcher %))
                                                        elements)]
       (if (nil? matching-elem)
         {:matched?  false

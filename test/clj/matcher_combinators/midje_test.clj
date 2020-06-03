@@ -298,10 +298,10 @@
 (def match-abs (match-with {java.lang.Long ->AbsValue}))
 
 (facts "match-with checker behavior"
-  (core/match? (core/match -1 1)) => false
+  (core/indicates-match? (core/match -1 1)) => false
 
   (fact "low-level invocation"
-    (core/match?
+    (core/indicates-match?
      (dispatch/wrap-match-with
       {java.lang.Long ->AbsValue}
       (core/match -1 1)))
