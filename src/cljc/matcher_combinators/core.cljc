@@ -350,7 +350,8 @@
   "Clojure's set functions expect clojure.lang.IPersistentSet, but
   matching works just fine with java.util.Set as well."
   [s]
-  (or (set? s) (instance? java.util.Set s)))
+  #?(:clj  (or (set? s) (instance? java.util.Set s))
+     :cljs (set? s)))
 
 (defrecord SetEquals [expected accept-seq?]
   Matcher
@@ -376,7 +377,7 @@
          ::result/weight weight}))))
 
 (defrecord Prefix [expected]
-n  Matcher
+  Matcher
   (-matcher-for [this] this)
   (-match [_this actual]
     (if-let [issue (validate-input
