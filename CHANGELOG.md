@@ -7,7 +7,9 @@ change log follows the conventions of
 
 - add `matchers/matcher-for` [#123](https://github.com/nubank/matcher-combinators/pull/123)
 - use set matching logic for `java.util.Set` [#125](https://github.com/nubank/matcher-combinators/pull/125)
-- align `standalone/match?` and `core/match?` fns [#126](https://github.com/nubank/matcher-combinators/pull/126)
+- changes to `match?` fn [#126](https://github.com/nubank/matcher-combinators/pull/126)
+  - add `indicates-match?` to `matcher-combinators-core` and `matcher-combinators/standalone` namespaces
+  - deprecate arity-1 branch of `match?`
 
 ### BREAKING CHANGES
 
