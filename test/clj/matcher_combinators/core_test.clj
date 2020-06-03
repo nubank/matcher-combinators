@@ -14,23 +14,10 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.parser]
-            [matcher-combinators.standalone :as standalone]))
+            [matcher-combinators.standalone :as standalone]
+            [matcher-combinators.test-helpers :as test-helpers :refer [gen-any-equatable]]))
 
-(spec.test/instrument)
-
-(use-fixtures :once
-  (fn [t]
-    (spec.test/instrument)
-    (t)
-    (spec.test/unstrument)))
-
-(def gen-any-equatable
-  (gen/such-that
-   (fn [v]
-     (every? (fn [node] (or (not (set? node))
-                            (not (contains? node false))))
-             (tree-seq coll? #(if (map? %) (keys %) %) v)))
-   gen/any-equatable))
+(use-fixtures :once test-helpers/instrument)
 
 (defspec equals-matcher-matches-when-values-are-equal
   {:max-size 10}
@@ -95,6 +82,8 @@
                    {::result/type  :mismatch
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
+
+(spec.test/instrument)
 
 (facts "on sequence matchers"
   (tabular
