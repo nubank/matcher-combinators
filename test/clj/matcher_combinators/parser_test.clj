@@ -126,8 +126,7 @@
                          an-object)
              (core/match an-object
                          an-object)))
-      (is (= (core/match? (core/match another-object
-                                      (Object.)))
+      (is (= (core/indicates-match? (core/match another-object (Object.)))
              (= another-object (Object.)))))))
 
 (deftest mimic-matcher-macro

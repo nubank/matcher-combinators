@@ -1,9 +1,12 @@
 (ns matcher-combinators.test-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [use-fixtures deftest testing is are]]
             [matcher-combinators.test :refer :all]
             [matcher-combinators.core :as core]
-            [matcher-combinators.matchers :as m])
+            [matcher-combinators.matchers :as m]
+            [matcher-combinators.test-helpers :as test-helpers :refer [greater-than-matcher]])
   (:import [clojure.lang ExceptionInfo]))
+
+(use-fixtures :once test-helpers/instrument)
 
 (def example-matcher {:username string?
                       :account  {:id        integer?
@@ -78,11 +81,6 @@
           :in-wrong-place))
     (testing "fails with a nice message when you provide too many arguments"
       (is (thrown-match? ExceptionInfo {:a 1} (bang!) :extra-arg)))))
-
-(defn greater-than-matcher [expected-long]
-  (core/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
 
 (deftest match-with-test
   (is (match-with? {java.lang.Long greater-than-matcher}

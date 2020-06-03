@@ -40,7 +40,7 @@
        (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)]
          (t/do-report
-           (if (core/match? result#)
+           (if (core/indicates-match? result#)
              {:type     :pass
               :message  ~msg
               :expected '~form
@@ -87,7 +87,7 @@
           (catch ~klass e#
             (let [result# (core/match ~matcher (ex-data e#))]
               (t/do-report
-               (if (core/match? result#)
+               (if (core/indicates-match? result#)
                  {:type     :pass
                   :message  ~msg
                   :expected '~form

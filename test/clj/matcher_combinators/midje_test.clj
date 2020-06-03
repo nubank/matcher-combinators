@@ -6,6 +6,7 @@
             [matcher-combinators.midje :refer [match throws-match match-with match-roughly match-equals]]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
+            [matcher-combinators.test-helpers :refer [greater-than-matcher]]
             [orchestra.spec.test :as spec.test]
             [midje.emission.api :as emission])
   (:import [clojure.lang ExceptionInfo]))
@@ -298,10 +299,10 @@
 (def match-abs (match-with {java.lang.Long ->AbsValue}))
 
 (facts "match-with checker behavior"
-  (core/match? (core/match -1 1)) => false
+  (core/indicates-match? (core/match -1 1)) => false
 
   (fact "low-level invocation"
-    (core/match?
+    (core/indicates-match?
      (dispatch/wrap-match-with
       {java.lang.Long ->AbsValue}
       (core/match -1 1)))
@@ -337,11 +338,6 @@
                                    {:a 1 :b 3.0})
   {:a 1 :b 3.05} =not=> (match-roughly 0.001
                                        {:a 1 :b 3.0}))
-
-(defn greater-than-matcher [expected-long]
-  (matcher-combinators.core/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
 
 (fact "example from docstring"
   5 => (match-with {java.lang.Long greater-than-matcher}

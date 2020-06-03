@@ -1,5 +1,5 @@
 (ns matcher-combinators.matchers-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]
@@ -7,8 +7,11 @@
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
             [matcher-combinators.test]
-            [matcher-combinators.result :as result])
+            [matcher-combinators.result :as result]
+            [matcher-combinators.test-helpers :as test-helpers :refer [greater-than-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
+
+(use-fixtures :once test-helpers/instrument)
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
@@ -238,11 +241,6 @@
                     gen/any)]
                 (= (class (m/equals v))
                    (class (m/matcher-for v)))))
-
-(defn greater-than-matcher [expected-long]
-  (c/->PredMatcher
-   (fn [actual] (> actual expected-long))
-   (str "greater than " expected-long)))
 
 (deftest matcher-for-works-within-match-with
   (is (match-with? {java.lang.Long greater-than-matcher}

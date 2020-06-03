@@ -49,7 +49,7 @@
 
        (core/matcher? matcher#)
        (let [result# (core/match matcher# actual#)
-             match?# (core/match? result#)]
+             match?# (core/indicates-match? result#)]
          (clojure.test/do-report
           (if match?#
             {:type     :pass
@@ -89,7 +89,7 @@
         (core/matcher? ~matcher)
         (let [result# (core/match ~matcher ~actual)]
           (clojure.test/do-report
-           (if (core/match? result#)
+           (if (core/indicates-match? result#)
              {:type     :pass
               :message  ~msg
               :expected '~form
@@ -137,7 +137,7 @@
             (catch ~klass e#
               (let [result# (core/match ~matcher (ex-data e#))]
                 (clojure.test/do-report
-                 (if (core/match? result#)
+                 (if (core/indicates-match? result#)
                    {:type     :pass
                     :message  ~msg
                     :expected '~form
@@ -190,7 +190,7 @@
           (core/matcher? matcher#)
           (let [result# (core/match matcher# actual#)]
             (clojure.test/do-report
-              (if (core/match? result#)
+              (if (core/indicates-match? result#)
                 {:type     :pass
                  :message  ~msg
                  :expected '~form
