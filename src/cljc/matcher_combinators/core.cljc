@@ -346,6 +346,12 @@
       issue
       (match-any-order expected actual false))))
 
+(defn- matchable-set?
+  "Clojure's set functions expect clojure.lang.IPersistentSet, but
+  matching works just fine with java.util.Set as well."
+  [s]
+  (or (set? s) (instance? java.util.Set s)))
+
 (defrecord SetEquals [expected accept-seq?]
   Matcher
   (-matcher-for [this] this)
@@ -353,24 +359,24 @@
     (if-let [issue (if accept-seq?
                      (validate-input expected
                                      actual
-                                     #(or (set? %) (sequential? %))
-                                     set?
+                                     #(or (matchable-set? %) (sequential? %))
+                                     matchable-set?
                                      'set-equals
                                      "set or sequential")
                      (validate-input expected
                                      actual
-                                     (fn [s] (or (set? s) (instance? java.util.Set s)))
+                                     matchable-set?
                                      'equals
                                      "set"))]
       issue
       (let [{::result/keys [type value weight]} (match-any-order
-                                                  (vec expected) (vec actual) false)]
+                                                 (vec expected) (vec actual) false)]
         {::result/type   type
          ::result/value  (set value)
          ::result/weight weight}))))
 
 (defrecord Prefix [expected]
-  Matcher
+n  Matcher
   (-matcher-for [this] this)
   (-match [_this actual]
     (if-let [issue (validate-input
@@ -394,13 +400,13 @@
     (if-let [issue (if accept-seq?
                      (validate-input expected
                                      actual
-                                     #(or (set? %) (sequential? %))
-                                     set?
+                                     #(or (matchable-set? %) (sequential? %))
+                                     matchable-set?
                                      'set-embeds
                                      "set or sequential")
                      (validate-input expected
                                      actual
-                                     set?
+                                     matchable-set?
                                      'embeds
                                      "set"))]
       issue

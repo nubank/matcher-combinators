@@ -18,14 +18,16 @@
     (is (= :match    (:match/result (standalone/match 37 37))))
     (is (= :match    (:match/result (standalone/match {:a odd?} {:a 1 :b 2}))))
     (is (= :mismatch (:match/result (standalone/match 37 42))))
-    (is (= :mismatch (:match/result (standalone/match {:a odd?} {:a 2 :b 2})))))
+    (is (= :mismatch (:match/result (standalone/match {:a odd?} {:a 2 :b 2}))))
+    (is (= :match (:match/result (standalone/match #{1 2} java-set))))
+    (is (= :match (:match/result (standalone/match java-set #{1 2})))))
 
   (testing "explicit matchers"
     (is (= :match    (:match/result (standalone/match (m/embeds {:a odd?}) {:a 1 :b 2}))))
     (is (= :match    (:match/result (standalone/match (m/in-any-order [1 2]) [1 2]))))
     (is (= :mismatch (:match/result (standalone/match (m/in-any-order [1 2]) [1 3]))))
-    (is (= :match (:match/result (standalone/match #{1 2} java-set))))
-    (is (= :match (:match/result (standalone/match java-set #{1 2})))))
+    (is (= :match (:match/result (standalone/match (m/set-equals [odd? even?]) java-set))))
+    (is (= :match (:match/result (standalone/match (m/set-embeds [odd? even?]) java-set)))))
 
   ;; TODO (dchelimsky,2020-03-11): consider making it a plain datastructure
   (testing ":match/detail binds to a Mismatch object"
