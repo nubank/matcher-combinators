@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [2.1.0]
+
+- extend `Matcher` protocol to `Symbol` in cljs [#131](https://github.com/nubank/matcher-combinators/pull/131)
+
 ## [2.0.0]
 
 - add `matchers/matcher-for` [#123](https://github.com/nubank/matcher-combinators/pull/123)
