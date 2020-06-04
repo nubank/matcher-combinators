@@ -41,6 +41,10 @@
   (-match [this actual]
     (core/match (dispatch/keyword-dispatch this) actual))
 
+  Symbol
+  (-match [this actual]
+    (core/match (dispatch/symbol-dispatch this) actual))
+
   UUID
   (-match [this actual]
     (core/match (dispatch/uuid-dispatch this) actual))

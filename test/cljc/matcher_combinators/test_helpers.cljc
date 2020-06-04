@@ -1,6 +1,7 @@
 (ns matcher-combinators.test-helpers
   (:require [clojure.test.check.generators :as gen]
-            [orchestra.spec.test :as spec.test]
+            #?(:cljc [clojure.spec.test.alpha :as spec.test]
+               :clj  [orchestra.spec.test :as spec.test])
             [matcher-combinators.core :as core]))
 
 (defn instrument
