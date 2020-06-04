@@ -13,9 +13,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Install dependencies
       run: lein deps
+
+    - name: Run midje tests
+      run: lein midje
+
     - name: Run clj tests
       run: lein test
+
     - name: Run cljs tests
       run: lein test-node
