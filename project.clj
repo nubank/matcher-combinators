@@ -19,8 +19,8 @@
                  [org.clojure/math.combinatorics "0.1.6"]
                  [midje "1.9.9" :exclusions [org.clojure/clojure]]]
 
-  :test-paths ["test/clj"]
-  :source-paths ["src/cljc" "src/cljs" "src/clj"]
+  :source-paths ["src/clj" "src/cljc"]
+  :test-paths   ["test/clj" "test/cljc"]
 
   :profiles {:dev {:plugins [[lein-project-version "0.1.0"]
                              [lein-midje "3.2.1"]
@@ -44,14 +44,14 @@
             "test-node" ["doo" "node" "node-test" "once"]}
   ;; Below, :process-shim false is workaround for <https://github.com/bensu/doo/pull/141>
   :cljsbuild {:builds [{:id "test"
-                        :source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
+                        :source-paths ["src/cljs" "test/cljs"]
                         :compiler {:output-to "target/out/test.js"
                                    :output-dir "target/out"
                                    :main matcher-combinators.doo-runner
                                    :optimizations :none
                                    :process-shim false}}
                        {:id "advanced-test"
-                        :source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
+                        :source-paths ["src/cljs" "test/cljs"]
                         :compiler {:output-to "target/advanced_out/test.js"
                                    :output-dir "target/advanced_out"
                                    :main matcher-combinator.doo-runner
@@ -60,7 +60,7 @@
                        ;; Node.js requires :target :nodejs, hence the separate
                        ;; build configuration.
                        {:id "node-test"
-                        :source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
+                        :source-paths ["src/cljs" "test/cljs"]
                         :compiler {:output-to "target/node_out/test.js"
                                    :output-dir "target/node_out"
                                    :main matcher-combinators.doo-runner

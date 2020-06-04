@@ -1,65 +1,43 @@
 (ns matcher-combinators.cljs-example-test
   (:require [clojure.test :refer [deftest testing is are]]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [matcher-combinators.standalone :as standalone]
             [matcher-combinators.parser]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
-            [matcher-combinators.test])
+            [matcher-combinators.test]
+            [matcher-combinators.test-helpers :as helpers])
   (:import [goog.Uri]))
 
-(def now-date (js/Date.))
-(def now-time (.getTime now-date))
-(def a-var (var now-time))
-(def uri (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento"))
+(def gen-any-equatable
+  ;; TODO: (dchelimsky,2020-06-04) replace helpers/gen-any-equatable
+  ;; with gen/any-equatable when
+  ;; https://github.com/nubank/matcher-combinators/issues/124 is fixed.
+  (gen/one-of [helpers/gen-any-equatable
+               (gen/return (js/Date.))
+               (gen/return (var identity))
+               (gen/return (.getTime (js/Date.)))
+               (gen/return (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento"))]))
 
-(deftest basic-examples
-  (testing "does it work?"
-    (is (match? "foo" "foo"))
-    (is (match? 3 3))
-    (is (match? nil nil))
-    (is (match? :foo :foo))
-    (is (match? a-var
-                a-var))
-    (is (match? 0.1 0.1))
-    (is (match? (uuid "00000000-0000-0000-0000-000000000000")
-                (uuid "00000000-0000-0000-0000-000000000000")))
-    (is (match? uri
-                uri))
-    (is (match? (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento")
-                (goog.Uri.parse "http://www.google.com:80/path?q=query#frag\nmento")))
-    (is (match? now-date
-                now-date))
-    (is (match? now-time
-                now-time))
-    (is (match? true true))
-    (is (match? even? 2))
-    (is (match? (cons 1 '())
-                (list 1)))
-    (is (match? [1]
-                [1]))
-    (is (match? #{:k}
-                #{:k}))
-    (is (match? (repeat 1 1)
-                [1]))
-    (is (match? (take 1 '(1))
-                [1]))
-    (is (match? {:foo even?}
-                {:foo 2
-                 :bar 3}))
-    (is (match? {:foo even?
-                 :baz m/absent}
-                {:foo 2
-                 :bar 3}))
-    (is (match? {:one #"1"}
-                {:one "1"}))))
+(defspec equals-matcher-matches-when-values-are-equal
+  {:max-size 10}
+  (prop/for-all [v gen-any-equatable]
+                (standalone/match? (m/equals v) v)))
 
-(deftest standalone
-  (is (standalone/match? (m/in-any-order [1 2]) [1 2]))
-  (is (not (standalone/match? (m/in-any-order [1 2]) [1 3]))))
+(defspec equals-matcher-matches-equal-values-with-partial-application
+  {:max-size 10}
+  (prop/for-all [v gen-any-equatable]
+                ((standalone/match? (m/equals v)) v)))
 
-(deftest partial-standalone
-  (testing "using partial version of match?"
-    (is ((standalone/match? (m/embeds {:a odd?})) {:a 1 :b 2}))))
+(deftest standalone-match?
+  (testing "with expected and actual"
+    (is (standalone/match? (m/in-any-order [1 2]) [1 2]))
+    (is (not (standalone/match? (m/in-any-order [1 2]) [1 3]))))
+  (testing "with partial application"
+    (let [match-fn (standalone/match? (m/embeds {:a odd?}))]
+      (is (match-fn {:a 1 :b 2})))))
 
 (defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
 

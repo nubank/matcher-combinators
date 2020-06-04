@@ -21,8 +21,8 @@
       (assoc :mismatch/detail value))))
 
 (s/fdef match?
-  :args (s/alt :partial (s/cat :matcher (partial satisfies? core/Matcher))
-               :full    (s/cat :matcher (partial satisfies? core/Matcher)
+  :args (s/alt :partial (s/cat :matcher (fn [matcher] (satisfies? core/Matcher matcher)))
+               :full    (s/cat :matcher (fn [matcher] (satisfies? core/Matcher matcher))
                                :actual any?))
   :ret (s/or :partial fn?
              :full boolean?))
