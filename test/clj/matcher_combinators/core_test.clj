@@ -83,6 +83,21 @@
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
 
+(deftest false-check-for-sets
+  (testing "gracefully handle matching `false` values"
+    (is (= (match false false)
+           {::result/type   :match
+            ::result/value  false
+            ::result/weight 0}))
+    (is (= (match (in-any-order [false]) [false])
+           {::result/type   :match
+            ::result/value  [false]
+            ::result/weight 0}))
+    (is (= (match #{false} #{false})
+           {::result/type   :match
+            ::result/value  #{false}
+            ::result/weight 0}))))
+
 (spec.test/instrument)
 
 (facts "on sequence matchers"

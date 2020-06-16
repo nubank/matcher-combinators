@@ -297,7 +297,7 @@
          :elements  (concat (map second matching) elements)
          :matched   (map first matching)}
         (recur unmatched-rest
-               (utils/remove-first #{matching-elem} elements)
+               (utils/remove-first #(= matching-elem %) elements)
                subset?
                (conj matching [matcher matching-elem]))))))
 
