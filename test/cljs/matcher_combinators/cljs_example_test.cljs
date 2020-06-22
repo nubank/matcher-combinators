@@ -12,10 +12,7 @@
   (:import [goog.Uri]))
 
 (def gen-any-equatable
-  ;; TODO: (dchelimsky,2020-06-04) replace helpers/gen-any-equatable
-  ;; with gen/any-equatable when
-  ;; https://github.com/nubank/matcher-combinators/issues/124 is fixed.
-  (gen/one-of [helpers/gen-any-equatable
+  (gen/one-of [gen/any-equatable
                (gen/return (js/Date.))
                (gen/return (var identity))
                (gen/return (.getTime (js/Date.)))

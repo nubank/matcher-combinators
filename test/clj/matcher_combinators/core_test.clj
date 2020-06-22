@@ -15,13 +15,13 @@
             [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.parser]
             [matcher-combinators.standalone :as standalone]
-            [matcher-combinators.test-helpers :as test-helpers :refer [gen-any-equatable]]))
+            [matcher-combinators.test-helpers :as test-helpers]))
 
 (use-fixtures :once test-helpers/instrument)
 
 (defspec equals-matcher-matches-when-values-are-equal
   {:max-size 10}
-  (prop/for-all [v gen-any-equatable]
+  (prop/for-all [v gen/any-equatable]
                 (standalone/match? (matchers/equals v) v)))
 
 (defspec equals-matcher-mismatches-when-scalar-values-are-not-equal
@@ -75,13 +75,28 @@
 (defspec map-matchers-mismatch-any-non-map-value
   {:max-size 10}
   (prop/for-all [m        (gen/elements [matchers/equals matchers/embeds])
-                 expected (gen/map gen/keyword gen-any-equatable)
-                 actual   (gen/such-that (comp not map?) gen-any-equatable)]
+                 expected (gen/map gen/keyword gen/any-equatable)
+                 actual   (gen/such-that (comp not map?) gen/any-equatable)]
                 (let [res (core/match (m expected) actual)]
                   (standalone/match?
                    {::result/type  :mismatch
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
+
+(deftest false-check-for-sets
+  (testing "gracefully handle matching `false` values"
+    (is (= (match false false)
+           {::result/type   :match
+            ::result/value  false
+            ::result/weight 0}))
+    (is (= (match (in-any-order [false]) [false])
+           {::result/type   :match
+            ::result/value  [false]
+            ::result/weight 0}))
+    (is (= (match #{false} #{false})
+           {::result/type   :match
+            ::result/value  #{false}
+            ::result/weight 0}))))
 
 (spec.test/instrument)
 
