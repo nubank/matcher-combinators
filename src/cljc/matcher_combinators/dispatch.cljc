@@ -4,8 +4,7 @@
   this namespace, which provide a layer of indirection between `match`
   and the specific matcher implementation for each type. This indirection allows
   for redefinition at runtime, necessary for the `match-with` feature."
-  (:require [matcher-combinators.matchers :as matchers]
-            [matcher-combinators.core :as core])
+  (:require [matcher-combinators.matchers :as matchers])
   #?(:clj
      (:import [clojure.lang Keyword Symbol Ratio BigInt IPersistentMap
                IPersistentVector IPersistentList IPersistentSet
@@ -13,9 +12,6 @@
               [java.util UUID Date]
               [java.util.regex Pattern]
               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
-
-(defn- cljs-uri [expected]
-  (core/->CljsUriEquals expected))
 
 ;; equals base types
 (defn nil-dispatch [expected] (matchers/equals expected))
@@ -33,7 +29,7 @@
 (defn uuid-dispatch [expected] (matchers/equals expected))
 (defn uri-dispatch [expected]
   #?(:clj  (matchers/equals expected)
-     :cljs (cljs-uri expected)))
+     :cljs (matchers/cljs-uri expected)))
 (defn date-dispatch [expected] (matchers/equals expected))
 (defn local-date-dispatch [expected] (matchers/equals expected))
 (defn local-date-time-dispatch [expected] (matchers/equals expected))

@@ -77,3 +77,6 @@
   to a value."
   [expected]
   (core/-matcher-for expected))
+
+#?(:cljs (defn- cljs-uri [expected]
+           (core/->CljsUriEquals expected)))
