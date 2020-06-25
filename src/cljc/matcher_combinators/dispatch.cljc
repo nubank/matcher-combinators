@@ -65,61 +65,49 @@
 
 (def type->dispatch
   #?(:cljs {}
-     :clj {nil                            #'nil-dispatch
-           java.lang.Class                #'class-dispatch
-           Object                         #'object-dispatch
-           java.lang.Integer              #'integer-dispatch
-           java.lang.Short                #'short-dispatch
-           java.lang.Long                 #'long-dispatch
-           java.lang.Float                #'float-dispatch
-           java.lang.Double               #'double-dispatch
-           java.lang.String               #'string-dispatch
-           clojure.lang.Symbol            #'symbol-dispatch
-           clojure.lang.Keyword           #'keyword-dispatch
-           java.lang.Boolean              #'boolean-dispatch
-           java.util.UUID                 #'uuid-dispatch
-           java.util.Date                 #'date-dispatch
-           java.time.LocalDate            #'local-date-dispatch
-           java.time.LocalDateTime        #'local-date-time-dispatch
-           java.time.LocalTime            #'local-time-dispatch
-           java.time.YearMonth            #'year-month-dispatch
-           clojure.lang.Ratio             #'ratio-dispatch
-           java.math.BigDecimal           #'big-decimal-dispatch
-           java.math.BigInteger           #'big-integer-dispatch
-           clojure.lang.BigInt            #'big-int-dispatch
-           java.lang.Character            #'character-dispatch
-           clojure.lang.Var               #'var-dispatch
+     :clj {'nil                                      'matcher-combinators.dispatch/nil-dispatch
+           'java.lang.Class                          'matcher-combinators.dispatch/class-dispatch
+           'Object                                   'matcher-combinators.dispatch/object-dispatch
+           'java.lang.Integer                        'matcher-combinators.dispatch/integer-dispatch
+           'java.lang.Short                          'matcher-combinators.dispatch/short-dispatch
+           'java.lang.Long                           'matcher-combinators.dispatch/long-dispatch
+           'java.lang.Float                          'matcher-combinators.dispatch/float-dispatch
+           'java.lang.Double                         'matcher-combinators.dispatch/double-dispatch
+           'java.lang.String                         'matcher-combinators.dispatch/string-dispatch
+           'clojure.lang.Symbol                      'matcher-combinators.dispatch/symbol-dispatch
+           'clojure.lang.Keyword                     'matcher-combinators.dispatch/keyword-dispatch
+           'java.lang.Boolean                        'matcher-combinators.dispatch/boolean-dispatch
+           'java.util.UUID                           'matcher-combinators.dispatch/uuid-dispatch
+           'java.util.Date                           'matcher-combinators.dispatch/date-dispatch
+           'java.time.LocalDate                      'matcher-combinators.dispatch/local-date-dispatch
+           'java.time.LocalDateTime                  'matcher-combinators.dispatch/local-date-time-dispatch
+           'java.time.LocalTime                      'matcher-combinators.dispatch/local-time-dispatch
+           'java.time.YearMonth                      'matcher-combinators.dispatch/year-month-dispatch
+           'clojure.lang.Ratio                       'matcher-combinators.dispatch/ratio-dispatch
+           'java.math.BigDecimal                     'matcher-combinators.dispatch/big-decimal-dispatch
+           'java.math.BigInteger                     'matcher-combinators.dispatch/big-integer-dispatch
+           'clojure.lang.BigInt                      'matcher-combinators.dispatch/big-int-dispatch
+           'java.lang.Character                      'matcher-combinators.dispatch/character-dispatch
+           'clojure.lang.Var                         'matcher-combinators.dispatch/var-dispatch
 
-           clojure.lang.IPersistentMap              #'i-persistent-map-dispatch
-           clojure.lang.IPersistentVector           #'i-persistent-vector-dispatch
-           clojure.lang.PersistentVector$ChunkedSeq #'chunked-seq-dispatch
-           clojure.lang.IPersistentList             #'i-persistent-list-dispatch
-           clojure.lang.IPersistentSet              #'i-persistent-list-dispatch
-           clojure.lang.Cons                        #'cons-dispatch
-           clojure.lang.Repeat                      #'repeat-dispatch
-           clojure.lang.LazySeq                     #'lazy-seq-dispatch
-           clojure.lang.ArraySeq                    #'array-seq-dispatch
-           java.util.regex.Pattern                  #'pattern-dispatch}))
-
-(def type-symbol->dispatch
-  (->> type->dispatch
-       (map (fn [[k v]] [(-> k pr-str symbol) v]))
-       (into {})))
-
-(defn var->qualified-ref [datatype]
-  (symbol (str
-            (-> type-symbol->dispatch datatype meta :ns ns-name)
-            "/"
-            (-> type-symbol->dispatch datatype meta :name))))
+           'clojure.lang.IPersistentMap              'matcher-combinators.dispatch/i-persistent-map-dispatch
+           'clojure.lang.IPersistentVector           'matcher-combinators.dispatch/i-persistent-vector-dispatch
+           'clojure.lang.PersistentVector$ChunkedSeq 'matcher-combinators.dispatch/chunked-seq-dispatch
+           'clojure.lang.IPersistentList             'matcher-combinators.dispatch/i-persistent-list-dispatch
+           'clojure.lang.IPersistentSet              'matcher-combinators.dispatch/i-persistent-list-dispatch
+           'clojure.lang.Cons                        'matcher-combinators.dispatch/cons-dispatch
+           'clojure.lang.Repeat                      'matcher-combinators.dispatch/repeat-dispatch
+           'clojure.lang.LazySeq                     'matcher-combinators.dispatch/lazy-seq-dispatch
+           'clojure.lang.ArraySeq                    'matcher-combinators.dispatch/array-seq-dispatch
+           'java.util.regex.Pattern                  'matcher-combinators.dispatch/pattern-dispatch}))
 
 (defn match-with-inner [type->default-matcher body]
   (when-not (map? type->default-matcher)
-    (throw (ex-info "Override argument to `wrap-match-with` must be a base map value"
+    (throw (ex-info "First argument to `match-with` must be a map"
                     {:expected-type 'map
                      :provided-type (type type->default-matcher)})))
-  (let [dispatch-vars+matcher-targets (mapcat
-                                        (fn [[k v]] [(var->qualified-ref k) v])
-                                        type->default-matcher)]
+  (let [dispatch-vars+matcher-targets (mapcat (fn [[k v]] [(type->dispatch k) v])
+                                              type->default-matcher)]
     `(with-redefs [~@dispatch-vars+matcher-targets]
       ~body)))
 
