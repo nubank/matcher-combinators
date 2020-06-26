@@ -61,7 +61,7 @@
 
 (def type->dispatch
   #?(:cljs {}
-     :clj {'nil                                      'matcher-combinators.dispatch/nil-dispatch
+     :clj {nil                                       'matcher-combinators.dispatch/nil-dispatch
            'java.lang.Class                          'matcher-combinators.dispatch/class-dispatch
            'Object                                   'matcher-combinators.dispatch/object-dispatch
            'java.lang.Integer                        'matcher-combinators.dispatch/integer-dispatch
@@ -109,3 +109,9 @@
 
 (defmacro wrap-match-with [type->default-matcher body]
   (match-with-inner type->default-matcher body))
+
+(defn lookup-matcher [t-sym t->m]
+  (let [k (if (class? t-sym)
+            (symbol (.getName t-sym))
+            t-sym)]
+    (resolve (get (merge type->dispatch t->m) k))))

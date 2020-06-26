@@ -89,17 +89,25 @@
   `(extend-protocol
     core/Matcher
      ~@(mapcat (fn [t] `(~t
-                         (~'-matcher-for [this#]
-                          (~matcher-builder this#))
+                         (~'-matcher-for
+                          ([this#]
+                           (~matcher-builder this#))
+                          ([this# t->m#]
+                           (let [m# (dispatch/lookup-matcher (symbol (.getName ~t)) t->m#)]
+                             (m# this#))))
                          (~'-match [this# actual#]
-                           (core/match (~matcher-builder this#) actual#)))) types)))
+                          (core/match (~matcher-builder this#) actual#))))
+         types)))
 
 (defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
   (let [type-pairs (->> type-strings
                         (map symbol)
                         (mapcat (fn [t] `(~t
-                                          (~'-matcher-for [this#]
-                                           (~matcher-builder this#))
+                                          (~'-matcher-for
+                                           ([this#] (~matcher-builder this#))
+                                           ([this# t->m#]
+                                            (let [m# (dispatch/lookup-matcher (symbol (.getName ~t)) t->m#)]
+                                              (m# this#))))
                                           (~'-match [this# actual#]
                                             (core/match (~matcher-builder this#) actual#))))))]
     `(extend-protocol core/Matcher ~@type-pairs)))
@@ -109,7 +117,11 @@
 
 (extend-type clojure.lang.Fn
   core/Matcher
-  (-matcher-for [this] (dispatch/function-dispatch this))
+  (-matcher-for
+    ([this] (dispatch/function-dispatch this))
+    ([this t->m]
+     (let [m (dispatch/lookup-matcher 'clojure.lang.Fn t->m)]
+       (m this))))
   (-match [this actual]
     (core/match (dispatch/function-dispatch this) actual)))
 

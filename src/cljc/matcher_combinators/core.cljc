@@ -8,7 +8,9 @@
 (defprotocol Matcher
   "For internal use. Type-specific implementations for finding matchers for
   expected values and matching them against expected values."
-  (-matcher-for [expected]
+  (-matcher-for
+    [expected]
+    [expected t->m]
     "Do not call directly. Implementation for matcher-combinators.matchers/matcher-for.")
   (-match [this actual]
     "Do not call directly. Implementation for matcher-combinators.core/match."))
@@ -62,6 +64,7 @@
 (defrecord Value [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_ actual]
     (value-match expected actual)))
 
@@ -103,6 +106,7 @@
 (defrecord Regex [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input expected actual regex? (constantly true) 'regex regex-type)]
       issue
@@ -125,6 +129,7 @@
 (defrecord Absent []
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this _actual]
     ;; `Absent` should never be matched against directly. That happening means
     ;; it wasn't used in the context of a map
@@ -136,6 +141,7 @@
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this _actual]
     {::result/type  :mismatch
      ::result/value (model/->InvalidMatcherType
@@ -186,6 +192,7 @@
 (defrecord EmbedsMap [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input expected actual map? 'embeds "map")]
       issue
@@ -194,6 +201,7 @@
 (defrecord EqualsMap [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input expected actual map? 'equals "map")]
       issue
@@ -202,6 +210,7 @@
 (defrecord EqualsRecord [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input expected actual record? map? 'equals "record")]
       issue
@@ -220,6 +229,7 @@
 (def ^:private unexpected-matcher
   (reify Matcher
     (-matcher-for [this] this)
+    (-matcher-for [this _] this)
     (-match [_this actual]
       {::result/type   :mismatch
        ::result/value  (model/->Unexpected actual)
@@ -264,6 +274,7 @@
 (defrecord EqualsSeq [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input
                     expected actual sequential? 'equals "sequential")]
@@ -348,6 +359,7 @@
 (defrecord InAnyOrder [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input
                     expected actual sequential? 'in-any-order "sequential")]
@@ -364,6 +376,7 @@
 (defrecord SetEquals [expected accept-seq?]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (if accept-seq?
                      (validate-input expected
@@ -387,6 +400,7 @@
 (defrecord Prefix [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input
                     expected actual sequential? 'prefix "sequential")]
@@ -396,6 +410,7 @@
 (defrecord EmbedsSeq [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input
                     expected actual sequential? 'embeds "sequential")]
@@ -405,6 +420,7 @@
 (defrecord SetEmbeds [expected accept-seq?]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (if accept-seq?
                      (validate-input expected
@@ -428,6 +444,7 @@
 (defrecord PredMatcher [pred desc]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [this actual]
     (cond
       (= actual ::missing)
@@ -448,6 +465,7 @@
 (defrecord CljsUriEquals [expected]
   Matcher
   (-matcher-for [this] this)
+  (-matcher-for [this _] this)
   (-match [_this actual]
     (if-let [issue (validate-input
                     expected actual uri? 'equals "goog.Uri")]
