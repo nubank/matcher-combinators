@@ -219,17 +219,6 @@
                    ::result/weight 1}
                   (c/match (m/equals a) b))))))
 
-(deftest matcher-for-special-cases
-  (testing "matcher for a fn is a fn"
-    (is (= (class (m/pred (fn [])))
-           (class (m/matcher-for (fn []))))))
-  (testing "matcher for a map is embeds"
-    (is (= (class (m/embeds {}))
-           (class (m/matcher-for {})))))
-  (testing "matcher for a regex"
-    (is (= (class (m/regex #"abc"))
-           (class (m/matcher-for #"abc"))))))
-
 (defspec matcher-for-most-cases
   {:doc "matchers/equals is the default matcher for everything but functions, regexen, and maps."
    :num-tests 1000
@@ -240,9 +229,73 @@
                                  (not (fn? v))))
                     gen/any)]
                 (= (class (m/equals v))
-                   (class (m/matcher-for v)))))
+                   (class (m/matcher-for v))
+                   (class (m/matcher-for v {})))))
+
+(deftest matcher-for-special-cases
+  (testing "matcher for a fn is pred"
+    (is (= (class (m/pred (fn [])))
+           (class (m/matcher-for (fn []))))))
+  (testing "matcher for a map is embeds"
+    (is (= (class (m/embeds {}))
+           (class (m/matcher-for {})))))
+  (testing "matcher for a regex"
+    (is (= (class (m/regex #"abc"))
+           (class (m/matcher-for #"abc"))))))
 
 (deftest matcher-for-works-within-match-with
   (is (match-with? {java.lang.Long greater-than-matcher}
                    (m/matcher-for 4)
                    5)))
+
+(defmacro no-match? [expected actual]
+  (not (c/indicates-match? (c/match expected actual))))
+
+(deftest match-with-matcher
+  (testing "maps"
+    (testing "passing case with equals override"
+      (is (match? (m/match-with `{clojure.lang.IPersistentMap m/equals}
+                                {:a :b})
+                  {:a :b})))
+    (testing "failing case with equals override"
+      (is (no-match? (m/match-with `{clojure.lang.IPersistentMap m/equals}
+                                   {:a :b})
+                     {:a :b :d :e})))
+    (testing "passing case multiple scopes"
+      (is (match?
+           {:o (m/match-with `{clojure.lang.IPersistentMap m/equals}
+                             {:a
+                              (m/match-with `{clojure.lang.IPersistentMap m/embeds}
+                                            {:b :c})})}
+           {:o {:a {:b :c :d :e}}
+            :p :q}))))
+
+  (testing "sets"
+    (testing "passing cases"
+      (is (match?
+           (m/match-with `{clojure.lang.IPersistentSet m/embeds}
+                         #{1})
+           #{1 2}))
+
+      (is (match?
+           (m/match-with `{clojure.lang.IPersistentSet m/embeds}
+                         #{odd?})
+           #{1 2}))))
+
+  (testing "multiple scopes"
+    (let [expected
+          {:a (m/match-with `{clojure.lang.IPersistentMap m/equals}
+                            {:b
+                             (m/match-with `{clojure.lang.IPersistentMap m/embeds
+                                            clojure.lang.IPersistentVector m/embeds}
+                                           {:c [odd? even?]})})}]
+      (is (match? expected {:a {:b {:c [1 2]}}}))
+      (is (match? expected {:a {:b {:c [1 2 3]}}}))
+      (is (match? expected {:a {:b {:c [1 2]}}
+                            :d :e}))
+      (is (match? expected {:a {:b {:c [1 2 3]
+                                    :d :e}}
+                            :f :g}))
+
+      (is (no-match? expected {:a {:b {:c [1 2]}
+                                   :d :e}})))))

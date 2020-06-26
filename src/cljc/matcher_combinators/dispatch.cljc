@@ -110,8 +110,15 @@
 (defmacro wrap-match-with [type->default-matcher body]
   (match-with-inner type->default-matcher body))
 
+(defn- symbolize [v]
+  (if (class? v)
+    (symbol (.getName v))
+    v))
+
 (defn lookup-matcher [t-sym t->m]
-  (let [k (if (class? t-sym)
-            (symbol (.getName t-sym))
-            t-sym)]
-    (resolve (get (merge type->dispatch t->m) k))))
+  (resolve (get (merge type->dispatch
+                       (reduce-kv
+                        (fn [m k v] (assoc m (symbolize k) v))
+                        {}
+                        t->m))
+                (symbolize t-sym))))

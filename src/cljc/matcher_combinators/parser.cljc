@@ -119,9 +119,7 @@
   core/Matcher
   (-matcher-for
     ([this] (dispatch/function-dispatch this))
-    ([this t->m]
-     (let [m (dispatch/lookup-matcher 'clojure.lang.Fn t->m)]
-       (m this))))
+    ([this t->m] (dispatch/function-dispatch this)))
   (-match [this actual]
     (core/match (dispatch/function-dispatch this) actual)))
 

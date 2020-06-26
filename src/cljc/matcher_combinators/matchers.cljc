@@ -75,8 +75,39 @@
   "Returns the type-specific matcher object for an expected value. This is
   useful for discovery when you want to know which Matcher type is associated
   to a value."
-  [expected]
-  (core/-matcher-for expected))
+  ([expected]
+   (core/-matcher-for expected))
+  ([expected overrides]
+   (core/-matcher-for expected overrides)))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
+
+
+(defn match-with [overrides value]
+  ;; TODO - matcher objects are records, so return true for map?
+  ;;      - this guards against re-wrapping matchers in other matchers
+  ;;      - ew!
+  ;;      - maybe add some identifying marking to matcher object metadata
+  ;;        or another protocol fn? Asking (matcher? value) won't do because
+  ;;        the answer is yes for all the types defined in parser (which should)
+  ;;        be all the types.
+  (cond (:matcher-object? (meta value))
+        value
+        (map? value)
+        (vary-meta
+         (matcher-for (reduce-kv (fn [m k v]
+                                   (assoc m k (match-with overrides v)))
+                                 {}
+                                 value)
+                      overrides)
+         assoc :matcher-object? true)
+        (coll? value)
+        (matcher-for (reduce (fn [c v]
+                               (conj c (match-with overrides v)))
+                             (empty value)
+                             value)
+                     overrides)
+
+        :else
+        (matcher-for value overrides)))

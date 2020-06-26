@@ -83,6 +83,21 @@
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
 
+(defspec matcher-for-arities
+  {:max-size 10}
+  (prop/for-all [v gen/any]
+                (= (core/-matcher-for v)
+                   (core/-matcher-for v {}))))
+
+(deftest matcher-for-with-overrides
+  (is (instance? matcher_combinators.core.EmbedsMap
+                 (core/-matcher-for {:this :map})))
+  (is (instance? matcher_combinators.core.EmbedsMap
+                 (core/-matcher-for {:this :map} {})))
+  (is (instance? matcher_combinators.core.EqualsMap
+                 (core/-matcher-for {:this :map}
+                                    {'clojure.lang.IPersistentMap `matchers/equals}))))
+
 (deftest false-check-for-sets
   (testing "gracefully handle matching `false` values"
     (is (= (match false false)
