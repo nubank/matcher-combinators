@@ -158,7 +158,7 @@
 (mimic-matcher dispatch/i-persistent-vector-dispatch IPersistentVector)
 (mimic-matcher dispatch/chunked-seq-dispatch PersistentVector$ChunkedSeq)
 (mimic-matcher dispatch/i-persistent-list-dispatch IPersistentList)
-(mimic-matcher dispatch/i-persistent-list-dispatch IPersistentSet)
+(mimic-matcher dispatch/i-persistent-set-dispatch IPersistentSet)
 (mimic-matcher dispatch/cons-dispatch Cons)
 (mimic-matcher dispatch/repeat-dispatch Repeat)
 (mimic-matcher dispatch/lazy-seq-dispatch LazySeq)

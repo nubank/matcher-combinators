@@ -90,7 +90,7 @@
            'clojure.lang.IPersistentVector           'matcher-combinators.dispatch/i-persistent-vector-dispatch
            'clojure.lang.PersistentVector$ChunkedSeq 'matcher-combinators.dispatch/chunked-seq-dispatch
            'clojure.lang.IPersistentList             'matcher-combinators.dispatch/i-persistent-list-dispatch
-           'clojure.lang.IPersistentSet              'matcher-combinators.dispatch/i-persistent-list-dispatch
+           'clojure.lang.IPersistentSet              'matcher-combinators.dispatch/i-persistent-set-dispatch
            'clojure.lang.Cons                        'matcher-combinators.dispatch/cons-dispatch
            'clojure.lang.Repeat                      'matcher-combinators.dispatch/repeat-dispatch
            'clojure.lang.LazySeq                     'matcher-combinators.dispatch/lazy-seq-dispatch
