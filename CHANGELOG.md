@@ -3,11 +3,13 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [2.2.0]
+- add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
+
 ## [2.1.1]
 - fix issue matching `false` in the context of sets [#124](https://github.com/nubank/matcher-combinators/issues/124)
 
 ## [2.1.0]
-
 - extend `Matcher` protocol to `Symbol` in cljs [#131](https://github.com/nubank/matcher-combinators/pull/131)
 
 ## [2.0.0]
