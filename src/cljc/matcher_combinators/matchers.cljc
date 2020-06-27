@@ -76,9 +76,13 @@
   useful for discovery when you want to know which Matcher type is associated
   to a value."
   ([expected]
-   (core/-matcher-for expected))
+   (vary-meta
+    (core/-matcher-for expected)
+    assoc :matcher-object? true))
   ([expected overrides]
-   (core/-matcher-for expected overrides)))
+   (vary-meta
+    (core/-matcher-for expected overrides)
+    assoc :matcher-object? true)))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
@@ -95,13 +99,11 @@
   (cond (:matcher-object? (meta value))
         value
         (map? value)
-        (vary-meta
-         (matcher-for (reduce-kv (fn [m k v]
-                                   (assoc m k (match-with overrides v)))
-                                 {}
-                                 value)
-                      overrides)
-         assoc :matcher-object? true)
+        (matcher-for (reduce-kv (fn [m k v]
+                                  (assoc m k (match-with overrides v)))
+                                {}
+                                value)
+                     overrides)
         (coll? value)
         (matcher-for (reduce (fn [c v]
                                (conj c (match-with overrides v)))

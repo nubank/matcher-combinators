@@ -76,37 +76,37 @@
         [type->matcher
          matcher
          actual]       args]
-    (dispatch/match-with-inner
-     type->matcher
-     `(cond
-        (not (= 3 (count '~args)))
-        (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
-          :actual   (symbol (str (count '~args) " were provided: " '~form))})
+    `(cond
+       (not (= 3 (count '~args)))
+       (clojure.test/do-report
+        {:type     :fail
+         :message  ~msg
+         :expected (symbol "`match-with?` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`")
+         :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
-        (core/matcher? ~matcher)
-        (let [result# (core/match ~matcher ~actual)]
-          (clojure.test/do-report
-           (if (core/indicates-match? result#)
-             {:type     :pass
-              :message  ~msg
-              :expected '~form
-              :actual   (list 'match? ~matcher ~actual)}
-             (with-file+line-info
-               {:type     :fail
-                :message  ~msg
-                :expected '~form
-                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
-                                                      result#)}))))
+       (core/matcher? ~matcher)
+       (let [result# (core/match
+                      (matchers/match-with ~type->matcher ~matcher)
+                      ~actual)]
+         (clojure.test/do-report
+          (if (core/indicates-match? result#)
+            {:type     :pass
+             :message  ~msg
+             :expected '~form
+             :actual   (list 'match? ~matcher ~actual)}
+            (with-file+line-info
+              {:type     :fail
+               :message  ~msg
+               :expected '~form
+               :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
+                                                     result#)}))))
 
-        :else
-        (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected (str "The second argument of match-with? needs to be a matcher (implement the match protocol)")
-          :actual   '~form})))))
+       :else
+       (clojure.test/do-report
+        {:type     :fail
+         :message  ~msg
+         :expected (str "The second argument of match-with? needs to be a matcher (implement the match protocol)")
+         :actual   '~form}))))
 
 (defmethod clojure.test/assert-expr 'thrown-match? [msg form]
   ;; 2-arity: (is (thrown-with-match? matcher expr))
@@ -170,44 +170,43 @@
     (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))`"
   [match-assert-name type->matcher msg form]
   (let [args             (rest form)
-        [matcher actual] args
-        ;; no idea why this is needed:
-        type->matcher'   (->> type->matcher
-                              (map (fn [[k v]] [(class->symbol k) v]))
-                              (into {}))]
-    (dispatch/match-with-inner
-     type->matcher'
-     `(let [matcher# ~matcher
-            actual# ~actual]
-        (cond
-          (not (= 2 (count '~args)))
-          (clojure.test/do-report
-            {:type     :fail
-             :message  ~msg
-             :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
-             :actual   (symbol (str (count '~args) " were provided: " '~form))})
+        [matcher actual] args]
+    `(let [matcher#       ~matcher
+           actual#        ~actual
+           type->matcher# ~type->matcher]
+       (cond
+         (not (= 2 (count '~args)))
+         (clojure.test/do-report
+          {:type     :fail
+           :message  ~msg
+           :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
+           :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
-          (core/matcher? matcher#)
-          (let [result# (core/match matcher# actual#)]
-            (clojure.test/do-report
-              (if (core/indicates-match? result#)
-                {:type     :pass
+         (core/matcher? matcher#)
+         (let [result# (core/match
+                        (matchers/match-with
+                         type->matcher#
+                         matcher#)
+                        actual#)]
+           (clojure.test/do-report
+            (if (core/indicates-match? result#)
+              {:type     :pass
+               :message  ~msg
+               :expected '~form
+               :actual   (list 'match? matcher# actual#)}
+              (with-file+line-info
+                {:type     :fail
                  :message  ~msg
                  :expected '~form
-                 :actual   (list 'match? matcher# actual#)}
-                (with-file+line-info
-                  {:type     :fail
-                   :message  ~msg
-                   :expected '~form
-                   :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
-                                                         result#)}))))
+                 :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
+                                                       result#)}))))
 
-          :else
-          (clojure.test/do-report
-            {:type     :fail
-             :message  ~msg
-             :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
-             :actual   '~form}))))))
+         :else
+         (clojure.test/do-report
+          {:type     :fail
+           :message  ~msg
+           :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
+           :actual   '~form})))))
 
 (defmethod clojure.test/assert-expr 'match-equals? [msg form]
   (build-match-assert 'match-equals?

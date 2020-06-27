@@ -61,64 +61,52 @@
 
 (def type->dispatch
   #?(:cljs {}
-     :clj {nil                                       'matcher-combinators.dispatch/nil-dispatch
-           'java.lang.Class                          'matcher-combinators.dispatch/class-dispatch
-           'Object                                   'matcher-combinators.dispatch/object-dispatch
-           'java.lang.Integer                        'matcher-combinators.dispatch/integer-dispatch
-           'java.lang.Short                          'matcher-combinators.dispatch/short-dispatch
-           'java.lang.Long                           'matcher-combinators.dispatch/long-dispatch
-           'java.lang.Float                          'matcher-combinators.dispatch/float-dispatch
-           'java.lang.Double                         'matcher-combinators.dispatch/double-dispatch
-           'java.lang.String                         'matcher-combinators.dispatch/string-dispatch
-           'clojure.lang.Symbol                      'matcher-combinators.dispatch/symbol-dispatch
-           'clojure.lang.Keyword                     'matcher-combinators.dispatch/keyword-dispatch
-           'java.lang.Boolean                        'matcher-combinators.dispatch/boolean-dispatch
-           'java.util.UUID                           'matcher-combinators.dispatch/uuid-dispatch
-           'java.util.Date                           'matcher-combinators.dispatch/date-dispatch
-           'java.time.LocalDate                      'matcher-combinators.dispatch/local-date-dispatch
-           'java.time.LocalDateTime                  'matcher-combinators.dispatch/local-date-time-dispatch
-           'java.time.LocalTime                      'matcher-combinators.dispatch/local-time-dispatch
-           'java.time.YearMonth                      'matcher-combinators.dispatch/year-month-dispatch
-           'clojure.lang.Ratio                       'matcher-combinators.dispatch/ratio-dispatch
-           'java.math.BigDecimal                     'matcher-combinators.dispatch/big-decimal-dispatch
-           'java.math.BigInteger                     'matcher-combinators.dispatch/big-integer-dispatch
-           'clojure.lang.BigInt                      'matcher-combinators.dispatch/big-int-dispatch
-           'java.lang.Character                      'matcher-combinators.dispatch/character-dispatch
-           'clojure.lang.Var                         'matcher-combinators.dispatch/var-dispatch
+     :clj {nil                                      matcher-combinators.dispatch/nil-dispatch
+           java.lang.Class                          matcher-combinators.dispatch/class-dispatch
+           Object                                   matcher-combinators.dispatch/object-dispatch
+           java.lang.Integer                        matcher-combinators.dispatch/integer-dispatch
+           java.lang.Short                          matcher-combinators.dispatch/short-dispatch
+           java.lang.Long                           matcher-combinators.dispatch/long-dispatch
+           java.lang.Float                          matcher-combinators.dispatch/float-dispatch
+           java.lang.Double                         matcher-combinators.dispatch/double-dispatch
+           java.lang.String                         matcher-combinators.dispatch/string-dispatch
+           clojure.lang.Symbol                      matcher-combinators.dispatch/symbol-dispatch
+           clojure.lang.Keyword                     matcher-combinators.dispatch/keyword-dispatch
+           java.lang.Boolean                        matcher-combinators.dispatch/boolean-dispatch
+           java.util.UUID                           matcher-combinators.dispatch/uuid-dispatch
+           java.util.Date                           matcher-combinators.dispatch/date-dispatch
+           java.time.LocalDate                      matcher-combinators.dispatch/local-date-dispatch
+           java.time.LocalDateTime                  matcher-combinators.dispatch/local-date-time-dispatch
+           java.time.LocalTime                      matcher-combinators.dispatch/local-time-dispatch
+           java.time.YearMonth                      matcher-combinators.dispatch/year-month-dispatch
+           clojure.lang.Ratio                       matcher-combinators.dispatch/ratio-dispatch
+           java.math.BigDecimal                     matcher-combinators.dispatch/big-decimal-dispatch
+           java.math.BigInteger                     matcher-combinators.dispatch/big-integer-dispatch
+           clojure.lang.BigInt                      matcher-combinators.dispatch/big-int-dispatch
+           java.lang.Character                      matcher-combinators.dispatch/character-dispatch
+           clojure.lang.Var                         matcher-combinators.dispatch/var-dispatch
 
-           'clojure.lang.IPersistentMap              'matcher-combinators.dispatch/i-persistent-map-dispatch
-           'clojure.lang.IPersistentVector           'matcher-combinators.dispatch/i-persistent-vector-dispatch
-           'clojure.lang.PersistentVector$ChunkedSeq 'matcher-combinators.dispatch/chunked-seq-dispatch
-           'clojure.lang.IPersistentList             'matcher-combinators.dispatch/i-persistent-list-dispatch
-           'clojure.lang.IPersistentSet              'matcher-combinators.dispatch/i-persistent-set-dispatch
-           'clojure.lang.Cons                        'matcher-combinators.dispatch/cons-dispatch
-           'clojure.lang.Repeat                      'matcher-combinators.dispatch/repeat-dispatch
-           'clojure.lang.LazySeq                     'matcher-combinators.dispatch/lazy-seq-dispatch
-           'clojure.lang.ArraySeq                    'matcher-combinators.dispatch/array-seq-dispatch
-           'java.util.regex.Pattern                  'matcher-combinators.dispatch/pattern-dispatch}))
+           clojure.lang.IPersistentMap              matcher-combinators.dispatch/i-persistent-map-dispatch
+           clojure.lang.IPersistentVector           matcher-combinators.dispatch/i-persistent-vector-dispatch
+           clojure.lang.PersistentVector$ChunkedSeq matcher-combinators.dispatch/chunked-seq-dispatch
+           clojure.lang.IPersistentList             matcher-combinators.dispatch/i-persistent-list-dispatch
+           clojure.lang.IPersistentSet              matcher-combinators.dispatch/i-persistent-set-dispatch
+           clojure.lang.Cons                        matcher-combinators.dispatch/cons-dispatch
+           clojure.lang.Repeat                      matcher-combinators.dispatch/repeat-dispatch
+           clojure.lang.LazySeq                     matcher-combinators.dispatch/lazy-seq-dispatch
+           clojure.lang.ArraySeq                    matcher-combinators.dispatch/array-seq-dispatch
+           java.util.regex.Pattern                  matcher-combinators.dispatch/pattern-dispatch}))
 
-(defn match-with-inner [type->default-matcher body]
-  (when-not (map? type->default-matcher)
-    (throw (ex-info "First argument to `match-with` must be a map"
-                    {:expected-type 'map
-                     :provided-type (type type->default-matcher)})))
-  (let [dispatch-vars+matcher-targets (mapcat (fn [[k v]] [(type->dispatch k) v])
-                                              type->default-matcher)]
-    `(with-redefs [~@dispatch-vars+matcher-targets]
-      ~body)))
-
-(defmacro wrap-match-with [type->default-matcher body]
-  (match-with-inner type->default-matcher body))
-
-(defn- symbolize [v]
-  (if (class? v)
-    (symbol (.getName v))
-    v))
+(defn- ensure-resolved [o]
+  (cond (map? o) (reduce-kv (fn [m k v] (assoc m (ensure-resolved k) (ensure-resolved v)))
+                            {}
+                            o)
+        (symbol? o)
+        (resolve o)
+        :else
+        o))
 
 (defn lookup-matcher [t-sym t->m]
-  (resolve (get (merge type->dispatch
-                       (reduce-kv
-                        (fn [m k v] (assoc m (symbolize k) v))
-                        {}
-                        t->m))
-                (symbolize t-sym))))
+  (let [f (get (merge type->dispatch (ensure-resolved t->m))
+               (ensure-resolved t-sym))]
+    (ensure-resolved f)))
