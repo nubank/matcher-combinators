@@ -2,8 +2,7 @@
   "Integration with clojure.test or cljs.test (depending on which platform
   you're running on)."
   (:require
-    [matcher-combinators.dispatch]
-    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
+   #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
        :clj  [clojure.test :as t :refer        [is are deftest testing]])
     #?(:cljs [matcher-combinators.cljs-test]
        :clj  [matcher-combinators.clj-test])))

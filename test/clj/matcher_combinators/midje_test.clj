@@ -1,7 +1,6 @@
 (ns matcher-combinators.midje-test
   (:require [midje.sweet :as midje :refer [fact facts => falsey]]
             [matcher-combinators.core :as core]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.midje :refer [match throws-match match-with match-roughly match-equals]]
             [matcher-combinators.model :as model]

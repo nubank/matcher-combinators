@@ -2,7 +2,6 @@
   "Internal use. Require `matcher-combinators.test` instead of this
   namespace."
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]

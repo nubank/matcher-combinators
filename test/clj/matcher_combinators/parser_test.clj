@@ -132,7 +132,7 @@
 (deftest mimic-matcher-macro
   (testing "mimic-matcher uses non-namespaced symbol for `-matcher-for`"
     (is (= '-matcher-for
-           (->> (macroexpand `(parser/mimic-matcher dispatch/integer-dispatch Integer))
+           (->> (macroexpand `(parser/mimic-matcher matchers/equals Integer))
                 last
                 butlast
                 last
@@ -140,7 +140,7 @@
   ;; this is a regression test for https://github.com/nubank/matcher-combinators/pull/104
   (testing "mimic-matcher uses non-namespaced symbol for `-match`"
     (is (= '-match
-           (-> (macroexpand `(parser/mimic-matcher dispatch/integer-dispatch Integer))
+           (-> (macroexpand `(parser/mimic-matcher matchers/equals Integer))
                last
                last
                first)))))

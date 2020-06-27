@@ -4,7 +4,6 @@
   #?(:cljs
      (:require-macros [matcher-combinators.cljs-test]))
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]

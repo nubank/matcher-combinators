@@ -1,6 +1,5 @@
 (ns matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]

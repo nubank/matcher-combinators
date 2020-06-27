@@ -71,10 +71,19 @@
   [pred]
   (core/->PredMatcher pred (str "predicate: " pred)))
 
+#?(:cljs (defn- cljs-uri [expected]
+           (core/->CljsUriEquals expected)))
+
 (defn matcher-for
-  "Returns the type-specific matcher object for an expected value. This is
-  useful for discovery when you want to know which Matcher type is associated
-  to a value."
+  "Returns the type-specific matcher object for an expected
+  value. This is used internally to support the match-with matcher,
+  and is also useful for discovery when you want to know which Matcher
+  type is associated to a value.
+
+  Adds :matcher-object? metadata to the returned matcher so that
+  other functions can differentiate between matcher objects and
+  objects that happen to implement the Matcher protocol (which should
+  be all other objects)."
   ([expected]
    (vary-meta
     (core/-matcher-for expected)
@@ -84,18 +93,7 @@
     (core/-matcher-for expected overrides)
     assoc :matcher-object? true)))
 
-#?(:cljs (defn- cljs-uri [expected]
-           (core/->CljsUriEquals expected)))
-
-
 (defn match-with [overrides value]
-  ;; TODO - matcher objects are records, so return true for map?
-  ;;      - this guards against re-wrapping matchers in other matchers
-  ;;      - ew!
-  ;;      - maybe add some identifying marking to matcher object metadata
-  ;;        or another protocol fn? Asking (matcher? value) won't do because
-  ;;        the answer is yes for all the types defined in parser (which should)
-  ;;        be all the types.
   (cond (:matcher-object? (meta value))
         value
         (map? value)
@@ -113,3 +111,17 @@
 
         :else
         (matcher-for value overrides)))
+
+(def type->matcher-defaults
+  #?(:cljs {}
+     :clj {clojure.lang.IPersistentMap embeds
+           java.util.regex.Pattern     regex}))
+
+(defn lookup-matcher
+  "Internal use only. Merges type->matcher-overrides into
+  type->matcher-defaults and uses type to lookup a matcher in the
+  resulting map. If none is found, returns the equals matcher."
+  [type type->matcher-overrides]
+  (get (merge type->matcher-defaults type->matcher-overrides)
+       type
+       equals))

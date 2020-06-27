@@ -1,6 +1,5 @@
 (ns matcher-combinators.parser
   (:require [matcher-combinators.core :as core]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.matchers :as matchers])
   #?(:cljs (:import goog.Uri)
      :clj  (:import [clojure.lang ArraySeq Keyword Symbol Ratio BigInt IPersistentMap
@@ -18,71 +17,71 @@
   ;; function as predicate
   function
   (-match [this actual]
-    (core/match (dispatch/function-dispatch this) actual))
+    (core/match (matchers/pred this) actual))
 
   ;; equals base types
   nil
   (-match [this actual]
-    (core/match (dispatch/nil-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   number
   (-match [this actual]
-    (core/match (dispatch/integer-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   string
   (-match [this actual]
-    (core/match (dispatch/string-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   boolean
   (-match [this actual]
-    (core/match (dispatch/boolean-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   Keyword
   (-match [this actual]
-    (core/match (dispatch/keyword-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   Symbol
   (-match [this actual]
-    (core/match (dispatch/symbol-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   UUID
   (-match [this actual]
-    (core/match (dispatch/uuid-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   goog.Uri
   (-match [this actual]
-    (core/match (dispatch/uri-dispatch this) actual))
+    (core/match (matchers/cljs-uri this) actual))
 
   js/Date
   (-match [this actual]
-    (core/match (dispatch/date-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   Var
   (-match [this actual]
-    (core/match (dispatch/var-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   ;; equals nested types
   Cons
   (-match [this actual]
-    (core/match (dispatch/cons-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   Repeat
   (-match [this actual]
-    (core/match (dispatch/repeat-dispatch this) actual))
+    (core/match (matchers/equals this) actual))
 
   default
   (-match [this actual]
     (cond
       (satisfies? IMap this)
-      (core/match (dispatch/i-persistent-map-dispatch this) actual)
+      (core/match (matchers/embeds this) actual)
 
       (or (satisfies? ISet this)
           (satisfies? ISequential this))
-      (core/match (dispatch/i-persistent-vector-dispatch this) actual)))
+      (core/match (matchers/equals this) actual)))
 
   js/RegExp
   (-match [this actual]
-    (core/match (dispatch/pattern-dispatch this) actual))))
+    (core/match (matchers/regex this) actual))))
 
 #?(:clj (do
 (defmacro mimic-matcher [matcher-builder & types]
@@ -93,7 +92,7 @@
                           ([this#]
                            (~matcher-builder this#))
                           ([this# t->m#]
-                           (let [m# (dispatch/lookup-matcher (symbol (.getName ~t)) t->m#)]
+                           (let [m# (matchers/lookup-matcher ~t t->m#)]
                              (m# this#))))
                          (~'-match [this# actual#]
                           (core/match (~matcher-builder this#) actual#))))
@@ -106,7 +105,7 @@
                                           (~'-matcher-for
                                            ([this#] (~matcher-builder this#))
                                            ([this# t->m#]
-                                            (let [m# (dispatch/lookup-matcher (symbol (.getName ~t)) t->m#)]
+                                            (let [m# (matchers/lookup-matcher ~t t->m#)]
                                               (m# this#))))
                                           (~'-match [this# actual#]
                                             (core/match (~matcher-builder this#) actual#))))))]
@@ -118,46 +117,46 @@
 (extend-type clojure.lang.Fn
   core/Matcher
   (-matcher-for
-    ([this] (dispatch/function-dispatch this))
-    ([this t->m] (dispatch/function-dispatch this)))
+    ([this] (matchers/pred this))
+    ([this t->m] (matchers/pred this)))
   (-match [this actual]
-    (core/match (dispatch/function-dispatch this) actual)))
+    (core/match (matchers/pred this) actual)))
 
 ;; scalars
-(mimic-matcher dispatch/object-dispatch Object)
-(mimic-matcher dispatch/class-dispatch java.lang.Class)
-(mimic-matcher dispatch/nil-dispatch nil)
-(mimic-matcher dispatch/integer-dispatch Integer)
-(mimic-matcher dispatch/short-dispatch Short)
-(mimic-matcher dispatch/long-dispatch Long)
-(mimic-matcher dispatch/float-dispatch Float)
-(mimic-matcher dispatch/double-dispatch Double)
-(mimic-matcher dispatch/string-dispatch String)
-(mimic-matcher dispatch/symbol-dispatch Symbol)
-(mimic-matcher dispatch/keyword-dispatch Keyword)
-(mimic-matcher dispatch/boolean-dispatch Boolean)
-(mimic-matcher dispatch/uuid-dispatch UUID)
-(mimic-matcher dispatch/uri-dispatch URI)
-(mimic-matcher dispatch/date-dispatch Date)
-(mimic-matcher dispatch/local-date-dispatch LocalDate)
-(mimic-matcher dispatch/local-date-time-dispatch LocalDateTime)
-(mimic-matcher dispatch/local-time-dispatch LocalTime)
-(mimic-matcher dispatch/year-month-dispatch YearMonth)
-(mimic-matcher dispatch/ratio-dispatch Ratio)
-(mimic-matcher dispatch/big-decimal-dispatch BigDecimal)
-(mimic-matcher dispatch/big-integer-dispatch BigInteger)
-(mimic-matcher dispatch/big-int-dispatch BigInt)
-(mimic-matcher dispatch/character-dispatch Character)
-(mimic-matcher dispatch/var-dispatch Var)
-(mimic-matcher dispatch/pattern-dispatch Pattern)
+(mimic-matcher matchers/equals Object)
+(mimic-matcher matchers/equals java.lang.Class)
+(mimic-matcher matchers/equals nil)
+(mimic-matcher matchers/equals Integer)
+(mimic-matcher matchers/equals Short)
+(mimic-matcher matchers/equals Long)
+(mimic-matcher matchers/equals Float)
+(mimic-matcher matchers/equals Double)
+(mimic-matcher matchers/equals String)
+(mimic-matcher matchers/equals Symbol)
+(mimic-matcher matchers/equals Keyword)
+(mimic-matcher matchers/equals Boolean)
+(mimic-matcher matchers/equals UUID)
+(mimic-matcher matchers/equals URI)
+(mimic-matcher matchers/equals Date)
+(mimic-matcher matchers/equals LocalDate)
+(mimic-matcher matchers/equals LocalDateTime)
+(mimic-matcher matchers/equals LocalTime)
+(mimic-matcher matchers/equals YearMonth)
+(mimic-matcher matchers/equals Ratio)
+(mimic-matcher matchers/equals BigDecimal)
+(mimic-matcher matchers/equals BigInteger)
+(mimic-matcher matchers/equals BigInt)
+(mimic-matcher matchers/equals Character)
+(mimic-matcher matchers/equals Var)
+(mimic-matcher matchers/regex Pattern)
 
 ;; collections
-(mimic-matcher dispatch/i-persistent-map-dispatch IPersistentMap)
-(mimic-matcher dispatch/i-persistent-vector-dispatch IPersistentVector)
-(mimic-matcher dispatch/chunked-seq-dispatch PersistentVector$ChunkedSeq)
-(mimic-matcher dispatch/i-persistent-list-dispatch IPersistentList)
-(mimic-matcher dispatch/i-persistent-set-dispatch IPersistentSet)
-(mimic-matcher dispatch/cons-dispatch Cons)
-(mimic-matcher dispatch/repeat-dispatch Repeat)
-(mimic-matcher dispatch/lazy-seq-dispatch LazySeq)
-(mimic-matcher dispatch/array-seq-dispatch ArraySeq)))
+(mimic-matcher matchers/embeds IPersistentMap)
+(mimic-matcher matchers/equals IPersistentVector)
+(mimic-matcher matchers/equals PersistentVector$ChunkedSeq)
+(mimic-matcher matchers/equals IPersistentList)
+(mimic-matcher matchers/equals IPersistentSet)
+(mimic-matcher matchers/equals Cons)
+(mimic-matcher matchers/equals Repeat)
+(mimic-matcher matchers/equals LazySeq)
+(mimic-matcher matchers/equals ArraySeq)))

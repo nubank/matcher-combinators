@@ -12,7 +12,6 @@
             [matcher-combinators.matchers :as matchers :refer :all]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.parser]
             [matcher-combinators.standalone :as standalone]
             [matcher-combinators.test-helpers :as test-helpers]))
@@ -96,7 +95,7 @@
                  (core/-matcher-for {:this :map} {})))
   (is (instance? matcher_combinators.core.EqualsMap
                  (core/-matcher-for {:this :map}
-                                    {'clojure.lang.IPersistentMap `matchers/equals}))))
+                                    {clojure.lang.IPersistentMap matchers/equals}))))
 
 (deftest false-check-for-sets
   (testing "gracefully handle matching `false` values"
