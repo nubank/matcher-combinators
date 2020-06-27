@@ -291,6 +291,26 @@
       (is (match? expected {:a {:b {:c [1 2 3]
                                     :d :e}}
                             :f :g}))
-
       (is (no-match? expected {:a {:b {:c [1 2]}
-                                   :d :e}})))))
+                                   :d :e}}))))
+
+  (testing "nested explicit matchers override the match-with matcher specified"
+    (let [actual {:a {:b {:c 1}
+                      :d {:e {:inner-e {:x 1 :y 2}}
+                          :f 5
+                          :g 17}}}]
+      (is (no-match?
+           (m/match-with {clojure.lang.IPersistentMap m/equals}
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e {:x 1}}})}})
+           actual))
+      (is (match?
+           (m/match-with {clojure.lang.IPersistentMap m/equals}
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e (m/embeds {:x 1 :y 2})}})}})
+           actual))
+      (is (match?
+           (m/match-with {clojure.lang.IPersistentMap m/equals}
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
+           actual)))))

@@ -305,7 +305,18 @@
     -1 => (match-with {java.lang.Long ->AbsValue} 1))
   (fact "binding 1-arg match-with to new checker"
     1 => (match-abs -1)
-    -1 => (match-abs 1)))
+    -1 => (match-abs 1))
+  (let [payload {:a {:b {:c 1}
+                     :d {:e {:inner-e {:x 1 :y 2}}
+                         :f 5
+                         :g 17}}}]
+    (fact "nested maps inside of an `embeds` of a match-equals are treated as equals"
+          payload
+          =not=> (match-equals {:a {:b {:c 1}
+                                    :d (m/embeds {:e {:inner-e {:x 1}}})}})
+          payload
+          => (match-equals {:a {:b {:c 1}
+                                :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}}))))
 
 (facts "match-equals"
   (fact "normal loose matching passes"

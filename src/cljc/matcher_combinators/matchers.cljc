@@ -85,32 +85,54 @@
   objects that happen to implement the Matcher protocol (which should
   be all other objects)."
   ([expected]
-   (vary-meta
-    (core/-matcher-for expected)
-    assoc :matcher-object? true))
+   (core/-matcher-for expected))
   ([expected overrides]
-   (vary-meta
-    (core/-matcher-for expected overrides)
-    assoc :matcher-object? true)))
+   (core/-matcher-for expected overrides)))
+
+(declare match-with)
+
+(defn- match-with-values [m overrides]
+  (reduce-kv (fn [m* k v]
+               (assoc m* k (match-with overrides v)))
+             {}
+             m))
+
+(defn- match-with-elements [coll overrides]
+  (reduce (fn [c v]
+            (conj c (match-with overrides v)))
+          (empty coll)
+          coll))
 
 (defn match-with [overrides value]
-  (cond (:matcher-object? (meta value))
-        value
-        (map? value)
-        (matcher-for (reduce-kv (fn [m k v]
-                                  (assoc m k (match-with overrides v)))
-                                {}
-                                value)
-                     overrides)
-        (coll? value)
-        (matcher-for (reduce (fn [c v]
-                               (conj c (match-with overrides v)))
-                             (empty value)
-                             value)
-                     overrides)
+  (vary-meta
+   (cond (:match-with? (meta value))
+         value
 
-        :else
-        (matcher-for value overrides)))
+         (fn? value)
+         value
+
+         ;; TODO: all of the built in matchers are records, but users
+         ;; define matchers by reifying the Matcher protocol, so this
+         ;; would break down. Also, what if a user's domain includes a
+         ;; record with an `:expected` key? Ideally, we should have
+         ;; some other marker to identify a matcher object, and document
+         ;; it in terms of "your custom Matcher implementations must do
+         ;; x in order to particpate in match-with"
+         (and (record? value) (map? (:expected value)))
+         (update value :expected match-with-values overrides)
+
+         (and (record? value) (coll? (:expected value)))
+         (update value :expected match-with-elements overrides)
+
+         (map? value)
+         (matcher-for (match-with-values value overrides) overrides)
+
+         (coll? value)
+         (matcher-for (match-with-elements value overrides) overrides)
+
+         :else
+         (matcher-for value overrides))
+   assoc :match-with? true))
 
 (def type->matcher-defaults
   #?(:cljs {}
