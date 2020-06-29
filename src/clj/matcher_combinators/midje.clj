@@ -131,7 +131,7 @@
 
 (def match-equals
   "match but using strict `equals` matching behavior for maps, even nested ones."
-  (match-with [int? matchers/equals]))
+  (match-with [map? matchers/equals]))
 
 (def match-roughly
   "match where all numbers match if they are within the delta of their expected value"
