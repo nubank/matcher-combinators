@@ -10,7 +10,11 @@ change log follows the conventions of
 
 ``` clojure
 ;; this means now you can do this
-(match-with? {map? matchers/equals} ...)
+(match-with? [map? matchers/equals] ...)
+
+;; .. which also supports precedence of overlapping predicates, e.g.
+(match-with? [odd? equals
+             [pos? (roughly 0.1)] ,,,)
 
 ;; instead of this (though this is still supported)
 (match-with? {clojure.lang.IPersistentMap matchers/equals} ...)
