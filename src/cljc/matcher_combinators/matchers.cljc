@@ -126,11 +126,24 @@
           (empty coll)
           coll))
 
-(defn match-with [overrides value]
+(defn match-with
+  "Given a vector (or map) of overrides, returns the appropriate matcher
+  for value (with value wrapped). If no matcher for value is found in
+  overrides, uses the default:
+    embeds for maps
+    regex  for regular expressions
+    equals for everything else
+
+  If value is a collection, recursively applies match-with to its nested
+  values, ignoring nested values that are already wrapped in matchers "
+  [overrides value]
+
   (vary-meta
-   (cond (:match-with? (meta value))
+         ;; don't re-wrap a value we've already wrapped
+   (cond (::match-with? (meta value))
          value
 
+         ;; functions are special because they get treated as predicates
          (fn? value)
          value
 
@@ -157,4 +170,4 @@
 
          :else
          ((matcher-for value overrides) value))
-   assoc :match-with? true))
+   assoc ::match-with? true))
