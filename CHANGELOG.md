@@ -5,6 +5,16 @@ change log follows the conventions of
 
 ## [2.2.0]
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
+  - also reimplemented match-with?, match-roughly? etc in terms of match-with
+  - the overrides map now supports predicates as keys:
+
+``` clojure
+;; this means now you can do this
+(match-with? {map? matchers/equals} ...)
+
+;; instead of this (though this is still supported)
+(match-with? {clojure.lang.IPersistentMap matchers/equals} ...)
+```
 
 ## [2.1.1]
 - fix issue matching `false` in the context of sets [#124](https://github.com/nubank/matcher-combinators/issues/124)
