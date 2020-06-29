@@ -84,36 +84,6 @@
     (core/match (matchers/regex this) actual))))
 
 #?(:clj (do
-(defmacro mimic-matcher [matcher-builder & types]
-  `(extend-protocol
-    core/Matcher
-     ~@(mapcat (fn [t] `(~t
-                         (~'-matcher-for
-                          ([this#]
-                           (~matcher-builder this#))
-                          ([this# t->m#]
-                           (let [m# (matchers/lookup-matcher ~t t->m#)]
-                             (m# this#))))
-                         (~'-match [this# actual#]
-                          (core/match (~matcher-builder this#) actual#))))
-         types)))
-
-(defmacro mimic-matcher-java-primitives [matcher-builder & type-strings]
-  (let [type-pairs (->> type-strings
-                        (map symbol)
-                        (mapcat (fn [t] `(~t
-                                          (~'-matcher-for
-                                           ([this#] (~matcher-builder this#))
-                                           ([this# t->m#]
-                                            (let [m# (matchers/lookup-matcher ~t t->m#)]
-                                              (m# this#))))
-                                          (~'-match [this# actual#]
-                                            (core/match (~matcher-builder this#) actual#))))))]
-    `(extend-protocol core/Matcher ~@type-pairs)))
-
-(mimic-matcher-java-primitives matchers/equals
-                               "[B")
-
 (extend-type clojure.lang.Fn
   core/Matcher
   (-matcher-for
@@ -121,6 +91,23 @@
     ([this t->m] (matchers/pred this)))
   (-match [this actual]
     (core/match (matchers/pred this) actual)))
+
+(defmacro mimic-matcher [matcher t]
+  `(extend-type ~(if (string? t)
+                   (symbol t)  ;; java primitives
+                   t)          ;; everything else
+     core/Matcher
+     (~'-matcher-for
+      ([this#]
+       (~matcher this#))
+      ([this# t->m#]
+       (let [m# (matchers/lookup-matcher ~t t->m#)]
+         (m# this#))))
+     (~'-match [this# actual#]
+      (core/match (~matcher this#) actual#))))
+
+;; java primitives
+(mimic-matcher matchers/equals "[B")
 
 ;; scalars
 (mimic-matcher matchers/equals Object)
