@@ -83,11 +83,8 @@
   `(extend-type ~t
      core/Matcher
      (~'-matcher-for
-      ([this#]
-       (~matcher this#))
-      ([this# t->m#]
-       (let [m# (matchers/lookup-matcher this# t->m#)]
-         (m# this#))))
+      ([this#] ~matcher)
+      ([this# t->m#] (matchers/lookup-matcher this# t->m#)))
      (~'-match [this# actual#]
       (core/match (~matcher this#) actual#))))
 

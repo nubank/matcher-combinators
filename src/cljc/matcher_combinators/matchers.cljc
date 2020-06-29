@@ -89,18 +89,6 @@
   ([expected overrides]
    (core/-matcher-for expected overrides)))
 
-(def ^:private pred->matcher-defaults
-  #?(:cljs {}
-     :clj {map?                                        embeds
-           (partial instance? java.util.regex.Pattern) regex}))
-
-(defn- lookup-default-matcher [value]
-  (or (->> pred->matcher-defaults
-        (filter (fn [[pred matcher]] (when (pred value) matcher)))
-        first
-        last)
-      equals))
-
 (defn- ->pred [class-or-pred]
   (if (class? class-or-pred)
     (partial instance? class-or-pred)
@@ -124,19 +112,17 @@
            (filter (fn [[class-or-pred matcher]] (when ((->pred class-or-pred) value) matcher)))
            first
            last)
-      (lookup-default-matcher value)))
+      (matcher-for value)))
 
 (declare match-with)
 
 (defn- match-with-values [m overrides]
-  (reduce-kv (fn [m* k v]
-               (assoc m* k (match-with overrides v)))
+  (reduce-kv (fn [m* k v] (assoc m* k (match-with overrides v)))
              {}
              m))
 
 (defn- match-with-elements [coll overrides]
-  (reduce (fn [c v]
-            (conj c (match-with overrides v)))
+  (reduce (fn [c v] (conj c (match-with overrides v)))
           (empty coll)
           coll))
 
@@ -162,11 +148,13 @@
          (update value :expected match-with-elements overrides)
 
          (map? value)
-         (matcher-for (match-with-values value overrides) overrides)
+         ((matcher-for value overrides)
+          (match-with-values value overrides))
 
          (coll? value)
-         (matcher-for (match-with-elements value overrides) overrides)
+         ((matcher-for value overrides)
+          (match-with-elements value overrides))
 
          :else
-         (matcher-for value overrides))
+         ((matcher-for value overrides) value))
    assoc :match-with? true))

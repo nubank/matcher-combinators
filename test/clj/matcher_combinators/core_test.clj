@@ -89,17 +89,15 @@
                    (core/-matcher-for v {}))))
 
 (deftest matcher-for-with-overrides
-  (is (instance? matcher_combinators.core.EmbedsMap
-                 (core/-matcher-for {:this :map})))
-  (is (instance? matcher_combinators.core.EmbedsMap
-                 (core/-matcher-for {:this :map} {})))
-  (is (instance? matcher_combinators.core.EqualsMap
-                 (core/-matcher-for {:this :map}
-                                    {map? matchers/equals})))
+  (is (= matchers/embeds
+         (core/-matcher-for {:this :map})))
+  (is (= matchers/embeds
+         (core/-matcher-for {:this :map} [])))
+  (is (= matchers/equals
+         (core/-matcher-for {:this :map} [map? matchers/equals])))
   (testing "legacy API using type instead of predicate"
-    (is (instance? matcher_combinators.core.EqualsMap
-                   (core/-matcher-for {:this :map}
-                                      {clojure.lang.IPersistentMap matchers/equals})))))
+    (is (= matchers/equals (core/-matcher-for {:this :map}
+                                              {clojure.lang.IPersistentMap matchers/equals})))))
 
 (deftest false-check-for-sets
   (testing "gracefully handle matching `false` values"

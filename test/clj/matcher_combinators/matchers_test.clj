@@ -228,20 +228,20 @@
                                  (not (instance? java.util.regex.Pattern v))
                                  (not (fn? v))))
                     gen/any)]
-                (= (class (m/equals v))
-                   (class (m/matcher-for v))
-                   (class (m/matcher-for v {})))))
+                (= m/equals
+                   (m/matcher-for v)
+                   (m/matcher-for v {}))))
 
 (deftest matcher-for-special-cases
   (testing "matcher for a fn is pred"
     (is (= (class (m/pred (fn [])))
            (class (m/matcher-for (fn []))))))
   (testing "matcher for a map is embeds"
-    (is (= (class (m/embeds {}))
-           (class (m/matcher-for {})))))
+    (is (= m/embeds
+           (m/matcher-for {}))))
   (testing "matcher for a regex"
-    (is (= (class (m/regex #"abc"))
-           (class (m/matcher-for #"abc"))))))
+    (is (= m/regex
+           (m/matcher-for #"abc")))))
 
 (defn no-match? [expected actual]
   (not (c/indicates-match? (c/match expected actual))))
