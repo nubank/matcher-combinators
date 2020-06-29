@@ -2,13 +2,8 @@
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers])
   #?(:cljs (:import goog.Uri)
-     :clj  (:import [clojure.lang ArraySeq Keyword Symbol Ratio BigInt IPersistentMap
-                PersistentVector$ChunkedSeq IPersistentVector IPersistentList IPersistentSet
-                LazySeq Repeat Cons Var]
-               [java.net URI]
-               [java.util UUID Date]
-               [java.util.regex Pattern]
-               [java.time LocalDate LocalDateTime LocalTime YearMonth])))
+     :clj  (:import (clojure.lang IPersistentMap)
+                    (java.util.regex Pattern))))
 
 #?(:cljs
 (extend-protocol
@@ -84,66 +79,35 @@
     (core/match (matchers/regex this) actual))))
 
 #?(:clj (do
+(defmacro mimic-matcher [matcher t]
+  `(extend-type ~t
+     core/Matcher
+     (~'-matcher-for
+      ([this#]
+       (~matcher this#))
+      ([this# t->m#]
+       (let [m# (matchers/lookup-matcher this# t->m#)]
+         (m# this#))))
+     (~'-match [this# actual#]
+      (core/match (~matcher this#) actual#))))
+
+;; default for most objects
+(mimic-matcher matchers/equals Object)
+
+;; nil is a special case
+(mimic-matcher matchers/equals nil)
+
+;; regex
+(mimic-matcher matchers/regex Pattern)
+
+;; collections
+(mimic-matcher matchers/embeds IPersistentMap)
+
+;; functions are special, too
 (extend-type clojure.lang.Fn
   core/Matcher
   (-matcher-for
     ([this] (matchers/pred this))
     ([this t->m] (matchers/pred this)))
   (-match [this actual]
-    (core/match (matchers/pred this) actual)))
-
-(defmacro mimic-matcher [matcher t]
-  `(extend-type ~(if (string? t)
-                   (symbol t)  ;; java primitives
-                   t)          ;; everything else
-     core/Matcher
-     (~'-matcher-for
-      ([this#]
-       (~matcher this#))
-      ([this# t->m#]
-       (let [m# (matchers/lookup-matcher ~t t->m#)]
-         (m# this#))))
-     (~'-match [this# actual#]
-      (core/match (~matcher this#) actual#))))
-
-;; java primitives
-(mimic-matcher matchers/equals "[B")
-
-;; scalars
-(mimic-matcher matchers/equals Object)
-(mimic-matcher matchers/equals java.lang.Class)
-(mimic-matcher matchers/equals nil)
-(mimic-matcher matchers/equals Integer)
-(mimic-matcher matchers/equals Short)
-(mimic-matcher matchers/equals Long)
-(mimic-matcher matchers/equals Float)
-(mimic-matcher matchers/equals Double)
-(mimic-matcher matchers/equals String)
-(mimic-matcher matchers/equals Symbol)
-(mimic-matcher matchers/equals Keyword)
-(mimic-matcher matchers/equals Boolean)
-(mimic-matcher matchers/equals UUID)
-(mimic-matcher matchers/equals URI)
-(mimic-matcher matchers/equals Date)
-(mimic-matcher matchers/equals LocalDate)
-(mimic-matcher matchers/equals LocalDateTime)
-(mimic-matcher matchers/equals LocalTime)
-(mimic-matcher matchers/equals YearMonth)
-(mimic-matcher matchers/equals Ratio)
-(mimic-matcher matchers/equals BigDecimal)
-(mimic-matcher matchers/equals BigInteger)
-(mimic-matcher matchers/equals BigInt)
-(mimic-matcher matchers/equals Character)
-(mimic-matcher matchers/equals Var)
-(mimic-matcher matchers/regex Pattern)
-
-;; collections
-(mimic-matcher matchers/embeds IPersistentMap)
-(mimic-matcher matchers/equals IPersistentVector)
-(mimic-matcher matchers/equals PersistentVector$ChunkedSeq)
-(mimic-matcher matchers/equals IPersistentList)
-(mimic-matcher matchers/equals IPersistentSet)
-(mimic-matcher matchers/equals Cons)
-(mimic-matcher matchers/equals Repeat)
-(mimic-matcher matchers/equals LazySeq)
-(mimic-matcher matchers/equals ArraySeq)))
+    (core/match (matchers/pred this) actual)))))

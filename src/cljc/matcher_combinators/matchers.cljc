@@ -89,6 +89,38 @@
   ([expected overrides]
    (core/-matcher-for expected overrides)))
 
+(def ^:private pred->matcher-defaults
+  #?(:cljs {}
+     :clj {map?                                        embeds
+           (partial instance? java.util.regex.Pattern) regex}))
+
+(defn- lookup-default-matcher [value]
+  (or (->> pred->matcher-defaults
+        (filter (fn [[pred matcher]] (when (pred value) matcher)))
+        first
+        last)
+      equals))
+
+(defn- ->pred [class-or-pred]
+  (if (class? class-or-pred)
+    (partial instance? class-or-pred)
+    class-or-pred))
+
+(defn lookup-matcher
+  "Internal use only. Iterates through pred->matcher-overrides and
+  returns the value (a matcher) bound to the first pred that returns
+  true for value. If no override is found, returns the default matcher
+  for value.
+
+  The legacy API called for a map of type->matcher, which is still
+  supported by wrapping types in (instance? type %) predicates."
+  [value pred->matcher-overrides]
+  (or (->> pred->matcher-overrides
+           (filter (fn [[class-or-pred matcher]] (when ((->pred class-or-pred) value) matcher)))
+           first
+           last)
+      (lookup-default-matcher value)))
+
 (declare match-with)
 
 (defn- match-with-values [m overrides]
@@ -133,17 +165,3 @@
          :else
          (matcher-for value overrides))
    assoc :match-with? true))
-
-(def type->matcher-defaults
-  #?(:cljs {}
-     :clj {clojure.lang.IPersistentMap embeds
-           java.util.regex.Pattern     regex}))
-
-(defn lookup-matcher
-  "Internal use only. Merges type->matcher-overrides into
-  type->matcher-defaults and uses type to lookup a matcher in the
-  resulting map. If none is found, returns the equals matcher."
-  [type type->matcher-overrides]
-  (get (merge type->matcher-defaults type->matcher-overrides)
-       type
-       equals))

@@ -249,18 +249,22 @@
 (deftest match-with-matcher
   (testing "maps"
     (testing "passing case with equals override"
-      (is (match? (m/match-with {clojure.lang.IPersistentMap m/equals}
+      (is (match? (m/match-with {map? m/equals}
                                 {:a :b})
-                  {:a :b})))
+                  {:a :b}))
+      (testing "legacy API support (using type instead of predicate)"
+        (is (match? (m/match-with {clojure.lang.IPersistentMap m/equals}
+                                  {:a :b})
+                    {:a :b}))))
     (testing "failing case with equals override"
-      (is (no-match? (m/match-with {clojure.lang.IPersistentMap m/equals}
+      (is (no-match? (m/match-with {map? m/equals}
                                    {:a :b})
                      {:a :b :d :e})))
     (testing "passing case multiple scopes"
       (is (match?
-           {:o (m/match-with {clojure.lang.IPersistentMap m/equals}
+           {:o (m/match-with {map? m/equals}
                              {:a
-                              (m/match-with {clojure.lang.IPersistentMap m/embeds}
+                              (m/match-with {map? m/embeds}
                                             {:b :c})})}
            {:o {:a {:b :c :d :e}}
             :p :q}))))
@@ -268,21 +272,21 @@
   (testing "sets"
     (testing "passing cases"
       (is (match?
-           (m/match-with {clojure.lang.IPersistentSet m/embeds}
+           (m/match-with {set? m/embeds}
                          #{1})
            #{1 2}))
 
       (is (match?
-           (m/match-with {clojure.lang.IPersistentSet m/embeds}
+           (m/match-with {set? m/embeds}
                          #{odd?})
            #{1 2}))))
 
   (testing "multiple scopes"
     (let [expected
-          {:a (m/match-with {clojure.lang.IPersistentMap m/equals}
+          {:a (m/match-with {map? m/equals}
                             {:b
-                             (m/match-with {clojure.lang.IPersistentMap m/embeds
-                                            clojure.lang.IPersistentVector m/embeds}
+                             (m/match-with {map? m/embeds
+                                            vector? m/embeds}
                                            {:c [odd? even?]})})}]
       (is (match? expected {:a {:b {:c [1 2]}}}))
       (is (match? expected {:a {:b {:c [1 2 3]}}}))
@@ -300,17 +304,17 @@
                           :f 5
                           :g 17}}}]
       (is (no-match?
-           (m/match-with {clojure.lang.IPersistentMap m/equals}
+           (m/match-with {map? m/equals}
                          {:a {:b {:c 1}
                               :d (m/embeds {:e {:inner-e {:x 1}}})}})
            actual))
       (is (match?
-           (m/match-with {clojure.lang.IPersistentMap m/equals}
+           (m/match-with {map? m/equals}
                          {:a {:b {:c 1}
                               :d (m/embeds {:e {:inner-e (m/embeds {:x 1 :y 2})}})}})
            actual))
       (is (match?
-           (m/match-with {clojure.lang.IPersistentMap m/equals}
+           (m/match-with {map? m/equals}
                          {:a {:b {:c 1}
                               :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
            actual)))))

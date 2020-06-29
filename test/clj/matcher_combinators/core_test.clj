@@ -95,7 +95,11 @@
                  (core/-matcher-for {:this :map} {})))
   (is (instance? matcher_combinators.core.EqualsMap
                  (core/-matcher-for {:this :map}
-                                    {clojure.lang.IPersistentMap matchers/equals}))))
+                                    {map? matchers/equals})))
+  (testing "legacy API using type instead of predicate"
+    (is (instance? matcher_combinators.core.EqualsMap
+                   (core/-matcher-for {:this :map}
+                                      {clojure.lang.IPersistentMap matchers/equals})))))
 
 (deftest false-check-for-sets
   (testing "gracefully handle matching `false` values"

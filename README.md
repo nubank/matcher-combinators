@@ -225,7 +225,7 @@ You can register a custom `clojure.test` match assert expression if you are goin
 
 ```clojure
 (defmethod clojure.test/assert-expr 'match-equals? [msg form]
-  (matcher-combinators.test/build-match-assert 'match-equals? {clojure.lang.IPersistentMap m/equals} msg form))
+  (matcher-combinators.test/build-match-assert 'match-equals? {map? m/equals} msg form))
 
 (deftest match-equals-test
   (is (match-equals? {:a {:b {:c odd?}}}
@@ -236,7 +236,7 @@ Or if you want a one-off override of defaults, it can be done `match-with?`:
 
 ```
 (deftest one-off-match-equals
-  (is (match-with? {clojure.lang.IPersistentMap m/equals}
+  (is (match-with? {map? m/equals}
                    {:a {:b {:c odd?}}}
                    {:a {:b {:c 1}}})))
 ```
@@ -259,7 +259,7 @@ Or if you want a one-off override of defaults, it can be done `match-with?`:
 
 ```clojure
 (fact "match-with example"
-  {:a {:b {:c odd?}}} => (match-with {clojure.lang.IPersistentMap m/equals}
+  {:a {:b {:c odd?}}} => (match-with {map? m/equals}
                                      {:a {:b {:c odd?}}}))
 (fact "match-equals example"
   {:a {:b {:c odd?}}} => (match-equals {:a {:b {:c odd?}}}))
@@ -277,7 +277,7 @@ Or you can build your own, for example:
 ```clojure
 (def match-equals
   "match but using strict `equals` matching behavior for maps, even nested ones."
-  (match-with {clojure.lang.IPersistentMap matchers/equals}))
+  (match-with {map? matchers/equals}))
 ```
 
 ## Running tests
