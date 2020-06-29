@@ -106,6 +106,11 @@
     (partial instance? class-or-pred)
     class-or-pred))
 
+(defn- format-overrides [overrides]
+  (if (sequential? overrides)
+    (partition 2 overrides)
+    overrides))
+
 (defn lookup-matcher
   "Internal use only. Iterates through pred->matcher-overrides and
   returns the value (a matcher) bound to the first pred that returns
@@ -115,7 +120,7 @@
   The legacy API called for a map of type->matcher, which is still
   supported by wrapping types in (instance? type %) predicates."
   [value pred->matcher-overrides]
-  (or (->> pred->matcher-overrides
+  (or (->> (format-overrides pred->matcher-overrides)
            (filter (fn [[class-or-pred matcher]] (when ((->pred class-or-pred) value) matcher)))
            first
            last)

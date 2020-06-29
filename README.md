@@ -259,7 +259,7 @@ Or if you want a one-off override of defaults, it can be done `match-with?`:
 
 ```clojure
 (fact "match-with example"
-  {:a {:b {:c odd?}}} => (match-with {map? m/equals}
+  {:a {:b {:c odd?}}} => (match-with [map? m/equals]
                                      {:a {:b {:c odd?}}}))
 (fact "match-equals example"
   {:a {:b {:c odd?}}} => (match-equals {:a {:b {:c odd?}}}))
@@ -277,7 +277,7 @@ Or you can build your own, for example:
 ```clojure
 (def match-equals
   "match but using strict `equals` matching behavior for maps, even nested ones."
-  (match-with {map? matchers/equals}))
+  (match-with [map? matchers/equals]))
 ```
 
 ## Running tests

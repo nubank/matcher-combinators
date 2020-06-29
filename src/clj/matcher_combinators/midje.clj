@@ -47,7 +47,7 @@
                       (fn [actual] (> actual expected-long))
                       (str \"greater than \" expected-long)))
 
-                 (match-with {java.lang.Long greater-than-matcher})`
+                 (match-with [int? greater-than-matcher])`
 
                  NOTE: currently doesn't work in midje `provided` expressions"
             :arglists '([type->default-matcher]
@@ -131,7 +131,7 @@
 
 (def match-equals
   "match but using strict `equals` matching behavior for maps, even nested ones."
-  (match-with {clojure.lang.IPersistentMap matchers/equals}))
+  (match-with [int? matchers/equals]))
 
 (def match-roughly
   "match where all numbers match if they are within the delta of their expected value"

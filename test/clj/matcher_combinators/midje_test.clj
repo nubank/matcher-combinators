@@ -295,14 +295,14 @@
                                ::result/value  (model/->Mismatch expected actual)
                                ::result/weight 1})))
 
-(def match-abs (match-with {java.lang.Long ->AbsValue}))
+(def match-abs (match-with [int? ->AbsValue]))
 
 (facts "match-with checker behavior"
   (core/indicates-match? (core/match -1 1)) => false
 
   (fact "using 2-arg match-with"
-    1 => (match-with {java.lang.Long ->AbsValue} -1)
-    -1 => (match-with {java.lang.Long ->AbsValue} 1))
+    1 => (match-with [int? ->AbsValue] -1)
+    -1 => (match-with [int? ->AbsValue] 1))
   (fact "binding 1-arg match-with to new checker"
     1 => (match-abs -1)
     -1 => (match-abs 1))
@@ -332,7 +332,7 @@
                                        {:a 1 :b 3.0}))
 
 (fact "example from docstring"
-  5 => (match-with {java.lang.Long greater-than-matcher}
+  5 => (match-with [int? greater-than-matcher]
                    4))
 
 (spec.test/unstrument)
