@@ -71,9 +71,105 @@
   [pred]
   (core/->PredMatcher pred (str "predicate: " pred)))
 
+#?(:cljs (defn- cljs-uri [expected]
+           (core/->CljsUriEquals expected)))
+
 (defn matcher-for
-  "Returns the type-specific matcher object for an expected value. This is
-  useful for discovery when you want to know which Matcher type is associated
-  to a value."
-  [expected]
-  (core/-matcher-for expected))
+  "Returns the type-specific matcher object for an expected
+  value. This is used internally to support the match-with matcher,
+  and is also useful for discovery when you want to know which Matcher
+  type is associated to a value.
+
+  Adds :matcher-object? metadata to the returned matcher so that
+  other functions can differentiate between matcher objects and
+  objects that happen to implement the Matcher protocol (which should
+  be all other objects)."
+  ([expected]
+   (core/-matcher-for expected))
+  ([expected overrides]
+   (core/-matcher-for expected overrides)))
+
+(defn- ->pred [class-or-pred]
+  (if (class? class-or-pred)
+    (partial instance? class-or-pred)
+    class-or-pred))
+
+(defn- format-overrides [overrides]
+  (if (sequential? overrides)
+    (partition 2 overrides)
+    overrides))
+
+(defn lookup-matcher
+  "Internal use only. Iterates through pred->matcher-overrides and
+  returns the value (a matcher) bound to the first pred that returns
+  true for value. If no override is found, returns the default matcher
+  for value.
+
+  The legacy API called for a map of type->matcher, which is still
+  supported by wrapping types in (instance? type %) predicates."
+  [value pred->matcher-overrides]
+  (or (->> (format-overrides pred->matcher-overrides)
+           (filter (fn [[class-or-pred matcher]] (when ((->pred class-or-pred) value) matcher)))
+           first
+           last)
+      (matcher-for value)))
+
+(declare match-with)
+
+(defn- match-with-values [m overrides]
+  (reduce-kv (fn [m* k v] (assoc m* k (match-with overrides v)))
+             {}
+             m))
+
+(defn- match-with-elements [coll overrides]
+  (reduce (fn [c v] (conj c (match-with overrides v)))
+          (empty coll)
+          coll))
+
+(defn match-with
+  "Given a vector (or map) of overrides, returns the appropriate matcher
+  for value (with value wrapped). If no matcher for value is found in
+  overrides, uses the default:
+    embeds for maps
+    regex  for regular expressions
+    equals for everything else
+
+  If value is a collection, recursively applies match-with to its nested
+  values, ignoring nested values that are already wrapped in matchers.
+
+  NOTE that each nested match-with creates a new context, and nested contexts
+  do not inherit the overrides of their parent contexts."
+  [overrides value]
+  (vary-meta
+         ;; don't re-wrap a value we've already wrapped
+   (cond (::match-with? (meta value))
+         value
+
+         ;; functions are special because they get treated as predicates
+         (fn? value)
+         value
+
+         ;; TODO: all of the built in matchers are records, but users
+         ;; define matchers by reifying the Matcher protocol, so this
+         ;; would break down. Also, what if a user's domain includes a
+         ;; record with an `:expected` key? Ideally, we should have
+         ;; some other marker to identify a matcher object, and document
+         ;; it in terms of "your custom Matcher implementations must do
+         ;; x in order to particpate in match-with"
+         (and (record? value) (map? (:expected value)))
+         (update value :expected match-with-values overrides)
+
+         (and (record? value) (coll? (:expected value)))
+         (update value :expected match-with-elements overrides)
+
+         (map? value)
+         ((matcher-for value overrides)
+          (match-with-values value overrides))
+
+         (coll? value)
+         ((matcher-for value overrides)
+          (match-with-elements value overrides))
+
+         :else
+         ((matcher-for value overrides) value))
+   assoc ::match-with? true))

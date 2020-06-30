@@ -219,17 +219,6 @@
                    ::result/weight 1}
                   (c/match (m/equals a) b))))))
 
-(deftest matcher-for-special-cases
-  (testing "matcher for a fn is a fn"
-    (is (= (class (m/pred (fn [])))
-           (class (m/matcher-for (fn []))))))
-  (testing "matcher for a map is embeds"
-    (is (= (class (m/embeds {}))
-           (class (m/matcher-for {})))))
-  (testing "matcher for a regex"
-    (is (= (class (m/regex #"abc"))
-           (class (m/matcher-for #"abc"))))))
-
 (defspec matcher-for-most-cases
   {:doc "matchers/equals is the default matcher for everything but functions, regexen, and maps."
    :num-tests 1000
@@ -239,10 +228,104 @@
                                  (not (instance? java.util.regex.Pattern v))
                                  (not (fn? v))))
                     gen/any)]
-                (= (class (m/equals v))
-                   (class (m/matcher-for v)))))
+                (= m/equals
+                   (m/matcher-for v)
+                   (m/matcher-for v {}))))
 
-(deftest matcher-for-works-within-match-with
-  (is (match-with? {java.lang.Long greater-than-matcher}
-                   (m/matcher-for 4)
-                   5)))
+(deftest matcher-for-special-cases
+  (testing "matcher for a fn is pred"
+    (is (= (class (m/pred (fn [])))
+           (class (m/matcher-for (fn []))))))
+  (testing "matcher for a map is embeds"
+    (is (= m/embeds
+           (m/matcher-for {}))))
+  (testing "matcher for a regex"
+    (is (= m/regex
+           (m/matcher-for #"abc")))))
+
+(defn no-match? [expected actual]
+  (not (c/indicates-match? (c/match expected actual))))
+
+(deftest match-with-matcher
+  (testing "processes overrides in order"
+    (let [matcher (m/match-with [pos? greater-than-matcher
+                                 int? m/equals]
+                                5)]
+      (is (match? matcher 6))
+      (is (no-match? matcher 5)))
+    (let [matcher (m/match-with [pos? greater-than-matcher
+                                 int? m/equals]
+                                -5)]
+      (is (match? matcher -5))
+      (is (no-match? matcher -6))))
+  (testing "maps"
+    (testing "passing case with equals override"
+      (is (match? (m/match-with [map? m/equals]
+                                {:a :b})
+                  {:a :b}))
+      (testing "legacy API support (map of type to matcher)"
+        (is (match? (m/match-with {clojure.lang.IPersistentMap m/equals}
+                                  {:a :b})
+                    {:a :b}))))
+    (testing "failing case with equals override"
+      (is (no-match? (m/match-with [map? m/equals]
+                                   {:a :b})
+                     {:a :b :d :e})))
+    (testing "passing case multiple scopes"
+      (is (match?
+           {:o (m/match-with [map? m/equals]
+                             {:a
+                              (m/match-with [map? m/embeds]
+                                            {:b :c})})}
+           {:o {:a {:b :c :d :e}}
+            :p :q}))))
+
+  (testing "sets"
+    (testing "passing cases"
+      (is (match?
+           (m/match-with [set? m/embeds]
+                         #{1})
+           #{1 2}))
+
+      (is (match?
+           (m/match-with [set? m/embeds]
+                         #{odd?})
+           #{1 2}))))
+
+  (testing "multiple scopes"
+    (let [expected
+          {:a (m/match-with [map? m/equals]
+                            {:b
+                             (m/match-with [map? m/embeds
+                                            vector? m/embeds]
+                                           {:c [odd? even?]})})}]
+      (is (match? expected {:a {:b {:c [1 2]}}}))
+      (is (match? expected {:a {:b {:c [1 2 3]}}}))
+      (is (match? expected {:a {:b {:c [1 2]}}
+                            :d :e}))
+      (is (match? expected {:a {:b {:c [1 2 3]
+                                    :d :e}}
+                            :f :g}))
+      (is (no-match? expected {:a {:b {:c [1 2]}
+                                   :d :e}}))))
+
+  (testing "nested explicit matchers override the match-with matcher specified"
+    (let [actual {:a {:b {:c 1}
+                      :d {:e {:inner-e {:x 1 :y 2}}
+                          :f 5
+                          :g 17}}}]
+      (is (no-match?
+           (m/match-with [map? m/equals]
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e {:x 1}}})}})
+           actual))
+      (is (match?
+           (m/match-with [map? m/equals]
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e (m/embeds {:x 1 :y 2})}})}})
+           actual))
+      (is (match?
+           (m/match-with [map? m/equals]
+                         {:a {:b {:c 1}
+                              :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
+           actual)))))

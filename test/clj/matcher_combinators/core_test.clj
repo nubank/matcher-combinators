@@ -12,7 +12,6 @@
             [matcher-combinators.matchers :as matchers :refer :all]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
-            [matcher-combinators.dispatch :as dispatch]
             [matcher-combinators.parser]
             [matcher-combinators.standalone :as standalone]
             [matcher-combinators.test-helpers :as test-helpers]))
@@ -83,6 +82,23 @@
                     ::result/value (model/->Mismatch expected actual)}
                    res))))
 
+(defspec matcher-for-arities
+  {:max-size 10}
+  (prop/for-all [v gen/any]
+                (= (core/-matcher-for v)
+                   (core/-matcher-for v {}))))
+
+(deftest matcher-for-with-overrides
+  (is (= matchers/embeds
+         (core/-matcher-for {:this :map})))
+  (is (= matchers/embeds
+         (core/-matcher-for {:this :map} [])))
+  (is (= matchers/equals
+         (core/-matcher-for {:this :map} [map? matchers/equals])))
+  (testing "legacy API using type instead of predicate"
+    (is (= matchers/equals (core/-matcher-for {:this :map}
+                                              {clojure.lang.IPersistentMap matchers/equals})))))
+
 (deftest false-check-for-sets
   (testing "gracefully handle matching `false` values"
     (is (= (match false false)
@@ -97,6 +113,24 @@
            {::result/type   :match
             ::result/value  #{false}
             ::result/weight 0}))))
+
+(deftest test-indicates-match?
+  (is (core/indicates-match? {::result/type :match
+                              ::result/weight 0
+                              ::result/value :does-not-matter}))
+
+  (is (not (core/indicates-match? {::result/type :mismatch
+                                   ::result/weight 1
+                                   ::result/value :does-not-matter}))))
+
+(deftest test-deprectated-match?
+  (is (core/match? {::result/type :match
+                              ::result/weight 0
+                              ::result/value :does-not-matter}))
+
+  (is (not (core/match? {::result/type :mismatch
+                                   ::result/weight 1
+                                   ::result/value :does-not-matter}))))
 
 (spec.test/instrument)
 

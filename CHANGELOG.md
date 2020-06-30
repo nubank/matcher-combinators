@@ -3,11 +3,27 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## DEV (next release)
+- add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
+  - also reimplemented match-with?, match-roughly? etc in terms of match-with
+  - the overrides map now supports predicates as keys:
+
+``` clojure
+;; this means now you can do this
+(match-with? [map? matchers/equals] ...)
+
+;; .. which also supports precedence of overlapping predicates, e.g.
+(match-with? [odd? equals
+             [pos? (roughly 0.1)] ,,,)
+
+;; instead of this (though this is still supported)
+(match-with? {clojure.lang.IPersistentMap matchers/equals} ...)
+```
+
 ## [2.1.1]
 - fix issue matching `false` in the context of sets [#124](https://github.com/nubank/matcher-combinators/issues/124)
 
 ## [2.1.0]
-
 - extend `Matcher` protocol to `Symbol` in cljs [#131](https://github.com/nubank/matcher-combinators/pull/131)
 
 ## [2.0.0]
