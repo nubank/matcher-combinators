@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## DEV (next release)
+## [3.0.0]
 - add within-delta matcher (replaces match-roughly)
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
   - also reimplemented match-with?, match-roughly? etc in terms of match-with
