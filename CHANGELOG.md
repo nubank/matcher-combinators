@@ -7,6 +7,7 @@ change log follows the conventions of
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
   - also reimplemented match-with?, match-roughly? etc in terms of match-with
   - the overrides map now supports predicates as keys:
+- add within-delta matcher
 
 ``` clojure
 ;; this means now you can do this
