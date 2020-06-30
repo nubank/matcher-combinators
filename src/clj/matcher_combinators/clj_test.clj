@@ -154,13 +154,6 @@
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
 
-(defn- class->symbol [cls]
-  (-> cls
-      str
-      (clojure.string/replace #"^class " "")
-      (clojure.string/replace #"^interface " "")
-      symbol))
-
 (defn build-match-assert
   "Allows you to define a custom clojure.test match assert:
 
