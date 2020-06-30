@@ -4,18 +4,17 @@ change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## DEV (next release)
+- add within-delta matcher
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
   - also reimplemented match-with?, match-roughly? etc in terms of match-with
   - the overrides map now supports predicates as keys:
-- add within-delta matcher
 
 ``` clojure
 ;; this means now you can do this
-(match-with? [map? matchers/equals] ...)
+(match? (match-with [map? matchers/equals] <expected>) <actual>)
 
 ;; .. which also supports precedence of overlapping predicates, e.g.
-(match-with? [odd? equals
-             [pos? (roughly 0.1)] ,,,)
+(match? (match-with [odd? equals pos? (roughly 0.1)] <expected>) <actual>)
 
 ;; instead of this (though this is still supported)
 (match-with? {clojure.lang.IPersistentMap matchers/equals} ...)
