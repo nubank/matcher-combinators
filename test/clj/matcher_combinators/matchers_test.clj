@@ -334,15 +334,15 @@
 (defspec within-delta-common-case
   {:doc       "works for ints, doubles, and bigdecs"
    :max-size  10}
-  (prop/for-all [v     (gen/one-of [gen/small-integer
+  (prop/for-all [delta (gen/fmap #(Math/abs %) (gen/double* {:infinite? false :NaN? false}))
+                 v     (gen/one-of [gen/small-integer
                                     (gen/double* {:infinite? false :NaN? false})
                                     (gen/fmap #(BigDecimal/valueOf %)
-                                              (gen/double* {:infinite? false :NaN? false}))])
-                 delta (gen/double* {:infinite? false :NaN? false})]
+                                              (gen/double* {:infinite? false :NaN? false}))])]
                 (c/indicates-match?
                  (c/match
-                  (m/within-delta delta {:x v})
-                  {:x (+ v delta)}))))
+                  (m/within-delta delta v)
+                  (+ v delta)))))
 
 (deftest with-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"

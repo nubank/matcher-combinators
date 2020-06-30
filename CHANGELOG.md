@@ -10,14 +10,22 @@ change log follows the conventions of
   - the overrides map now supports predicates as keys:
 
 ``` clojure
-;; this means now you can do this
-(match? (match-with [map? matchers/equals] <expected>) <actual>)
+;; before
+(is (match-with? {clojure.lang.IPersistentMap matchers/equals} <expected> <actual>))
+;; or
+(is (match-equals? <expected> <actual>))
 
-;; .. which also supports precedence of overlapping predicates, e.g.
-(match? (match-with [odd? equals pos? (roughly 0.1)] <expected>) <actual>)
+;; after
+(is (match? (matchers/match-with [map? matchers/equals] <expected> <actual>)))
 
-;; instead of this (though this is still supported)
-(match-with? {clojure.lang.IPersistentMap matchers/equals} ...)
+;; before
+(is (match-roughly? <delta> <expected> <actual>))
+;; after
+(is (match? (matchers/within-delta <delta> <expected>) <actual>))
+;; or (for nested numeric values)
+(is (match? (matchers/match-with [number? (matchers/within-delta <delta>)]
+                                 <expected>)
+            <actual>))
 ```
 
 ## [2.1.1]

@@ -176,15 +176,8 @@
    assoc ::match-with? true))
 
 (defn within-delta
-  "Returns a matcher that matches an actual numeric value (or any numeric
-  value within the actual structure) within delta of expected.
-
-  NOTE this uses `match-with`, and therefore does not apply to values nested within
-  a nested `match-with`."
+  "Matcher that will match when the actual value is within `delta` of `expected`."
   [delta expected]
-  (match-with [number?
-               (fn [expected]
-                 (core/->PredMatcher
-                  (fn [actual] (utils/within-delta? delta expected actual))
-                  (str "within-delta " expected " (+/- " delta ")")))]
-              expected))
+  (core/->PredMatcher
+   (fn [actual] (utils/within-delta? delta expected actual))
+   (str "within-delta " expected " (+/- " delta ")")))
