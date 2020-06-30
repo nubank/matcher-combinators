@@ -42,8 +42,8 @@
     :doc "DEPRECATED! Use `indicates-match?` instead."}
   match?
   [match-result]
-  (println (str "DEPRECATION WARNING: matcher-combinators.core/match? is deprecated.\n"
-                "                     Use matcher-combinators.core/indicates-match? instead."))
+  (println (str "DEPRECATION NOTICE: matcher-combinators.core/match? is deprecated.\n"
+                "                    Use matcher-combinators.core/indicates-match? instead."))
   (indicates-match? match-result))
 
 (defn matcher? [x]

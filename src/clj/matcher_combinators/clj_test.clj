@@ -75,6 +75,8 @@
         [type->matcher
          matcher
          actual]       args]
+    (str "DEPRECATION NOTICE: `match-with?` is deprecated.\n"
+         "                    Use (match? (matchers/match-with <type->matcher> <expected>) <actual>) instead.")
     `(cond
        (not (= 3 (count '~args)))
        (clojure.test/do-report
@@ -154,57 +156,60 @@
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
 
-(defn build-match-assert
-  "Allows you to define a custom clojure.test match assert:
+(defn ^:deprecated build-match-assert
+  "DEPRECATED: use (match? (matchers/match-with <overrides> <expected>) <actual>) "
+  ([match-assert-name type->matcher msg form]
+   (build-match-assert match-assert-name type->matcher msg form
+                       (str "DEPRECATION NOTICE: custom assertions for matcher-combinators are deprecated.\n"
+                            "                    Use (match? (matchers/match-with <overrides> <expected>) <actual>) instead.")))
+  ([match-assert-name type->matcher msg form deprecation-notice]
+   (let [args             (rest form)
+         [matcher actual] args]
+     (println deprecation-notice)
+     `(let [matcher#       ~matcher
+            actual#        ~actual
+            type->matcher# ~type->matcher]
+        (cond
+          (not (= 2 (count '~args)))
+          (clojure.test/do-report
+           {:type     :fail
+            :message  ~msg
+            :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
+            :actual   (symbol (str (count '~args) " were provided: " '~form))})
 
+          (core/matcher? matcher#)
+          (let [result# (core/match
+                         (matchers/match-with
+                          type->matcher#
+                          matcher#)
+                         actual#)]
+            (clojure.test/do-report
+             (if (core/indicates-match? result#)
+               {:type     :pass
+                :message  ~msg
+                :expected '~form
+                :actual   (list 'match? matcher# actual#)}
+               (with-file+line-info
+                 {:type     :fail
+                  :message  ~msg
+                  :expected '~form
+                  :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
+                                                        result#)}))))
 
-  `(defmethod clojure.test/assert-expr 'baz? [msg form]
-    (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))`"
-  [match-assert-name type->matcher msg form]
-  (let [args             (rest form)
-        [matcher actual] args]
-    `(let [matcher#       ~matcher
-           actual#        ~actual
-           type->matcher# ~type->matcher]
-       (cond
-         (not (= 2 (count '~args)))
-         (clojure.test/do-report
-          {:type     :fail
-           :message  ~msg
-           :expected (symbol (str "`" '~match-assert-name "` expects 3 arguments: a `type->matcher` map, a `matcher`, and the `actual`"))
-           :actual   (symbol (str (count '~args) " were provided: " '~form))})
-
-         (core/matcher? matcher#)
-         (let [result# (core/match
-                        (matchers/match-with
-                         type->matcher#
-                         matcher#)
-                        actual#)]
-           (clojure.test/do-report
-            (if (core/indicates-match? result#)
-              {:type     :pass
-               :message  ~msg
-               :expected '~form
-               :actual   (list 'match? matcher# actual#)}
-              (with-file+line-info
-                {:type     :fail
-                 :message  ~msg
-                 :expected '~form
-                 :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
-                                                       result#)}))))
-
-         :else
-         (clojure.test/do-report
-          {:type     :fail
-           :message  ~msg
-           :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
-           :actual   '~form})))))
+          :else
+          (clojure.test/do-report
+           {:type     :fail
+            :message  ~msg
+            :expected (str "The second argument of " '~match-assert-name " needs to be a matcher (implement the match protocol)")
+            :actual   '~form}))))))
 
 (defmethod clojure.test/assert-expr 'match-equals? [msg form]
   (build-match-assert 'match-equals?
                       {clojure.lang.IPersistentMap matchers/equals}
                       msg
-                      form))
+                      form
+                      (str "DEPRECATION NOTICE: `match-equals?` is deprecated.\n"
+                           "                    Use (match? (matchers/match-with [map? matchers/equals] <expected>) <actual>) instead.")))
 
 (defmethod clojure.test/assert-expr 'match-roughly? [msg form]
   (let [directive (first form)
@@ -221,6 +226,9 @@
           :message  ~msg
           :expected (symbol (str "`" '~directive "` expects 3 arguments: a `delta` number, a `matcher`, and the `actual`"))
           :actual   (symbol (str (count '~(rest form)) " were provided: " '~form))})
-       ~(build-match-assert 'match-roughly? [number? roughly-delta?]
-                            msg
-                            form'))))
+       ~(build-match-assert
+         'match-roughly? [number? roughly-delta?]
+         msg
+         form'
+         (str "DEPRECATION NOTICE: `match-roughly?` is deprecated.\n"
+              "                    Use (match? (matchers/within-delta <expected>) <actual>) instead.")))))
