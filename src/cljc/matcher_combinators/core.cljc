@@ -44,7 +44,7 @@
   [match-result]
   (println (str "DEPRECATION WARNING: matcher-combinators.core/match? is deprecated.\n"
                 "                     Use matcher-combinators.core/indicates-match? instead."))
-  `(indicates-match? ~match-result))
+  (indicates-match? match-result))
 
 (defn matcher? [x]
   (satisfies? Matcher x))

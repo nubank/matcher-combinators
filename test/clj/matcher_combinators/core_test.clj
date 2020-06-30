@@ -114,6 +114,24 @@
             ::result/value  #{false}
             ::result/weight 0}))))
 
+(deftest test-indicates-match?
+  (is (core/indicates-match? {::result/type :match
+                              ::result/weight 0
+                              ::result/value :does-not-matter}))
+
+  (is (not (core/indicates-match? {::result/type :mismatch
+                                   ::result/weight 1
+                                   ::result/value :does-not-matter}))))
+
+(deftest test-deprectated-match?
+  (is (core/match? {::result/type :match
+                              ::result/weight 0
+                              ::result/value :does-not-matter}))
+
+  (is (not (core/match? {::result/type :mismatch
+                                   ::result/weight 1
+                                   ::result/value :does-not-matter}))))
+
 (spec.test/instrument)
 
 (facts "on sequence matchers"
