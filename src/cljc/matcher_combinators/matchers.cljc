@@ -135,9 +135,11 @@
     equals for everything else
 
   If value is a collection, recursively applies match-with to its nested
-  values, ignoring nested values that are already wrapped in matchers "
-  [overrides value]
+  values, ignoring nested values that are already wrapped in matchers.
 
+  NOTE that each nested match-with creates a new context, and nested contexts
+  do not inherit the overrides of their parent contexts."
+  [overrides value]
   (vary-meta
          ;; don't re-wrap a value we've already wrapped
    (cond (::match-with? (meta value))
