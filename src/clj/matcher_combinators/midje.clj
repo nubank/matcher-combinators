@@ -137,7 +137,7 @@
   "match where all numbers match if they are within the delta of their expected value"
   (fn [delta matcher]
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
-                                                    (utils/roughly? expected actual delta))
+                                                    (utils/within-delta? delta expected actual))
                                                   (str "roughly " expected " (+/- " delta ")")))]
       (match-with
        {java.lang.Integer    func

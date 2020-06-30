@@ -1,6 +1,7 @@
 (ns matcher-combinators.matchers
   (:require [clojure.string :as string]
-            [matcher-combinators.core :as core]))
+            [matcher-combinators.core :as core]
+            [matcher-combinators.utils :as utils]))
 
 (defn- non-internal-record? [v]
   (and (record? v)
@@ -173,3 +174,10 @@
          :else
          ((matcher-for value overrides) value))
    assoc ::match-with? true))
+
+(defn within-delta
+  "Matcher that will match when the actual value is within `delta` of `expected`."
+  [delta expected]
+  (core/->PredMatcher
+   (fn [actual] (utils/within-delta? delta expected actual))
+   (str "within-delta " expected " (+/- " delta ")")))

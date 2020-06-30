@@ -1,9 +1,17 @@
-(ns matcher-combinators.utils)
+(ns matcher-combinators.utils
+  "Internal use only. Subject (and likely) to change.")
 
-(defn roughly? [expected actual delta]
-  (and (number? actual)
-       (>= expected (- actual delta))
-       (<= expected (+ actual delta))))
+(defn processable-number? [v]
+  (and (number? v)
+       (try
+         (and (not (Double/isInfinite v))
+              (not (Double/isNaN v)))
+         (catch Exception _ false))))
+
+(defn within-delta? [delta expected actual]
+  (and (processable-number? actual)
+       (>= expected (- actual (Math/abs delta)))
+       (<= expected (+ actual (Math/abs delta)))))
 
 (defn find-first [pred coll]
   (->> coll (filter pred) first))

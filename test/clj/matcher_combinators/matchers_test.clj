@@ -8,6 +8,7 @@
             [matcher-combinators.core :as c]
             [matcher-combinators.test]
             [matcher-combinators.result :as result]
+            [matcher-combinators.utils :as utils]
             [matcher-combinators.test-helpers :as test-helpers :refer [greater-than-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
@@ -329,3 +330,22 @@
                          {:a {:b {:c 1}
                               :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
            actual)))))
+
+(defspec within-delta-common-case
+  {:doc       "works for ints, doubles, and bigdecs"
+   :max-size  10}
+  (prop/for-all [delta (gen/fmap #(Math/abs %) (gen/double* {:infinite? false :NaN? false}))
+                 v     (gen/one-of [gen/small-integer
+                                    (gen/double* {:infinite? false :NaN? false})
+                                    (gen/fmap #(BigDecimal/valueOf %)
+                                              (gen/double* {:infinite? false :NaN? false}))])]
+                (c/indicates-match?
+                 (c/match
+                  (m/within-delta delta v)
+                  (+ v delta)))))
+
+(deftest with-delta-edge-cases
+  (testing "+/-infinity and NaN return false (instead of throwing)"
+    (is (no-match? (m/within-delta 0.1 100) ##Inf))
+    (is (no-match? (m/within-delta 0.1 100) ##-Inf))
+    (is (no-match? (m/within-delta 0.1 100) ##NaN))))
