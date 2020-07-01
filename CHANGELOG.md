@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.1.1]
+- fix bug using `within-delta` nested in `match-with` where expected value is a list
+
 ## [3.1.0]
 - adapt `utils/within-delta?` to accept BigDecimal as `delta` argument
 
