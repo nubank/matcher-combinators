@@ -11,7 +11,7 @@
                 (not (infinite? v)))))
 
 (defn within-delta? [delta expected actual]
-  (let [delta-fn (if (decimal? delta)
+  (let [abs (if (decimal? delta)
                    #(.abs %)
                    #(Math/abs %))]
     (and (processable-number? actual)
