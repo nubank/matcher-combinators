@@ -124,7 +124,9 @@
 
 (defn- match-with-elements [coll overrides]
   (reduce (fn [c v] (conj c (match-with overrides v)))
-          (empty coll)
+          (if (set? coll)
+            #{}
+            [])
           coll))
 
 (defn match-with
@@ -176,8 +178,17 @@
    assoc ::match-with? true))
 
 (defn within-delta
-  "Matcher that will match when the actual value is within `delta` of `expected`."
-  [delta expected]
-  (core/->PredMatcher
-   (fn [actual] (utils/within-delta? delta expected actual))
-   (str "within-delta " expected " (+/- " delta ")")))
+  "Given `delta` and `expected`, returns a Matcher that will match
+  when the actual value is within `delta` of `expected`. Given only
+  `delta`, returns a function to be used in the context of `match-with`,
+  e.g.
+
+    (is (match? (m/match-with [number? (m/within-delta 0.01M)]
+                              <expected>)
+                <actual>))"
+  ([delta]
+   (fn [expected] (within-delta delta expected)))
+  ([delta expected]
+   (core/->PredMatcher
+    (fn [actual] (utils/within-delta? delta expected actual))
+    (str "within-delta " expected " (+/- " delta ")"))))

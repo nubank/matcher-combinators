@@ -351,8 +351,22 @@
                   (m/within-delta delta expected)
                   (+ expected delta)))))
 
-(deftest with-delta-edge-cases
+(deftest within-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"
     (is (no-match? (m/within-delta 0.1 100) ##Inf))
     (is (no-match? (m/within-delta 0.1 100) ##-Inf))
     (is (no-match? (m/within-delta 0.1 100) ##NaN))))
+
+(deftest within-delta-in-match-with
+  (testing "works with a vec"
+    (is (match? (m/match-with [number? (m/within-delta 0.01M)]
+                              [{:b 1M} {:b 0M} {:b 3M}])
+                [{:b 1M} {:b 0M} {:b 3M}])))
+  (testing "works with a seq"
+    (is (match? (m/match-with [number? (m/within-delta 0.01M)]
+                              '({:b 1M} {:b 0M} {:b 3M}))
+                [{:b 1M} {:b 0M} {:b 3M}])))
+  (testing "works with a set"
+    (is (match? (m/match-with [number? (m/within-delta 0.01M)]
+                              #{{:b 1M} {:b 0M} {:b 3M}})
+                #{{:b 1M} {:b 0M} {:b 3M}}))))
