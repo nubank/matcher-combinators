@@ -138,10 +138,8 @@ Note that you can also use the `match` checker to match arguments within midje's
 ### Default matchers
 
 When an expected value isn't wrapped in a specific matcher the default interpretation is:
-- number, date, and other scalar values: `equals`
+- all scalar and collection types except regex and maps: `equals`
 - regex: `regex`
-- sequential: `equals`
-- set: `equals`
 - map: `embeds`
 
 You can use the `matcher-for` function to discover which matcher would be used
@@ -151,26 +149,13 @@ for a specific value, e.g.
 (require '[matcher-combinators.matchers :as matchers])
 
 (matchers/matcher-for {:this :map})
-;; => {:expected {:this :map}}
-
-(class *1)
-;; => matcher_combinators.core.EmbedsMap
-```
-
-You can then use that matcher in place of a value, e.g.
-
-``` clojure
-(require '[matcher-combinators.standalone :as matcher-combinators])
-(matcher-combinators/match
-  (matchers/matcher-for {:this :map})
-  {:this :map :and :then-some})
-;; => {:match/result :match}
+;; => #function[matcher-combinators.matchers/embeds]
 ```
 
 ### built-in matchers
 
-- `equals` operates over base values, maps, sequences, and sets
-  - base values (string, int, function, etc.): matches when the given value is exactly the same as the `expected`.
+- `equals` operates over any scalar value or collection
+  - scalars: matches when the given value is exactly the same as the `expected`.
   - map: matches when
       1. the keys of the `expected` map are equal to the given map's keys
       2. the value matchers of `expected` map matches the given map's values
@@ -189,9 +174,13 @@ You can then use that matcher in place of a value, e.g.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
 
-- `regex`: matches the `actual-value-found` when provided an `expected-regex` using `(re-find expected-regex actual-value-found)`
+- `regex`: matches the `actual` value when provided an `expected-regex` using `(re-find expected-regex actual)`
 
 - `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't.
+
+- `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep stucture) (see Overriding default matchers, below)
+
+- `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
 
 ### building new matchers
 
@@ -217,67 +206,12 @@ For example, if you want to do exact map matching you need to use a log of `m/eq
               {:a {:b {:c 1 :extra-c 0} :extra-b 0} :extra-a 0})))
 ```
 
-This verbosity can be avoided by redefining the matcher data-type defaults
+This verbosity can be avoided by redefining the matcher data-type defaults using the `match-with` matcher:
 
-### clojure.test
-
-You can register a custom `clojure.test` match assert expression if you are going to use it a few times:
-
-```clojure
-(defmethod clojure.test/assert-expr 'match-equals? [msg form]
-  (matcher-combinators.test/build-match-assert 'match-equals? {map? m/equals} msg form))
-
-(deftest match-equals-test
-  (is (match-equals? {:a {:b {:c odd?}}}
-                     {:a {:b {:c 1}}})))
-```
-
-Or if you want a one-off override of defaults, it can be done `match-with?`:
-
-```
-(deftest one-off-match-equals
-  (is (match-with? {map? m/equals}
-                   {:a {:b {:c odd?}}}
-                   {:a {:b {:c 1}}})))
-```
-
-#### built-in matching context
-
-- `match?`
-- `match-with?`
-- `match-equals?`
-- `match-roughly?`:
-
-```clojure
-(deftest match-roughly-test
-  (is (match-roughly? 0.1
-                      {:a 1 :b 3.0}
-                      {:a 1 :b 3.05})))
-```
-
-### midje
-
-```clojure
-(fact "match-with example"
-  {:a {:b {:c odd?}}} => (match-with [map? m/equals]
-                                     {:a {:b {:c odd?}}}))
-(fact "match-equals example"
-  {:a {:b {:c odd?}}} => (match-equals {:a {:b {:c odd?}}}))
-```
-
-#### built-in matching context
-
-- `match`
-- `match-with`
-- `match-roughly`
-- `match-equals`
-
-Or you can build your own, for example:
-
-```clojure
-(def match-equals
-  "match but using strict `equals` matching behavior for maps, even nested ones."
-  (match-with [map? matchers/equals]))
+``` clojure
+(deftest exact-map-matching-with-match-with
+  (is (match? (m/match-with [map? m/equals] {:a {:b {:c odd?}}}))
+              {:a {:b {:c 1}}}))
 ```
 
 ## Running tests

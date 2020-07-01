@@ -3,29 +3,31 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## DEV (next release)
-- add within-delta matcher
+## [3.0.0]
+- add within-delta matcher (replaces match-roughly)
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
   - also reimplemented match-with?, match-roughly? etc in terms of match-with
-  - the overrides map now supports predicates as keys:
+  - the overrides map now supports predicates as keys
+- deprecate `match-with?`, `match-equals?`, `match-roughly?` assert expressions
+- deprecate `match-with`, `match-equals`, and `match-roughly` midje checkers
 
 ``` clojure
-;; before
-(is (match-with? {clojure.lang.IPersistentMap matchers/equals} <expected> <actual>))
-;; or
-(is (match-equals? <expected> <actual>))
+;; With this release, do this:
+(match? (matchers/match-with [map? matchers/equals] <expected>) <actual>)
 
-;; after
-(is (match? (matchers/match-with [map? matchers/equals] <expected> <actual>)))
+;; instead of this (deprecated, but still works)
+(match-with? {clojure.lang.IPersistentMap matchers/equals} <expected> <actual>)
+(match-equals? <expected> <actual>)
 
-;; before
-(is (match-roughly? <delta> <expected> <actual>))
-;; after
-(is (match? (matchers/within-delta <delta> <expected>) <actual>))
-;; or (for nested numeric values)
+;; and this
+(match? (matchers/within-delta <delta> <expected>) <actual>)
+;; or this
 (is (match? (matchers/match-with [number? (matchers/within-delta <delta>)]
                                  <expected>)
             <actual>))
+
+;; instead of this
+(match-roughly? <delta> <expected> <actual>)
 ```
 
 ## [2.1.1]
