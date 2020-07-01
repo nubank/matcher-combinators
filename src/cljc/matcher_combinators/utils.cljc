@@ -11,9 +11,12 @@
                 (not (infinite? v)))))
 
 (defn within-delta? [delta expected actual]
-  (and (processable-number? actual)
-       (>= expected (- actual (Math/abs delta)))
-       (<= expected (+ actual (Math/abs delta)))))
+  (let [abs (if (decimal? delta)
+                   #(.abs %)
+                   #(Math/abs %))]
+    (and (processable-number? actual)
+         (>= expected (- actual (abs delta)))
+         (<= expected (+ actual (abs delta))))))
 
 (defn find-first [pred coll]
   (->> coll (filter pred) first))
