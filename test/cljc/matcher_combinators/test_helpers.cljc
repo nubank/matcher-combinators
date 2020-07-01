@@ -1,6 +1,6 @@
 (ns matcher-combinators.test-helpers
   (:require [clojure.test.check.generators :as gen]
-            #?(:cljc [clojure.spec.test.alpha :as spec.test]
+            #?(:cljs [clojure.spec.test.alpha :as spec.test]
                :clj  [orchestra.spec.test :as spec.test])
             [matcher-combinators.core :as core]))
 
