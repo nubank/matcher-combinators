@@ -91,9 +91,9 @@
    (core/-matcher-for expected overrides)))
 
 (defn- ->pred [class-or-pred]
-  (if (class? class-or-pred)
-    (partial instance? class-or-pred)
-    class-or-pred))
+  (if (fn? class-or-pred)
+    class-or-pred
+    (partial instance? class-or-pred)))
 
 (defn- format-overrides [overrides]
   (if (sequential? overrides)

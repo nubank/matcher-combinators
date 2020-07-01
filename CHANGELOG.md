@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.0.1]
+- eliminate cljs warnings
+
 ## [3.0.0]
 - add within-delta matcher (replaces match-roughly)
 - add match-with matcher [#134](https://github.com/nubank/matcher-combinators/issues/134)
