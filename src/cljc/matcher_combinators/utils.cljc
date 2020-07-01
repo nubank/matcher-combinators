@@ -2,11 +2,13 @@
   "Internal use only. Subject (and likely) to change.")
 
 (defn processable-number? [v]
-  (and (number? v)
-       (try
-         (and (not (Double/isInfinite v))
-              (not (Double/isNaN v)))
-         (catch Exception _ false))))
+  #?(:clj (and (number? v)
+               (try
+                 (and (not (Double/isInfinite v))
+                      (not (Double/isNaN v)))
+                 (catch Exception _ false)))
+     :cljs (and (number? v)
+                (not (infinite? v)))))
 
 (defn within-delta? [delta expected actual]
   (and (processable-number? actual)
