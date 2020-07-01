@@ -110,4 +110,7 @@
 (deftest match-roughly-test
   (is (match-roughly? 0.1
                       {:a 1 :b 3.0}
+                      {:a 1 :b 3.05}))
+  (is (match-roughly? 0.1M
+                      {:a 1 :b 3.0}
                       {:a 1 :b 3.05})))
