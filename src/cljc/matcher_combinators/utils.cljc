@@ -15,7 +15,7 @@
                    #(.abs %)
                    #(Math/abs %))]
     (and (processable-number? actual)
-         (>= expected (- actual (delta-fn delta)))
+         (>= expected (- actual (abs delta)))
          (<= expected (+ actual (abs delta))))))
 
 (defn find-first [pred coll]
