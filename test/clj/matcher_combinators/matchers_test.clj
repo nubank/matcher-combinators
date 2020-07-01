@@ -331,18 +331,25 @@
                               :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
            actual)))))
 
+(def gen-processable-double
+  (gen/double* {:infinite? false :NaN? false}))
+
+(def gen-bigdec
+  (gen/fmap #(BigDecimal/valueOf %) gen-processable-double))
+
 (defspec within-delta-common-case
-  {:doc       "works for ints, doubles, and bigdecs"
+  {:doc       "works for ints, doubles, and bigdecs as delta, expected, or actual"
    :max-size  10}
-  (prop/for-all [delta (gen/fmap #(Math/abs %) (gen/double* {:infinite? false :NaN? false}))
-                 v     (gen/one-of [gen/small-integer
-                                    (gen/double* {:infinite? false :NaN? false})
-                                    (gen/fmap #(BigDecimal/valueOf %)
-                                              (gen/double* {:infinite? false :NaN? false}))])]
+  (prop/for-all [delta    (gen/one-of [gen/small-integer
+                                       gen-processable-double
+                                       gen-bigdec])
+                 expected (gen/one-of [gen/small-integer
+                                       gen-processable-double
+                                       gen-bigdec])]
                 (c/indicates-match?
                  (c/match
-                  (m/within-delta delta v)
-                  (+ v delta)))))
+                  (m/within-delta delta expected)
+                  (+ expected delta)))))
 
 (deftest with-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"
