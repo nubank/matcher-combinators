@@ -5,7 +5,7 @@
             [matcher-combinators.midje :refer [match throws-match match-with match-roughly match-equals]]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
-            [matcher-combinators.test-helpers :refer [greater-than-matcher]]
+            [matcher-combinators.test-helpers :refer [abs-value-matcher]]
             [orchestra.spec.test :as spec.test]
             [midje.emission.api :as emission])
   (:import [clojure.lang ExceptionInfo]))
@@ -280,32 +280,21 @@
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2} ExceptionInfo)
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 1} clojure.lang.ArityException))
 
-(defrecord AbsValue [expected]
-  core/Matcher
-  (-match [_this actual]
-    (cond
-      (= ::missing actual)    {::result/type   :mismatch
-                               ::result/value  (model/->Missing expected)
-                               ::result/weight 1}
-      (= (Math/abs actual)
-         (Math/abs expected)) {::result/type   :match
-                               ::result/value  actual
-                               ::result/weight 0}
-      :else                   {::result/type   :mismatch
-                               ::result/value  (model/->Mismatch expected actual)
-                               ::result/weight 1})))
-
-(def match-abs (match-with [int? ->AbsValue]))
+(def match-abs (match-with [int? abs-value-matcher]))
 
 (facts "match-with checker behavior"
   (core/indicates-match? (core/match -1 1)) => false
 
   (fact "using 2-arg match-with"
-    1 => (match-with [int? ->AbsValue] -1)
-    -1 => (match-with [int? ->AbsValue] 1))
+    1 => (match-with [int? abs-value-matcher] 1)
+    1 => (match-with [int? abs-value-matcher] -1)
+    -1 => (match-with [int? abs-value-matcher] 1)
+    -1 => (match-with [int? abs-value-matcher] -1))
   (fact "binding 1-arg match-with to new checker"
+    1 => (match-abs 1)
     1 => (match-abs -1)
-    -1 => (match-abs 1))
+    -1 => (match-abs 1)
+    -1 => (match-abs -1))
   (let [payload {:a {:b {:c 1}
                      :d {:e {:inner-e {:x 1 :y 2}}
                          :f 5
@@ -317,6 +306,8 @@
           payload
           => (match-equals {:a {:b {:c 1}
                                 :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}}))))
+
+
 
 (facts "match-equals"
   (fact "normal loose matching passes"
@@ -330,9 +321,5 @@
                                    {:a 1 :b 3.0})
   {:a 1 :b 3.05} =not=> (match-roughly 0.001
                                        {:a 1 :b 3.0}))
-
-(fact "example from docstring"
-  5 => (match-with [int? greater-than-matcher]
-                   4))
 
 (spec.test/unstrument)
