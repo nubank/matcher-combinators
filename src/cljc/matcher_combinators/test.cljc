@@ -21,7 +21,6 @@
    (def build-match-assert
      "Allows you to define a custom clojure.test match assert:
 
-
-     `(defmethod clojure.test/assert-expr 'baz? [msg form]
-     (build-match-assert 'baz? {java.lang.Long greater-than-matcher} msg form))`"
+     `(defmethod clojure.test/assert-expr 'abs-value? [msg form]
+     (build-match-assert 'abs-value? [int? abs-value-matcher] msg form))`"
      matcher-combinators.clj-test/build-match-assert))

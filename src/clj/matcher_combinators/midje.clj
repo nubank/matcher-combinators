@@ -37,17 +37,17 @@
                  uses the provided type->matcher map to redefine the default
                  matchers used for the specified types.
 
-                 By default when the system sees a `java.lang.Long` it applies
+                 By default when the system sees a number, it applies
                  the `equals` matcher to it.  So if, for example, we want to
-                 check that all Longs are greater than whatever Long provided
-                 in the matcher, we would do:
+                 match ints by their absolute value, we could do this:
 
-                 `(defn greater-than-matcher [expected-long]
-                    (matcher-combinators.core/->PredMatcher
-                      (fn [actual] (> actual expected-long))
-                      (str \"greater than \" expected-long)))
+                     (defn abs-value-matcher [expected]
+                       (core/->PredMatcher
+                        (fn [actual] (= (Math/abs expected)
+                                        (Math/abs actual)))
+                        (str \"equal to abs value of \" expected)))
 
-                 (match-with [int? greater-than-matcher])`
+                     (match-with [int? abs-value-matcher])
 
                  NOTE: currently doesn't work in midje `provided` expressions"
             :arglists '([type->default-matcher]

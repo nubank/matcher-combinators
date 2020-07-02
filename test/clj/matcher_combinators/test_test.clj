@@ -3,7 +3,7 @@
             [matcher-combinators.test :refer :all]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.test-helpers :as test-helpers :refer [greater-than-matcher]])
+            [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [clojure.lang ExceptionInfo]))
 
 (use-fixtures :once test-helpers/instrument)
@@ -82,16 +82,20 @@
     (testing "fails with a nice message when you provide too many arguments"
       (is (thrown-match? ExceptionInfo {:a 1} (bang!) :extra-arg)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DEPRECATED
+;; - the rest of these tests are for deprecated APIs
+
 (deftest match-with-test
-  (is (match-with? {java.lang.Long greater-than-matcher}
-                   4
+  (is (match-with? {java.lang.Long abs-value-matcher}
+                   -5
                    5)))
 
-(defmethod clojure.test/assert-expr 'match-greather-than? [msg form]
-  (build-match-assert 'match-greather-than? {java.lang.Long greater-than-matcher} msg form))
+(defmethod clojure.test/assert-expr 'match-abs-value? [msg form]
+  (build-match-assert 'match-abs-value? {java.lang.Long abs-value-matcher} msg form))
 
-(deftest match-greater-than-test
-  (is (match-greather-than? 4 5)))
+(deftest custom-assert-expr
+  (is (match-abs-value? - 5)))
 
 (deftest match-equals-test
   (is (match-equals? {:a 1}
@@ -109,8 +113,5 @@
 
 (deftest match-roughly-test
   (is (match-roughly? 0.1
-                      {:a 1 :b 3.0}
-                      {:a 1 :b 3.05}))
-  (is (match-roughly? 0.1M
                       {:a 1 :b 3.0}
                       {:a 1 :b 3.05})))

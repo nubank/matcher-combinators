@@ -9,7 +9,7 @@
             [matcher-combinators.test]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]
-            [matcher-combinators.test-helpers :as test-helpers :refer [greater-than-matcher]])
+            [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (use-fixtures :once test-helpers/instrument)
@@ -249,16 +249,16 @@
 
 (deftest match-with-matcher
   (testing "processes overrides in order"
-    (let [matcher (m/match-with [pos? greater-than-matcher
+    (let [matcher (m/match-with [pos? abs-value-matcher
                                  int? m/equals]
                                 5)]
-      (is (match? matcher 6))
-      (is (no-match? matcher 5)))
-    (let [matcher (m/match-with [pos? greater-than-matcher
+      (is (match? matcher 5))
+      (is (match? matcher -5)))
+    (let [matcher (m/match-with [pos? abs-value-matcher
                                  int? m/equals]
                                 -5)]
-      (is (match? matcher -5))
-      (is (no-match? matcher -6))))
+      (is (no-match? matcher 5))
+      (is (match? matcher -5))))
   (testing "maps"
     (testing "passing case with equals override"
       (is (match? (m/match-with [map? m/equals]
