@@ -1,6 +1,6 @@
 # Releasing
 
-To release a new version in Clojars, first make sure your local master is sync'd with master on github:
+Anybody with write access to this repository can release a new version and deploy it to Clojars. To do this, first make sure your local master is sync'd with master on github:
 
 ```bash
 git checkout master
