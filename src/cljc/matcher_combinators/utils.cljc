@@ -1,4 +1,4 @@
-(ns matcher-combinators.utils
+(ns ^:no-doc matcher-combinators.utils
   "Internal use only. Subject (and likely) to change.")
 
 (defn- processable-number? [v]
@@ -14,16 +14,22 @@
     (.abs n)
     (Math/abs n)))
 
-(defn within-delta? [delta expected actual]
+(defn ^:no-doc within-delta?
+  "Internal use only. Subject to change and removal.
+  Supports the `within-delta` matcher."
+  [delta expected actual]
   (and (processable-number? actual)
        (>= expected (- actual (abs delta)))
        (<= expected (+ actual (abs delta)))))
 
-(defn find-first [pred coll]
+(defn ^:no-doc find-first
+  "Internal use only. Subject to change and removal."
+  [pred coll]
   (->> coll (filter pred) first))
 
-(defn remove-first
-  "Similar to `remove` but stops after removing 1 element"
+(defn ^:no-doc remove-first
+  "Internal use only. Subject to change and removal.
+  Similar to `remove` but stops after removing 1 element"
   [pred coll]
   (let [[x [y & z]] (split-with (complement pred) coll)]
     (concat x z)))
