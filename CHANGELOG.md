@@ -39,6 +39,13 @@ change log follows the conventions of
 (match-roughly? <delta> <expected> <actual>)
 ```
 
+### BREAKING CHANGE
+
+We removed `matcher-combinators.utils/match-roughly` in 3.0.0. If you were
+using it, you should use `matcher-combinators.matchers/within-delta`
+instead. We've documented `matcher-combinators.utils` as "Internal use
+only." for clarification.
+
 ## [2.1.1]
 - fix issue matching `false` in the context of sets [#124](https://github.com/nubank/matcher-combinators/issues/124)
 
