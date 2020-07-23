@@ -69,8 +69,8 @@
 
 (defn pred
   "Matcher that will match when `pred` of the actual value returns true."
-  [pred]
-  (core/->PredMatcher pred (str "predicate: " pred)))
+  ([pred] (core/->PredMatcher pred (str "predicate: " pred)))
+  ([pred desc] (core/->PredMatcher pred desc)))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
