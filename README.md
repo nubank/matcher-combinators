@@ -198,8 +198,8 @@ For example, if you want to do exact map matching you need to use a log of `m/eq
 
 ```clojure
 (deftest exact-map-matching-by-hand
-  (is (match? (m/equals {:a (m/equals {:b (m/equals {:c odd?})})}))
-              {:a {:b {:c 1}}})
+  (is (match? (m/equals {:a (m/equals {:b (m/equals {:c odd?})})})
+              {:a {:b {:c 1}}}))
   ;; without m/equals, the system defaults to m/embeds for maps,
   ;; which has looser matching properties
   (is (match? {:a {:b {:c odd?}}}
