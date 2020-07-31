@@ -30,3 +30,27 @@ jobs:
 
     - name: Run cljs tests
       run: lein test-node
+
+  run-tests-on-java-11:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 11
+
+    - name: Print java version
+      run: java -version
+
+    - name: Install dependencies
+      run: lein deps
+
+    - name: Run midje tests
+      run: lein midje
+
+    - name: Run clj tests
+      run: lein test
+
+    - name: Run cljs tests
+      run: lein test-node
