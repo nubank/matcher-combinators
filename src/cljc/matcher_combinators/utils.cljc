@@ -10,9 +10,10 @@
                 (not (infinite? v)))))
 
 (defn- abs [n]
-  (if (decimal? n)
-    (.abs n)
-    (Math/abs n)))
+  #?(:clj (if (decimal? n)
+            (.abs n)
+            (Math/abs n))
+     :cljs (js/Math.abs n)))
 
 (defn ^:no-doc within-delta?
   "Internal use only. Subject to change and removal.
