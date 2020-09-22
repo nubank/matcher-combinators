@@ -1,7 +1,8 @@
 (ns matcher-combinators.matchers
   (:require [clojure.string :as string]
             [matcher-combinators.core :as core]
-            [matcher-combinators.utils :as utils]))
+            [matcher-combinators.utils :as utils])
+  #?(:clj (:import [matcher_combinators.core Absent])))
 
 (defn- non-internal-record? [v]
   (and (record? v)
@@ -164,6 +165,9 @@
 
          (and (record? value) (coll? (:expected value)))
          (update value :expected match-with-elements overrides)
+
+         (= Absent (type value))
+         value
 
          (map? value)
          ((matcher-for value overrides)

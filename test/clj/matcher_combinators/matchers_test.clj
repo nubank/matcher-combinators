@@ -279,7 +279,15 @@
                               (m/match-with [map? m/embeds]
                                             {:b :c})})}
            {:o {:a {:b :c :d :e}}
-            :p :q}))))
+            :p :q})))
+    (testing "using `absent` matcher"
+      (is (match? (m/match-with [map? m/equals]
+                                {:a m/absent
+                                 :b :c})
+                  {:b :c}))
+      (is (match? (m/match-with [map? m/embeds]
+                                {:a m/absent})
+                  {:b :c}))))
 
   (testing "sets"
     (testing "passing cases"
