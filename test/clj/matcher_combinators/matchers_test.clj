@@ -281,6 +281,10 @@
            {:o {:a {:b :c :d :e}}
             :p :q})))
     (testing "using `absent` matcher"
+      (is (match? (m/match-with [map? m/equals]
+                                {:a m/absent
+                                 :b :c})
+                  {:b :c}))
       (is (match? (m/match-with [map? m/embeds]
                                 {:a m/absent})
                   {:b :c}))))
