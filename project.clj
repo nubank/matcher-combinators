@@ -24,7 +24,7 @@
 
   :profiles {:dev {:plugins [[lein-project-version "0.1.0"]
                              [lein-midje "3.2.1"]
-                             [lein-cljfmt "0.5.7"]
+                             [lein-cljfmt "0.7.0"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-ancient "0.6.15"]
                              [lein-doo "0.1.11"]]

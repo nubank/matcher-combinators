@@ -3,19 +3,19 @@
   you're running on)."
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
-       :clj  [clojure.test :as t :refer        [is are deftest testing]])
-    #?(:cljs [matcher-combinators.cljs-test]
-       :clj  [matcher-combinators.clj-test])))
+      :clj  [clojure.test :as t :refer        [is are deftest testing]])
+   #?(:cljs [matcher-combinators.cljs-test]
+      :clj  [matcher-combinators.clj-test])))
 
 (declare ^{:arglists '([matcher actual])}
-         match?)
+ match?)
 (declare ^{:arglists '([type->matcher matcher actual])}
-         match-with?)
+ match-with?)
 (declare ^{:arglists '([matcher actual]
                        [exception-class matcher actual])}
-         thrown-match?)
+ thrown-match?)
 (declare ^{:arglists '([delta matcher actual])}
-         match-roughly?)
+ match-roughly?)
 
 #?(:clj
    (def build-match-assert

@@ -135,7 +135,7 @@
     ;; it wasn't used in the context of a map
     {::result/type  :mismatch
      ::result/value (model/->InvalidMatcherContext
-                      "`absent` matcher should only be used as the value in a map")
+                     "`absent` matcher should only be used as the value in a map")
      ::result/weight 1}))
 
 (defrecord InvalidType [provided matcher-name type-msg]
@@ -215,10 +215,10 @@
     (if-let [issue (validate-input expected actual record? map? 'equals "record")]
       issue
       (if (= (type expected) (type actual))
-          (match (->EqualsMap expected) actual)
-          {::result/type   :mismatch
-           ::result/value  (model/->TypeMismatch expected actual)
-           ::result/weight 1}))))
+        (match (->EqualsMap expected) actual)
+        {::result/type   :mismatch
+         ::result/value  (model/->TypeMismatch expected actual)
+         ::result/weight 1}))))
 
 (defn- type-preserving-mismatch [base-list values]
   (let [lst (into base-list values)]
@@ -347,7 +347,7 @@
        ::result/weight 0}
       (match (->EqualsSeq (concat (:matched result)
                                   (:unmatched result)))
-             (:elements result)))))
+        (:elements result)))))
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
