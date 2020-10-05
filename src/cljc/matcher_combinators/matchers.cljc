@@ -1,7 +1,8 @@
 (ns matcher-combinators.matchers
   (:require [clojure.string :as string]
             [matcher-combinators.core :as core]
-            [matcher-combinators.utils :as utils])
+            [matcher-combinators.utils :as utils]
+            #?(:cljs [matcher-combinators.core :refer [Absent]]))
   #?(:clj (:import [matcher_combinators.core Absent])))
 
 (defn- non-internal-record? [v]
