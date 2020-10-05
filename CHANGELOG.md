@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.1.4]
+- fix `undeclared Var matcher-combinators.matchers/Absent` warning introduced in `3.1.3`
+
 ## [3.1.3]
 - fix issue where `absent` matcher doesn't work with `match-with`
 

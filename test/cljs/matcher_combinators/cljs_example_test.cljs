@@ -31,6 +31,7 @@
 (deftest standalone-match?
   (testing "with expected and actual"
     (is (standalone/match? (m/in-any-order [1 2]) [1 2]))
+    (is (standalone/match? {:a 1 :b m/absent} {:a 1}))
     (is (not (standalone/match? (m/in-any-order [1 2]) [1 3]))))
   (testing "with partial application"
     (let [match-fn (standalone/match? (m/embeds {:a odd?}))]
