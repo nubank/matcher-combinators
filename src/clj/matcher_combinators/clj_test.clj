@@ -35,6 +35,10 @@
               :match-result result}
     {:type ::mismatch}))
 
+(defn tag-expected [expected]
+  (with-meta {:expected expected}
+    {:type ::expected}))
+
 (defmethod clojure.test/assert-expr 'match? [msg form]
   `(let [args#              (list ~@(rest form))
          [matcher# actual#] args#]
@@ -53,12 +57,12 @@
           (if match?#
             {:type     :pass
              :message  ~msg
-             :expected '~form
+             :expected (tag-expected '~form)
              :actual   (list 'match? matcher# actual#)}
             (with-file+line-info
               {:type     :fail
                :message  ~msg
-               :expected '~form
+               :expected (tag-expected '~form)
                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
                                                      result#)})))
          match?#)
@@ -93,12 +97,12 @@
           (if (core/indicates-match? result#)
             {:type     :pass
              :message  ~msg
-             :expected '~form
+             :expected (tag-expected '~form)
              :actual   (list 'match? ~matcher ~actual)}
             (with-file+line-info
               {:type     :fail
                :message  ~msg
-               :expected '~form
+               :expected (tag-expected '~form)
                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? ~matcher ~actual))
                                                      result#)}))))
 
@@ -133,7 +137,7 @@
                 :actual   (symbol (str ~arity " argument(s) provided: " '~form))})
               (clojure.test/do-report {:type     :fail
                                        :message  ~msg
-                                       :expected '~form
+                                       :expected (tag-expected '~form)
                                        :actual   (symbol "the expected exception wasn't thrown")}))
             (catch ~klass e#
               (let [result# (core/match ~matcher (ex-data e#))]
@@ -141,12 +145,12 @@
                  (if (core/indicates-match? result#)
                    {:type     :pass
                     :message  ~msg
-                    :expected '~form
+                    :expected (tag-expected '~form)
                     :actual   (list 'thrown-match? ~klass ~matcher '~body)}
                    (with-file+line-info
                      {:type     :fail
                       :message  ~msg
-                      :expected '~form
+                      :expected (tag-expected '~form)
                       :actual   (tagged-for-pretty-printing (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
                                                             result#)
                       :ex-class ~klass}))))
@@ -155,6 +159,13 @@
 (defmethod clojure.core/print-method ::mismatch [{:keys [match-result]} out]
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
+
+(defmethod clojure.core/print-method ::expected [{:keys [expected]} out]
+  (binding [*out* out]
+    (let [expected-str (pr-str expected)]
+      (if (> (count expected-str) 10)
+        (print (subs expected-str 0 10) "... )")
+        (print expected)))))
 
 (defn ^:deprecated build-match-assert
   "DEPRECATED: use (match? (matchers/match-with <overrides> <expected>) <actual>) "
