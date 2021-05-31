@@ -1,6 +1,7 @@
 (ns matcher-combinators.printer
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
+            [flare.string]
             #?(:clj  [matcher-combinators.model]
                :cljs [matcher-combinators.model :refer [Mismatch
                                                         Missing
@@ -18,10 +19,18 @@
 
 (defmulti markup-expression type)
 
-(defmethod markup-expression Mismatch [mismatch]
-  (list 'mismatch
-        (->ColorTag :yellow (:expected mismatch))
-        (->ColorTag :red (:actual mismatch))))
+(defmethod markup-expression Mismatch [{:keys [expected actual]}]
+  (if (and (string? expected) (string? actual))
+    (let [expected-diff (flare.string/diff-tuples->string
+                         (flare.string/diff-tuples expected actual))
+          actual-diff   (flare.string/diff-tuples->string
+                         (flare.string/diff-tuples actual expected))]
+      (list 'mismatch
+            (->ColorTag :yellow expected-diff)
+            (->ColorTag :red actual-diff)))
+    (list 'mismatch
+          (->ColorTag :yellow expected)
+          (->ColorTag :red actual))))
 
 (defmethod markup-expression Missing [missing]
   (list 'missing (->ColorTag :red (:expected missing))))
