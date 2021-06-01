@@ -378,3 +378,15 @@
     (is (match? (m/match-with [number? (m/within-delta 0.01M)]
                               #{{:b 1M} {:b 0M} {:b 3M}})
                 #{{:b 1M} {:b 0M} {:b 3M}}))))
+
+(deftest absent-matcher
+  (testing "predicate not-match"
+    (is (match? [1 (m/not-matcher odd?) 3]
+                [1 2 3])))
+  (testing "declarative not-match"
+    (is (match? [1 (m/not-matcher {:a 1}) 3]
+                [1 {:a 2 :b 1} 3])))
+  (testing "in-any-order with not-match"
+    (is (match? (m/in-any-order
+                 [odd? pos? (m/not-matcher odd?)])
+                [1 2 3]))))
