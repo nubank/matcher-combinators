@@ -117,9 +117,9 @@
                       {:a 1 :b 3.05})))
 
 (deftest absent-pred
-  (is (match? [1 (m/not-matcher even?) 3]
+  (is (match? [1 (m/not-matcher odd?) 3]
               [1 2 3])))
 
 (deftest absent-matcher
-  (is (match? [1 (m/not-matcher {:a 2}) 3]
-              [1 {:a 2} 3])))
+  (is (match? [1 (m/not-matcher {:a 1}) 3]
+              [1 {:a 2 :b 1} 3])))
