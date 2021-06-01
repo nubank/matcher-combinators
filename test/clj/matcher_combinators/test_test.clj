@@ -115,3 +115,11 @@
   (is (match-roughly? 0.1
                       {:a 1 :b 3.0}
                       {:a 1 :b 3.05})))
+
+(deftest absent-pred
+  (is (match? [1 (m/not-matcher even?) 3]
+              [1 2 3])))
+
+(deftest absent-matcher
+  (is (match? [1 (m/not-matcher {:a 2}) 3]
+              [1 {:a 2} 3])))

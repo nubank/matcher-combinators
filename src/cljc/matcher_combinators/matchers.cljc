@@ -74,6 +74,12 @@
   [pred]
   (core/->PredMatcher pred (str "predicate: " pred)))
 
+(defn not-matcher
+  [expected]
+  (let [not-match? (fn [actual] (not (core/indicates-match? (core/match expected actual))))]
+    (core/->PredMatcher not-match?
+                        (str "expected mismatch from: " expected))))
+
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
 
