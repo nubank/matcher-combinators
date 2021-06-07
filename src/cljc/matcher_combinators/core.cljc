@@ -1,5 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
+            [clojure.pprint :as pprint]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
@@ -142,6 +143,12 @@
                       "`absent` matcher should only be used as the value in a map")
      ::result/weight 1})
   (-name [_] 'absent))
+
+(defmethod clojure.pprint/simple-dispatch Absent [absent]
+  (pr (-name absent)))
+
+(defmethod print-method Absent [this ^java.io.Writer w]
+  (.write w (name (-name this))))
 
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher

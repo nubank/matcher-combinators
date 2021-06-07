@@ -379,7 +379,10 @@
                               #{{:b 1M} {:b 0M} {:b 3M}})
                 #{{:b 1M} {:b 0M} {:b 3M}}))))
 
-(deftest absent-matcher
+(deftest mismatcher-matcher
+  (testing "assert presence of key via double negation"
+    (is (match? (m/mismatch {:a m/absent})
+                {:a 1})))
   (testing "assert an entry is definitely not in a sequence"
     (is (match? (m/mismatch (m/embeds [even?]))
                 [1 3 5 7])))
