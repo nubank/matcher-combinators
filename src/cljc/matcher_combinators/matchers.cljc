@@ -28,8 +28,17 @@
   (core/->SetEquals expected true))
 
 (defn embeds
-  "Matcher that will match when the map contains some of the same key/values as
-  the `expected` map."
+  "Matcher for asserting that the expected is embedded in the actual.
+
+  Behaviour differs depending on the form of the `expected`:
+
+  - map:      matches when the map contains some of the same key/values as the
+              `expected` map.
+  - sequence: order-agnostic matcher that will match when provided a subset of
+              the `expected` sequence.
+  - set:      matches when all the matchers in the `expected` set can be
+              matched with an element in the provided set. There may be more
+              elements in the provided set than there are matchers."
   [expected]
   (cond
     (sequential? expected)          (core/->EmbedsSeq expected)
