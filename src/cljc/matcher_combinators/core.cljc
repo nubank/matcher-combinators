@@ -479,6 +479,32 @@
        ::result/weight 1}))
   (-name [_] 'predicate))
 
+(defn- printable-matcher [matcher]
+  (try
+    (if-let [n (-name matcher)]
+      `(~(symbol n) ~(:expected matcher))
+      matcher)
+    (catch IllegalArgumentException _e
+      matcher)))
+
+(defrecord Mismatcher
+  [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (let [{::result/keys [type weight] :as result} (match expected actual)]
+      (if (= :match type)
+        {::result/type   :mismatch
+         ::result/value  (model/->ExpectedMismatch
+                          (printable-matcher expected)
+                          actual)
+         ::result/weight weight}
+        {::result/type   :match
+         ::result/value  actual
+         ::result/weight 0})))
+  (-name [_] 'mismatch))
+
 (defrecord CljsUriEquals [expected]
   Matcher
   (-matcher-for [this] this)

@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
             #?(:clj  [matcher-combinators.model]
-               :cljs [matcher-combinators.model :refer [Mismatch
+               :cljs [matcher-combinators.model :refer [ExpectedMismatch
+                                                        Mismatch
                                                         Missing
                                                         Unexpected
                                                         TypeMismatch
@@ -11,8 +12,8 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
-     (:import [matcher_combinators.model Mismatch Missing Unexpected
-               TypeMismatch InvalidMatcherContext InvalidMatcherType])))
+     (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing
+               Unexpected TypeMismatch InvalidMatcherContext InvalidMatcherType])))
 
 (defrecord ColorTag [color expression])
 
@@ -20,6 +21,12 @@
 
 (defmethod markup-expression Mismatch [mismatch]
   (list 'mismatch
+        (->ColorTag :yellow (:expected mismatch))
+        (->ColorTag :red (:actual mismatch))))
+
+(defmethod markup-expression ExpectedMismatch [mismatch]
+  (list 'mismatch
+        (->ColorTag :yellow (symbol "expected mismatch from: "))
         (->ColorTag :yellow (:expected mismatch))
         (->ColorTag :red (:actual mismatch))))
 

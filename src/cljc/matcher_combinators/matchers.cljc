@@ -75,11 +75,14 @@
   [pred]
   (core/->PredMatcher pred `(~'pred ~pred)))
 
-(defn not-matcher
+(defn mismatch
+  "Negation matcher that takes in an `expected` matcher and passes when it
+  doesn't match the `actual`.
+
+  When possible use positive matching instead as negation matching quickly
+  leads to very unreadable match assertions"
   [expected]
-  (let [not-match? (fn [actual] (not (core/indicates-match? (core/match expected actual))))]
-    (core/->PredMatcher not-match?
-                        (str "expected mismatch from: " expected))))
+  (core/->Mismatcher expected))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
