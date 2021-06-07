@@ -66,13 +66,14 @@
   (core/->Regex expected))
 
 (def absent
-  "Value-position matcher for maps that matches when containing map doesn't have the key pointing to this matcher."
+  "Value-position matcher for maps that matches when containing map doesn't
+  have the key pointing to this matcher."
   (core/->Absent))
 
 (defn pred
   "Matcher that will match when `pred` of the actual value returns true."
   [pred]
-  (core/->PredMatcher pred (str "predicate: " pred)))
+  (core/->PredMatcher pred `(~'pred ~pred)))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
