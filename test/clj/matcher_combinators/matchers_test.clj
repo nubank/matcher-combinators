@@ -378,3 +378,21 @@
     (is (match? (m/match-with [number? (m/within-delta 0.01M)]
                               #{{:b 1M} {:b 0M} {:b 3M}})
                 #{{:b 1M} {:b 0M} {:b 3M}}))))
+
+(deftest mismatcher-matcher
+  (testing "assert presence of key via double negation"
+    (is (match? (m/mismatch {:a m/absent})
+                {:a 1})))
+  (testing "assert an entry is definitely not in a sequence"
+    (is (match? (m/mismatch (m/embeds [even?]))
+                [1 3 5 7])))
+  (testing "predicate mismatch"
+    (is (match? [1 (m/mismatch odd?) 3]
+                [1 2 3])))
+  (testing "declarative mismatch"
+    (is (match? [1 (m/mismatch {:a 1}) 3]
+                [1 {:a 2 :b 1} 3])))
+  (testing "in-any-order with mismatch"
+    (is (match? (m/in-any-order
+                 [odd? pos? (m/mismatch odd?)])
+                [1 2 3]))))
