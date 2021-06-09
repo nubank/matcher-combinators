@@ -182,10 +182,10 @@ for a specific value, e.g.
 
 #### negative matchers
 
-Negative matchers, that is, those asserting the absence of something, are generally discouraged due to the negative effects they can have on code readability.
+Negative matchers, that is, those asserting the absence of something, are generally discouraged due to the adverse effect they can have on code readability.
 
-- `mismatch`: Negation matcher that takes in an `expected` matcher and passes when it doesn't match the `actual`. For example, to assert the absence of an entry in a list `(is (match? (mismatch (embeds [odd?])) actual))`. Considering the mental burden of reasoning about negation, please use sparingly.
-- `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't.
+- `mismatch`: negation matcher that takes in an `expected` matcher and passes when it doesn't match the `actual`. For example, to assert the absence of an entry in a list `(is (match? (mismatch (embeds [odd?])) actual))`. Considering the mental burden of reasoning about negation, please use sparingly.
+- `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't. `absent` should only be used when the absence of a key is behaviourly important.
 
 ##### readability concerns with negation matchers
 
