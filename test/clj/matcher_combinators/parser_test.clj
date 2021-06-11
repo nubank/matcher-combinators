@@ -123,9 +123,9 @@
         another-object (RuntimeException.)]
     (testing "Objects default to equality matching"
       (is (= (core/match (equals an-object)
-                         an-object)
+               an-object)
              (core/match an-object
-                         an-object)))
+               an-object)))
       (is (= (core/indicates-match? (core/match another-object (Object.)))
              (= another-object (Object.)))))))
 
