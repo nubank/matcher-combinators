@@ -176,17 +176,34 @@ for a specific value, e.g.
 
 - `regex`: matches the `actual` value when provided an `expected-regex` using `(re-find expected-regex actual)`
 
-- `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't.
-
 - `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep stucture) (see Overriding default matchers, below)
 
 - `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
 
+#### negative matchers
+
+Negative matchers, that is, those asserting the absence of something, are generally discouraged due to the adverse effect they can have on code readability.
+
+- `mismatch`: negation matcher that takes in an `expected` matcher and passes when it doesn't match the `actual`. For example, to assert the absence of an entry in a list `(is (match? (mismatch (embeds [odd?])) actual))`. Considering the mental burden of reasoning about negation, please use sparingly.
+- `absent`: for use in the context of maps. Matches when the actual map is missing the key pointing to the `absent` matcher. For example `(is (match? {:a absent :b 1} {:b 1}))` matches but `(is (match? {:a absent :b 1} {:a 0 :b 1}))` won't. `absent` should only be used when the absence of a key is behaviourly important.
+
+##### readability concerns with negation matchers
+
+```clojure
+(deftest avoid-negative-matchers
+  (testing "normal assertion that `:a` is present"
+    (match? {:a any?}
+            actual))
+  (testing "double negation version"
+    (match? (matcher-combinators.matchers/mismatch {:a matcher-combinators.matchers/absent})
+            actual)))
+```
+
 ### building new matchers
 
-You can extend your data-types to work with `matcher-combinators` by implemented the [`Matcher` protocol](https://github.com/nubank/matcher-combinators/blob/066da1a07ab620a6c63bbb0ce8e1b6b3a4ccd956/src/matcher_combinators/core.clj#L5-L9).
+You can extend your data-types to work with `matcher-combinators` by implemented the [`Matcher` protocol](https://github.com/nubank/matcher-combinators/blob/afdb64012757719bb699c2a7a3d9d8c2f06a9d32/src/cljc/matcher_combinators/core.cljc#L8-L18).
 
-An example of this in the wild can be seen in the `abracad` library [here](https://github.com/nubank/abracad/blob/b52e6a7114461f50bdacc2cf09a1de08f707b9f3/test/abracad/custom_types_test.clj#L15-L20).
+In the `Matcher` protocol `-name` and `-matcher-for` are largely boilerplate while the important implementation is `-match`, who should return a map adhering to the [result spec](https://github.com/nubank/matcher-combinators/blob/afdb64012757719bb699c2a7a3d9d8c2f06a9d32/src/cljc/matcher_combinators/result.cljc#L14).
 
 ## Overriding default matchers
 

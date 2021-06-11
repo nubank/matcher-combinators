@@ -1,5 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
+            [clojure.pprint :as pprint]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
@@ -12,6 +13,8 @@
     [expected]
     [expected t->m]
     "Do not call directly. Implementation for matcher-combinators.matchers/matcher-for.")
+  (-base-name [this]
+    "The name of the matcher as a symbol")
   (-match [this actual]
     "Do not call directly. Implementation for matcher-combinators.core/match."))
 
@@ -66,7 +69,8 @@
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [_ actual]
-    (value-match expected actual)))
+    (value-match expected actual))
+  (-base-name [_] 'equals))
 
 (defn- validate-input
   ([expected actual pred matcher-name type]
@@ -107,8 +111,8 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
-    (if-let [issue (validate-input expected actual regex? (constantly true) 'regex regex-type)]
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual regex? (constantly true) (-base-name this) regex-type)]
       issue
       (try
         (if-let [match (re-find expected actual)]
@@ -124,7 +128,8 @@
                            (str "provided: " actual)
                            (str "regex " (print-str expected) " can't match 'expected' argument of type: "
                                 (type actual)))
-           ::result/weight 1})))))
+           ::result/weight 1}))))
+  (-base-name [_] 'regex))
 
 (defrecord Absent []
   Matcher
@@ -136,7 +141,11 @@
     {::result/type  :mismatch
      ::result/value (model/->InvalidMatcherContext
                       "`absent` matcher should only be used as the value in a map")
-     ::result/weight 1}))
+     ::result/weight 1})
+  (-base-name [_] 'absent))
+
+(defmethod clojure.pprint/simple-dispatch Absent [absent]
+  (print (-base-name absent)))
 
 (defrecord InvalidType [provided matcher-name type-msg]
   Matcher
@@ -149,7 +158,8 @@
                      (str matcher-name
                           " should be called with 'expected' argument of type: "
                           type-msg))
-     ::result/weight 1}))
+     ::result/weight 1})
+  (-base-name [_] (symbol matcher-name)))
 
 (defn- find-unexpected [expected-map key]
   (when-let [[k v] (find expected-map key)]
@@ -193,32 +203,35 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
-    (if-let [issue (validate-input expected actual map? 'embeds "map")]
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual map? (-base-name this) "map")]
       issue
-      (compare-maps expected actual identity true))))
+      (compare-maps expected actual identity true)))
+  (-base-name [_] 'embeds))
 
 (defrecord EqualsMap [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
-    (if-let [issue (validate-input expected actual map? 'equals "map")]
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual map? (-base-name this) "map")]
       issue
-      (compare-maps expected actual model/->Unexpected false))))
+      (compare-maps expected actual model/->Unexpected false)))
+  (-base-name [_] 'equals))
 
 (defrecord EqualsRecord [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
-    (if-let [issue (validate-input expected actual record? map? 'equals "record")]
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual record? map? (-base-name this) "record")]
       issue
       (if (= (type expected) (type actual))
           (match (->EqualsMap expected) actual)
           {::result/type   :mismatch
            ::result/value  (model/->TypeMismatch expected actual)
-           ::result/weight 1}))))
+           ::result/weight 1})))
+  (-base-name [_] 'equals))
 
 (defn- type-preserving-mismatch [base-list values]
   (let [lst (into base-list values)]
@@ -233,7 +246,8 @@
     (-match [_this actual]
       {::result/type   :mismatch
        ::result/value  (model/->Unexpected actual)
-       ::result/weight 1})))
+       ::result/weight 1})
+    (-base-name [_] 'unexpected)))
 
 (defn- normalize-inputs-length
   "Modify the matchers and actuals sequences to match in length.
@@ -275,11 +289,12 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual sequential? 'equals "sequential")]
+                    expected actual sequential? (-base-name this) "sequential")]
       issue
-      (sequence-match expected actual false))))
+      (sequence-match expected actual false)))
+  (-base-name [_] 'equals))
 
 (defn- matched-successfully? [unmatched elements subset?]
   (or (and subset? (empty? unmatched))
@@ -360,11 +375,12 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual sequential? 'in-any-order "sequential")]
+                    expected actual sequential? (-base-name this) "sequential")]
       issue
-      (match-any-order expected actual false))))
+      (match-any-order expected actual false)))
+  (-base-name [_] 'in-any-order))
 
 (defn- matchable-set?
   "Clojure's set functions expect clojure.lang.IPersistentSet, but
@@ -377,69 +393,73 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (if accept-seq?
                      (validate-input expected
                                      actual
                                      #(or (matchable-set? %) (sequential? %))
                                      matchable-set?
-                                     'set-equals
+                                     (-base-name this)
                                      "set or sequential")
                      (validate-input expected
                                      actual
                                      matchable-set?
-                                     'equals
+                                     (-base-name this)
                                      "set"))]
       issue
       (let [{::result/keys [type value weight]} (match-any-order
                                                  (vec expected) (vec actual) false)]
         {::result/type   type
          ::result/value  (set value)
-         ::result/weight weight}))))
+         ::result/weight weight})))
+  (-base-name [_] (if accept-seq? 'set-equals 'equals)))
 
 (defrecord Prefix [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual sequential? 'prefix "sequential")]
+                    expected actual sequential? (-base-name this) "sequential")]
       issue
-      (sequence-match expected actual true))))
+      (sequence-match expected actual true)))
+  (-base-name [_] 'prefix))
 
 (defrecord EmbedsSeq [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual sequential? 'embeds "sequential")]
+                    expected actual sequential? (-base-name this) "sequential")]
       issue
-      (match-any-order expected actual true))))
+      (match-any-order expected actual true)))
+  (-base-name [_] 'embeds))
 
 (defrecord SetEmbeds [expected accept-seq?]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (if accept-seq?
                      (validate-input expected
                                      actual
                                      #(or (matchable-set? %) (sequential? %))
                                      matchable-set?
-                                     'set-embeds
+                                     (-base-name this)
                                      "set or sequential")
                      (validate-input expected
                                      actual
                                      matchable-set?
-                                     'embeds
+                                     (-base-name this)
                                      "set"))]
       issue
       (let [{::result/keys [type value weight]} (match-any-order
                                                  (vec expected) (vec actual) true)]
         {::result/type   type
          ::result/value  (set value)
-         ::result/weight weight}))))
+         ::result/weight weight})))
+  (-base-name [_] (if accept-seq? 'set-embeds 'embeds)))
 
 (defrecord PredMatcher [pred desc]
   Matcher
@@ -460,15 +480,43 @@
       :else
       {::result/type  :mismatch
        ::result/value (model/->Mismatch desc actual)
-       ::result/weight 1})))
+       ::result/weight 1}))
+  (-base-name [_] 'predicate))
+
+(defn- printable-matcher [matcher]
+  (try
+    (if-let [n (-base-name matcher)]
+      `(~(symbol n) ~(:expected matcher))
+      matcher)
+    (catch #?(:clj IllegalArgumentException :cljs Exception) _e
+      matcher)))
+
+(defrecord Mismatcher
+  [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (let [{::result/keys [type weight] :as result} (match expected actual)]
+      (if (= :match type)
+        {::result/type   :mismatch
+         ::result/value  (model/->ExpectedMismatch
+                          (printable-matcher expected)
+                          actual)
+         ::result/weight weight}
+        {::result/type   :match
+         ::result/value  actual
+         ::result/weight 0})))
+  (-base-name [_] 'mismatch))
 
 (defrecord CljsUriEquals [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this actual]
+  (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual uri? 'equals "goog.Uri")]
+                    expected actual uri? (-base-name this) "goog.Uri")]
       issue
       (value-match (.toString expected)
-                   (.toString actual)))))
+                   (.toString actual))))
+  (-base-name [_] 'equals))
