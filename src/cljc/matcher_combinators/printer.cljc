@@ -1,7 +1,7 @@
 (ns matcher-combinators.printer
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
-            [flare.string]
+            #?(:clj [flare.string])
             #?(:clj  [matcher-combinators.model]
                :cljs [matcher-combinators.model :refer [ExpectedMismatch
                                                         Mismatch
@@ -20,18 +20,21 @@
 
 (defmulti markup-expression type)
 
-(defmethod markup-expression Mismatch [{:keys [expected actual]}]
+(defn- build-diff [expected actual]
   (if (and (string? expected) (string? actual))
     (let [expected-diff (flare.string/diff-tuples->string
-                         (flare.string/diff-tuples expected actual))
+                          (flare.string/diff-tuples expected actual))
           actual-diff   (flare.string/diff-tuples->string
-                         (flare.string/diff-tuples actual expected))]
-      (list 'mismatch
-            (->ColorTag :yellow expected-diff)
-            (->ColorTag :red actual-diff)))
+                          (flare.string/diff-tuples actual expected))]
+      [expected-diff actual-diff])
+    [expected actual]))
+
+(defmethod markup-expression Mismatch [{:keys [expected actual]}]
+  (let [[expected-out actual-out] #?(:clj  (build-diff expected actual)
+                                     :cljs [expected actual])] ;; TODO: figure out how to use flare with cljs
     (list 'mismatch
-          (->ColorTag :yellow expected)
-          (->ColorTag :red actual))))
+          (->ColorTag :yellow expected-out)
+          (->ColorTag :red actual-out))))
 
 (defmethod markup-expression ExpectedMismatch [mismatch]
   (list 'mismatch
