@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.2.1]
+- fix cljs issue introduced in `3.2.0`
+
 ## [3.2.0]
 - implement `mismtach` matcher that is satisfied when the provided `expected` doesn't match.
 
