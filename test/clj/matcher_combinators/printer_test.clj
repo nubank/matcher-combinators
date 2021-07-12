@@ -25,16 +25,16 @@
   (fact "Mismatches are marked up in yellow and red"
     (printer/markup-expression (model/->Mismatch 1 2))
     => (list 'mismatch
-             (printer/->ColorTag :yellow 1)
-             (printer/->ColorTag :red 2))
+             (list 'expected (printer/->ColorTag :yellow 1))
+             (list 'actual (printer/->ColorTag :red 2)))
 
     (for-all [expected any
               actual   any]
              {:num-tests 100}
              (printer/markup-expression (model/->Mismatch expected actual))
              => (list 'mismatch
-                      (printer/->ColorTag :yellow expected)
-                      (printer/->ColorTag :red actual))))
+                      (list 'expected (printer/->ColorTag :yellow expected))
+                      (list 'actual (printer/->ColorTag :red actual)))))
 
   (fact "Missing values are marked up in red"
     (printer/markup-expression (model/->Missing 42))
