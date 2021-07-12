@@ -125,11 +125,11 @@
 
 (deftest test-deprectated-match?
   (is (core/match? {::result/type :match
-                              ::result/weight 0
-                              ::result/value :does-not-matter}))
+                    ::result/weight 0
+                    ::result/value :does-not-matter}))
 
   (is (not (core/match? {::result/type :mismatch
-                                   ::result/weight 1
+                         ::result/weight 1
                          ::result/value :does-not-matter}))))
 
 (defspec sequence-matchers-match-when-elements-match-in-order
@@ -178,7 +178,6 @@
                 (not
                  (core/indicates-match?
                   (core/match (m expected) actual)))))
-
 
 (spec.test/instrument)
 

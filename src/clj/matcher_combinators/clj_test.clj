@@ -88,7 +88,7 @@
        (core/matcher? ~matcher)
        (let [result# (core/match
                       (matchers/match-with ~type->matcher ~matcher)
-                      ~actual)]
+                       ~actual)]
          (clojure.test/do-report
           (if (core/indicates-match? result#)
             {:type     :pass
@@ -182,7 +182,7 @@
                          (matchers/match-with
                           type->matcher#
                           matcher#)
-                         actual#)]
+                          actual#)]
             (clojure.test/do-report
              (if (core/indicates-match? result#)
                {:type     :pass
@@ -222,10 +222,10 @@
         form' (concat [directive] the-rest)]
     `(if (not (= 3 (count '~(rest form))))
        (clojure.test/do-report
-         {:type     :fail
-          :message  ~msg
-          :expected (symbol (str "`" '~directive "` expects 3 arguments: a `delta` number, a `matcher`, and the `actual`"))
-          :actual   (symbol (str (count '~(rest form)) " were provided: " '~form))})
+        {:type     :fail
+         :message  ~msg
+         :expected (symbol (str "`" '~directive "` expects 3 arguments: a `delta` number, a `matcher`, and the `actual`"))
+         :actual   (symbol (str (count '~(rest form)) " were provided: " '~form))})
        ~(build-match-assert
          'match-roughly? [number? roughly-delta?]
          msg
