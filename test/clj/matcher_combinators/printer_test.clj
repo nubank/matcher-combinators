@@ -36,6 +36,12 @@
                       (printer/->ColorTag :yellow expected)
                       (printer/->ColorTag :red actual))))
 
+  (fact "string mismatches show distance between strings"
+    (printer/markup-expression (model/->Mismatch "hello world" "h4110 w0r1d"))
+    => (list 'mismatch
+             (printer/->ColorTag :yellow "h(ello worl)d")
+             (printer/->ColorTag :red "h(4110 w0r1)d")))
+
   (fact "Missing values are marked up in red"
     (printer/markup-expression (model/->Missing 42))
     => (list 'missing
