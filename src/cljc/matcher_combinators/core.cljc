@@ -488,7 +488,7 @@
     (if-let [n (-base-name matcher)]
       `(~(symbol n) ~(:expected matcher))
       matcher)
-    (catch #?(:clj IllegalArgumentException :cljs Exception) _e
+    (catch #?(:clj IllegalArgumentException :cljs js/Error) _e
       matcher)))
 
 (defrecord Mismatcher
