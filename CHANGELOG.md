@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.3.0]
+- mismatch messages now wrap the actual (highlighted in red) and expected (highlighed in yellow) with `(actual ...)` and `(expected ...)` forms to improve readability.
+
 ## [3.2.1]
 - fix cljs issue introduced in `3.2.0`
 

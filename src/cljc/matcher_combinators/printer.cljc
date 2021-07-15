@@ -19,16 +19,16 @@
 
 (defmulti markup-expression type)
 
-(defmethod markup-expression Mismatch [mismatch]
+(defmethod markup-expression Mismatch [{:keys [expected actual]}]
   (list 'mismatch
-        (->ColorTag :yellow (:expected mismatch))
-        (->ColorTag :red (:actual mismatch))))
+        (list 'expected (->ColorTag :yellow expected))
+        (list 'actual (->ColorTag :red actual))))
 
-(defmethod markup-expression ExpectedMismatch [mismatch]
+(defmethod markup-expression ExpectedMismatch [{:keys [actual expected]}]
   (list 'mismatch
         (->ColorTag :yellow (symbol "expected mismatch from: "))
-        (->ColorTag :yellow (:expected mismatch))
-        (->ColorTag :red (:actual mismatch))))
+        (->ColorTag :yellow expected)
+        (list 'actual (->ColorTag :red actual))))
 
 (defmethod markup-expression Missing [missing]
   (list 'missing (->ColorTag :red (:expected missing))))
@@ -36,10 +36,10 @@
 (defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))
 
-(defmethod markup-expression TypeMismatch [mismatch]
+(defmethod markup-expression TypeMismatch [{:keys [actual expected]}]
   (list 'mismatch
-        (->ColorTag :yellow (type (:expected mismatch)))
-        (->ColorTag :red (type (:actual mismatch)))))
+        (list 'expected (->ColorTag :yellow (type expected)))
+        (list 'actual (->ColorTag :red (type actual)))))
 
 (defmethod markup-expression InvalidMatcherType [invalid-type]
   (list 'invalid-matcher-input
