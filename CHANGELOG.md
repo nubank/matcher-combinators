@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.3.1]
+- Bump midje from 1.10.3 -> 1.10.4
+
 ## [3.3.0]
 - mismatch messages now wrap the actual (highlighted in red) and expected (highlighed in yellow) with `(actual ...)` and `(expected ...)` forms to improve readability.
 
