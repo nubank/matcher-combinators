@@ -33,6 +33,12 @@
   (testing ":match/detail binds to a Mismatch object"
     (is (instance? matcher_combinators.model.Mismatch (:mismatch/detail (standalone/match 37 42))))))
 
+(deftest n-factorial-pathologies
+  (testing "in-any-order"
+    (is (= :match    (:match/result (standalone/match (m/in-any-order (range 10000)) (shuffle (range 10000)))))))
+  (testing "set-equals"
+    (is (= :match    (:match/result (standalone/match (m/set-equals (set (range 100000))) (set (range 100000))))))))
+
 (deftest test-match?
   (testing "parser defaults"
     (is (standalone/match? 37 37))
