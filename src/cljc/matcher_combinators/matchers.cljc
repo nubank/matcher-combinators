@@ -9,12 +9,21 @@
   (and (record? v)
        (not (string/starts-with? (-> v type str) "class matcher_combinators.core"))))
 
+(declare equals)
+
+(defn- match-with-equals?
+  "Predicate to detect if we should use the fastpath matcher."
+  [expected-coll]
+  (every? (comp (partial = equals) core/-matcher-for) expected-coll))
+
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
   `expected`."
   [expected]
   (cond
     (sequential? expected)          (core/->EqualsSeq expected)
+    (and (set? expected)
+         (match-with-equals? expected)) (core/->FastPathSetEquals expected false)
     (set? expected)                 (core/->SetEquals expected false)
     (non-internal-record? expected) (core/->EqualsRecord expected)
     (map? expected)                 (core/->EqualsMap expected)
@@ -25,7 +34,12 @@
   the expected matcher argument, allowing one to use matchers with the same
   submatcher appearing more than once."
   [expected]
-  (core/->SetEquals expected true))
+  (if (and (coll? expected)
+           (match-with-equals? expected)
+           (= (count (set expected))
+              (count expected)))
+    (core/->FastPathSetEquals expected true)
+    (core/->SetEquals expected true)))
 
 (defn embeds
   "Matcher for asserting that the expected is embedded in the actual.
@@ -59,7 +73,12 @@
   `expected` list but with elements in a different order.
 
   Similar to Midje's `(just expected :in-any-order)`"
-  [expected] (core/->InAnyOrder expected))
+  [expected]
+
+  (if (and (coll? expected)
+           (match-with-equals? expected))
+    (core/->FastPathInAnyOrder expected)
+    (core/->InAnyOrder expected)))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`

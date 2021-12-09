@@ -35,9 +35,12 @@
 
 (deftest n-factorial-pathologies
   (testing "in-any-order"
-    (is (= :match    (:match/result (standalone/match (m/in-any-order (range 10000)) (shuffle (range 10000)))))))
+    (is (= :match    (:match/result (standalone/match (m/in-any-order (range 10000)) (shuffle (range 10000))))))
+    (is (thrown? IllegalArgumentException (standalone/match (m/in-any-order [even? odd?]) [even? odd?])))
+    (is (= :match    (:match/result (standalone/match (m/match-with [number? (m/within-delta 0.01M)] (m/in-any-order [3 4 5])) [2.99 4.99 4.01])))))
   (testing "set-equals"
-    (is (= :match    (:match/result (standalone/match (m/set-equals (set (range 100000))) (set (range 100000))))))))
+    (is (= :match    (:match/result (standalone/match (m/set-equals (set (range 100000))) (set (range 100000))))))
+    (is (= :mismatch (:match/result (standalone/match (m/set-equals [:a :a :b :c]) #{:a :b :c}))))))
 
 (deftest test-match?
   (testing "parser defaults"

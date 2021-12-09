@@ -371,6 +371,17 @@
      :result/weight 1}
     (match-all-permutations expected actual subset?)))
 
+(defrecord InAnyOrder [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (validate-input
+                    expected actual sequential? (-base-name this) "sequential")]
+      issue
+      (match-any-order expected actual false)))
+  (-base-name [_] 'in-any-order))
+
 (defn- in-any-order-fast-path
   "Elides O(n!) comparison in those cases when order agnostic comparison
   of two simple collections is desired."
@@ -381,7 +392,7 @@
      ::result/value actual
      ::result/weight 0}))
 
-(defrecord InAnyOrder [expected]
+(defrecord FastPathInAnyOrder [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
@@ -401,6 +412,31 @@
   #?(:clj  (or (set? s) (instance? java.util.Set s))
      :cljs (set? s)))
 
+(defrecord SetEquals [expected accept-seq?]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (if accept-seq?
+                     (validate-input expected
+                                     actual
+                                     #(or (matchable-set? %) (sequential? %))
+                                     matchable-set?
+                                     (-base-name this)
+                                     "set or sequential")
+                     (validate-input expected
+                                     actual
+                                     matchable-set?
+                                     (-base-name this)
+                                     "set"))]
+      issue
+      (let [{::result/keys [type value weight]} (match-any-order
+                                                 (vec expected) (vec actual) false)]
+        {::result/type   type
+         ::result/value  (set value)
+         ::result/weight weight})))
+  (-base-name [_] (if accept-seq? 'set-equals 'equals)))
+
 (defn- set-equals-fast-path
   "Fast path simple equality check for set-equals: run posterior to
   validating actual is a set. Coerces expected to a set."
@@ -410,7 +446,7 @@
      ::result/value actual
      ::result/weight 0}))
 
-(defrecord SetEquals [expected accept-seq?]
+(defrecord FastPathSetEquals [expected accept-seq?]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
