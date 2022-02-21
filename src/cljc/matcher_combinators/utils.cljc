@@ -9,7 +9,7 @@
      :cljs (and (number? v)
                 (not (infinite? v)))))
 
-(defn- abs [n]
+(defn- absolute [n]
   #?(:clj (if (decimal? n)
             (.abs n)
             (Math/abs n))
@@ -20,8 +20,8 @@
   Supports the `within-delta` matcher."
   [delta expected actual]
   (and (processable-number? actual)
-       (>= expected (- actual (abs delta)))
-       (<= expected (+ actual (abs delta)))))
+       (>= expected (- actual (absolute delta)))
+       (<= expected (+ actual (absolute delta)))))
 
 (defn ^:no-doc find-first
   "Internal use only. Subject to change and removal."
@@ -32,5 +32,5 @@
   "Internal use only. Subject to change and removal.
   Similar to `remove` but stops after removing 1 element"
   [pred coll]
-  (let [[x [y & z]] (split-with (complement pred) coll)]
+  (let [[x [_y & z]] (split-with (complement pred) coll)]
     (concat x z)))

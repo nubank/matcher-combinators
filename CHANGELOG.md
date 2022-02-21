@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## unreleased
+- Fix `abs already refers to: #'clojure.core/abs in namespace: matcher-combinators.utils` warning
+
 ## [3.3.1]
 - Bump midje from 1.10.3 -> 1.10.4
 
