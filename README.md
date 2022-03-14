@@ -158,7 +158,8 @@ for a specific value, e.g.
   - scalars: matches when the given value is exactly the same as the `expected`.
   - map: matches when
       1. the keys of the `expected` map are equal to the given map's keys
-      2. the value matchers of `expected` map matches the given map's values
+      2. the value matchers of `expected` map matches the given map's values 
+         - Note: Given that the default matcher for maps is `embeds`, nested maps continue being matched with embeds (instead of also being matched with `equals`). Check out 'Overriding default matchers' below for instructions on how to match nested maps with equals too.
   - sequence: matches when the `expected` sequences's matchers match the given sequence. Similar to midje's `(just expected)`
   - set: matches when all the elements in the given set can be matched with a matcher in `expected` set and each matcher is used exactly once.
 - `embeds` operates over maps, sequences, and sets
