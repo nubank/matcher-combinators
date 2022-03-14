@@ -11,7 +11,11 @@
 
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
-  `expected`."
+  `expected`.
+
+  Note: For maps, only the top level keys and values are checked for equality.
+  Nested maps continue being matched with `embeds`. If you want to do a deep
+  match, consider using `match-with` instead."
   [expected]
   (cond
     (sequential? expected)          (core/->EqualsSeq expected)
