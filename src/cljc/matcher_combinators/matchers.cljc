@@ -11,7 +11,15 @@
 
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
-  `expected`."
+  `expected`.
+
+  When `expected` is:
+   - A scalar or function: Value equality is used
+   - A composite data-structure (map, vector, etc): each element in `actual` must 
+  match a corresponding element in `expected`. Consistent with other matchers, 
+  equals is not recursively applied to sub-elements. This means that nested maps, 
+  for example, continue using their default matcher. If you want to do a deep  
+  match, consider using `match-with` instead."
   [expected]
   (cond
     (sequential? expected)          (core/->EqualsSeq expected)
