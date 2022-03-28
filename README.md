@@ -62,14 +62,26 @@ For example:
   (is (match? (m/prefix [odd? 3]) [1 3 5]))
 
   ;; use m/in-any-order when order doesn't matter
-  (is (match? (m/in-any-order [odd? odd? even?]) [1 2 3])))
+  (is (match? (m/in-any-order [odd? odd? even?]) [1 2 3]))
+
+  ;; NOTE: in-any-order is O(n!) because it compares every expected element
+  ;; with every actual element in order to find a best-match for each one,
+  ;; removing matched elements from both sequences as it goes.
+  ;; Avoid applying this to long sequences.
+  )
 
 (deftest test-matching-sets
   ;; A set is also interpreted as an `equals` matcher.
   (is (match? #{1 2 3} #{3 2 1}))
   (is (match? #{odd? even?} #{1 2}))
   ;; use m/set-equals to repeat predicates
-  (is (match? (m/set-equals [odd? odd? even?]) #{1 2 3})))
+  (is (match? (m/set-equals [odd? odd? even?]) #{1 2 3}))
+
+  ;; NOTE: matching sets is an O(n!) operation because it compares every
+  ;; expected element with every actual element in order to find a best-match
+  ;; for each one, removing matched elements from both sets as it goes.
+  ;; Avoid applying this to large sets.
+  )
 
 (deftest test-matching-maps
   ;; A map is interpreted as an `embeds` matcher, which ignores
@@ -77,7 +89,7 @@ For example:
   (is (match? {:name/first "Alfredo"}
               {:name/first  "Alfredo"
                :name/last   "da Rocha Viana"
-               :name/suffix "Jr."})))
+               :name/suffix "Jr."}))))
 
 (deftest test-matching-nested-datastructures
   ;; Maps, sequences, and sets follow the same semantics whether at
