@@ -14,10 +14,13 @@
                      provided [[:inner 0]]
                      tabular  [[:inner 0]]}}
 
-  :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.clojure/spec.alpha "0.2.187"]
+  :dependencies [[org.clojure/clojure "1.11.0"]
+                 [org.clojure/spec.alpha "0.3.218"]
                  [org.clojure/math.combinatorics "0.1.6"]
-                 [midje "1.10.4" :exclusions [org.clojure/clojure]]]
+                 [midje "1.10.5" :exclusions [org.clojure/clojure]]
+                 ;; override midje's dependency on an old version
+                 ;; of pretty
+                 [io.aviso/pretty "1.1.1"]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths   ["test/clj" "test/cljc"]
@@ -28,10 +31,10 @@
                              [lein-cljsbuild "1.1.7"]
                              [lein-ancient "0.6.15"]
                              [lein-doo "0.1.11"]]
-                   :dependencies [[org.clojure/test.check "1.1.0"]
-                                  [org.clojure/clojurescript "1.10.866"]
+                   :dependencies [[org.clojure/test.check "1.1.1"]
+                                  [org.clojure/clojurescript "1.11.4"]
                                   [org.clojure/core.rrb-vector "0.1.2"]
-                                  [orchestra "2020.09.18-1"]]
+                                  [orchestra "2021.01.01-1"]]
                    :source-paths ["dev"]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}}
 
