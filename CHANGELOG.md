@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.4.0]
+- Eliminate "already refers to" warning on `abs` for clojure-1.11.0
+
 ## [3.3.1]
 - Bump midje from 1.10.3 -> 1.10.4
 
