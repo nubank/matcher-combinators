@@ -1,6 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.pprint :as pprint]
+            [clojure.pprint]
             [clojure.spec.alpha :as s]
             [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
@@ -199,12 +199,18 @@
          ::result/value  mismatch-val
          ::result/weight weight}))))
 
+(def ^:private map-like?
+  "Returns true if v is associative, but not sequential. This lets us
+  support map-like structures like Datomic EntityMaps without trying
+  to compare maps to vectors (which are associative and sequential)."
+  (every-pred associative? (complement sequential?)))
+
 (defrecord EmbedsMap [expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [this actual]
-    (if-let [issue (validate-input expected actual map? (-base-name this) "map")]
+    (if-let [issue (validate-input expected actual map? map-like? (-base-name this) "map")]
       issue
       (compare-maps expected actual identity true)))
   (-base-name [_] 'embeds))
