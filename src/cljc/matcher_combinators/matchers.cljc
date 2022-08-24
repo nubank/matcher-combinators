@@ -65,15 +65,15 @@
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
   `expected` list but with elements in a different order.
-
-  Similar to Midje's `(just expected :in-any-order)`"
+  
+  WARNING: in-any-order can match each expected element against every value
+  in the actual sequence, which may be cost prohibitive for large sequences
+  Consider sorting the expected and actual sequences and comparing those instead."
   [expected] (core/->InAnyOrder expected))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`
-  list.
-
-  Similar to Midje's `(embeds expected)`"
+  list."
   [expected]
   (core/->Prefix expected))
 
