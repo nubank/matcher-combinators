@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.5.1]
+- warn that in-any-order is expensive
+
 ## [3.5.0]
 - embeds matcher supports map like (associative, not sequential) actual values
 
