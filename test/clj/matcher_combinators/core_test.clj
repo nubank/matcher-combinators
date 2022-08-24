@@ -191,11 +191,12 @@
   {:max-size 5}
   (prop/for-all [expected (gen/one-of [(gen/vector gen/any-equatable)
                                        (gen/list   gen/any-equatable)])
-                 actual   (gen/such-that (complement sequential?) gen/any-equatable)
+                 actual   gen/any-equatable
                  m (gen/elements [matchers/equals matchers/in-any-order])]
-                (not
-                 (core/indicates-match?
-                  (core/match (m expected) actual)))))
+                (or (sequential? actual)
+                    (not
+                     (core/indicates-match?
+                      (core/match (m expected) actual))))))
 
 (spec.test/instrument)
 
