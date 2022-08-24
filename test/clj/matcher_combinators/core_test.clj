@@ -4,7 +4,6 @@
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]
-            [clojure.string :as str]
             [orchestra.spec.test :as spec.test]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
@@ -188,15 +187,15 @@
                    (core/indicates-match?
                     (core/match (m expected) actual))))))
 
-;(defspec sequence-matchers-mismatch-non-sequences
-;  {:max-size 5}
-;  (prop/for-all [expected (gen/one-of [(gen/vector gen/any-equatable)
-;                                       (gen/list   gen/any-equatable)])
-;                 actual   (gen/such-that (complement sequential?) gen/any-equatable)
-;                 m (gen/elements [matchers/equals matchers/in-any-order])]
-;                (not
-;                 (core/indicates-match?
-;                  (core/match (m expected) actual)))))
+(defspec sequence-matchers-mismatch-non-sequences
+  {:max-size 5}
+  (prop/for-all [expected (gen/one-of [(gen/vector gen/any-equatable)
+                                       (gen/list   gen/any-equatable)])
+                 actual   (gen/such-that (complement sequential?) gen/any-equatable)
+                 m (gen/elements [matchers/equals matchers/in-any-order])]
+                (not
+                 (core/indicates-match?
+                  (core/match (m expected) actual)))))
 
 (spec.test/instrument)
 
@@ -244,28 +243,22 @@
              (core/match (matchers/equals [(matchers/equals {:a (matchers/equals 1)}) (matchers/equals {:b (matchers/equals 2)})]) [{:a 1}])))))
 
   (testing "on the in-any-order sequence matcher"
-    ;(tabular
-    ;  (facts "common behavior for all in-any-order arities"
-    ;    (fact "matches a sequence with elements corresponding to the expected matchers, in different orders"
-    ;      (match
-    ;       (?in-any-order-matcher [(matchers/equals {:id (matchers/equals 1) :x (matchers/equals 1)})
-    ;                               (matchers/equals {:id (matchers/equals 2) :x (matchers/equals 2)})])
-    ;        [{:id 2 :x 2} {:id 1 :x 1}])
-    ;      => {::result/type   :match
-    ;          ::result/value  [{:id 2 :x 2} {:id 1 :x 1}]
-    ;          ::result/weight 0}
-    ;
-    ;      (match
-    ;       (?in-any-order-matcher [(matchers/equals {:id (matchers/equals 1) :x (matchers/equals 1)})
-    ;                               (matchers/equals {:id (matchers/equals 2) :x (matchers/equals 2)})
-    ;                               (matchers/equals {:id (matchers/equals 3) :x (matchers/equals 3)})])
-    ;        [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])
-    ;      => {::result/type   :match
-    ;          ::result/value  [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]
-    ;          ::result/weight 0}))
-    ;  ?in-any-order-matcher
-    ;  in-any-order)
-
+    (is (= {::result/type   :match
+            ::result/value  [{:id 2 :x 2} {:id 1 :x 1}]
+            ::result/weight 0}
+           (core/match
+            (matchers/in-any-order [(matchers/equals {:id (matchers/equals 1) :x (matchers/equals 1)})
+                                    (matchers/equals {:id (matchers/equals 2) :x (matchers/equals 2)})])
+             [{:id 2 :x 2} {:id 1 :x 1}])))
+    (is (= {::result/type   :match
+            ::result/value  [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}]
+            ::result/weight 0}
+           (core/match
+            (matchers/in-any-order [(matchers/equals {:id (matchers/equals 1) :x (matchers/equals 1)})
+                                    (matchers/equals {:id (matchers/equals 2) :x (matchers/equals 2)})
+                                    (matchers/equals {:id (matchers/equals 3) :x (matchers/equals 3)})])
+             [{:id 2 :x 2} {:id 1 :x 1} {:id 3 :x 3}])))       )
+    
     (testing "the 1-argument arity has a simple all-or-nothing behavior:"
       (testing "in-any-order for list of same value/matchers"
         (is (= {::result/type   :match
@@ -276,8 +269,7 @@
       (is (match? {::result/type   :mismatch
                    ::result/value  (matchers/in-any-order [2 1 (model/->Missing 3)])
                    ::result/weight 1}
-                  (core/match (matchers/in-any-order [(matchers/equals 1) (matchers/equals 2) (matchers/equals 3)]) [1 2])))
-      )))
+                  (core/match (matchers/in-any-order [(matchers/equals 1) (matchers/equals 2) (matchers/equals 3)]) [1 2])))))
 
 (deftest nesting-multiple-matchers
   (testing "on nesting equals matchers for sequences"
