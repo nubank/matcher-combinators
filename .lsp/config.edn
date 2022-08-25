@@ -1,0 +1,10 @@
+{:clean {:ns-inner-blocks-indentation :same-line
+         :sort {:import-classes nil}}
+ :cljfmt {:indents {do-report [[:block 0]]
+                    facts     [[:block 1]]
+                    fact      [[:block 1]]
+                    fdef      [[:block 1]]
+                    for-all   [[:block 1]]
+                    match     [[:block 0]]
+                    provided  [[:inner 0]]
+                    tabular   [[:inner 0]]}}}

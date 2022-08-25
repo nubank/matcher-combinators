@@ -1,0 +1,2 @@
+{:lint-as {clojure.test.check.clojure-test/defspec clj-kondo.lint-as/def-catch-all
+           clojure.test.check.properties/for-all   clojure.core/let}}

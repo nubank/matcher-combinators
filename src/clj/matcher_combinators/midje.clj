@@ -3,14 +3,14 @@
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model]
             [matcher-combinators.parser]
+            [matcher-combinators.printer :as printer]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]
-            [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
-            [matcher-combinators.printer :as printer]
+            [midje.checking.checkers.defining :as checkers.defining]
             [midje.checking.core :as checking]
+            [midje.data.metaconstant] ; otherwise Metaconstant class cannot be found
             [midje.util.exceptions :as exception]
-            [midje.util.thread-safe-var-nesting :as thread-safe-var-nesting]
-            [midje.checking.checkers.defining :as checkers.defining])
+            [midje.util.thread-safe-var-nesting :as thread-safe-var-nesting])
   (:import [clojure.lang ArityException]
            [midje.data.metaconstant Metaconstant]
            [midje.util.exceptions ICapturedThrowable]))

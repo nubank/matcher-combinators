@@ -8,12 +8,6 @@
                              :password :env/clojars_passwd
                              :sign-releases false}]]
 
-  :cljfmt {:indents {facts    [[:block 1]]
-                     fact     [[:block 1]]
-                     fdef     [[:block 1]]
-                     provided [[:inner 0]]
-                     tabular  [[:inner 0]]}}
-
   :dependencies [[org.clojure/clojure "1.11.0"]
                  [org.clojure/spec.alpha "0.3.218"]
                  [org.clojure/math.combinatorics "0.1.6"]
@@ -25,9 +19,9 @@
   :source-paths ["src/clj" "src/cljc"]
   :test-paths   ["test/clj" "test/cljc"]
 
-  :profiles {:dev {:plugins [[lein-project-version "0.1.0"]
+  :profiles {:dev {:plugins [[com.github.clojure-lsp/lein-clojure-lsp "1.3.11"]
+                             [lein-project-version "0.1.0"]
                              [lein-midje "3.2.1"]
-                             [lein-cljfmt "0.5.7"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-ancient "0.6.15"]
                              [lein-doo "0.1.11"]]
@@ -38,13 +32,16 @@
                    :source-paths ["dev"]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}}
 
-  :aliases {"lint"     ["do" "cljfmt" "check,"]
-            "lint-fix" ["do" "cljfmt" "fix,"]
-            "test-clj" ["all" "do" ["test"] ["check"]]
-            "test-phantom" ["doo" "phantom" "test"]
-            "test-advanced" ["doo" "phantom" "advanced-test"]
+  :aliases {"format"          ["clojure-lsp" "format" "--dry"]
+            "format-fix"      ["clojure-lsp" "format"]
+            "clean-ns"        ["clojure-lsp" "clean-ns" "--dry"]
+            "clean-ns-fix"    ["clojure-lsp" "clean-ns"]
+            "lint"            ["do" ["format"] ["clean-ns"]]
+            "lint-fix"        ["do" ["format-fix"] ["clean-ns-fix"]]
+            "test-phantom"    ["doo" "phantom" "test"]
+            "test-advanced"   ["doo" "phantom" "advanced-test"]
             "test-node-watch" ["doo" "node" "node-test"]
-            "test-node" ["doo" "node" "node-test" "once"]}
+            "test-node"       ["doo" "node" "node-test" "once"]}
   ;; Below, :process-shim false is workaround for <https://github.com/bensu/doo/pull/141>
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src/cljs" "test/cljs"]
