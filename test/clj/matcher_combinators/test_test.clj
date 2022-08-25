@@ -1,8 +1,7 @@
 (ns matcher-combinators.test-test
-  (:require [clojure.test :refer [use-fixtures deftest testing is are]]
-            [matcher-combinators.test :refer :all]
-            [matcher-combinators.core :as core]
+  (:require [clojure.test :refer [are deftest is testing use-fixtures]]
             [matcher-combinators.matchers :as m]
+            [matcher-combinators.test :refer :all]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [clojure.lang ExceptionInfo]))
 

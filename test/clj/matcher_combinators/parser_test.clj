@@ -1,12 +1,11 @@
 (ns matcher-combinators.parser-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [matcher-combinators.parser :as parser]
-            [matcher-combinators.matchers :refer :all]
-            [matcher-combinators.core :as core]
+  (:require [clojure.test :as t :refer [deftest is testing]]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer [defspec]]
-            [matcher-combinators.model :as model])
+            [matcher-combinators.core :as core]
+            [matcher-combinators.matchers :refer :all]
+            [matcher-combinators.parser :as parser])
   (:import [java.net URI]))
 
 (def gen-big-decimal

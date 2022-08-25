@@ -1,13 +1,14 @@
 (ns matcher-combinators.midje-test
-  (:require [midje.sweet :as midje :refer [fact facts => falsey]]
-            [matcher-combinators.core :as core]
+  (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.midje :refer [match throws-match match-with match-roughly match-equals]]
+            [matcher-combinators.midje :refer [match match-equals
+                                               match-roughly match-with throws-match]]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.test-helpers :refer [abs-value-matcher]]
-            [orchestra.spec.test :as spec.test]
-            [midje.emission.api :as emission])
+            [midje.emission.api :as emission]
+            [midje.sweet :as midje :refer [=> fact facts falsey]]
+            [orchestra.spec.test :as spec.test])
   (:import [clojure.lang ExceptionInfo]))
 
 (spec.test/instrument)

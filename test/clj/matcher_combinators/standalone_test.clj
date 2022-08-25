@@ -1,9 +1,8 @@
 (ns matcher-combinators.standalone-test
-  (:require [orchestra.spec.test :as spec.test]
-            [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.result :as result]
-            [matcher-combinators.standalone :as standalone]))
+            [matcher-combinators.standalone :as standalone]
+            [orchestra.spec.test :as spec.test]))
 
 (use-fixtures :once
   (fn [f]

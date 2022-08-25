@@ -1,14 +1,14 @@
 (ns matcher-combinators.core-test
-  (:require [clojure.test :refer [are deftest testing is use-fixtures]]
+  (:require [clojure.string :as str]
+            [clojure.test :refer [are deftest is testing use-fixtures]]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer [defspec]]
-            [clojure.string :as str]
             [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model]
-            [matcher-combinators.result :as result]
             [matcher-combinators.parser]
+            [matcher-combinators.result :as result]
             [matcher-combinators.standalone :as standalone]
             [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers])

@@ -1,14 +1,14 @@
 (ns matcher-combinators.clj-test
   "Internal use. Require `matcher-combinators.test` instead of this
   namespace."
-  (:require [matcher-combinators.core :as core]
+  (:require [clojure.string :as str]
+            [clojure.test :as clojure.test]
+            [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
-            [matcher-combinators.printer :as printer]
             [matcher-combinators.parser]
+            [matcher-combinators.printer :as printer]
             [matcher-combinators.result :as result]
-            [matcher-combinators.utils :as utils]
-            [clojure.string :as str]
-            [clojure.test :as clojure.test]))
+            [matcher-combinators.utils :as utils]))
 
 (defn- stacktrace-file-and-line
   [stacktrace]

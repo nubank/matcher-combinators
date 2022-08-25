@@ -1,14 +1,13 @@
 (ns matcher-combinators.matchers-test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.math.combinatorics :as combo]
+            [clojure.test :refer [deftest is testing use-fixtures]]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer [defspec]]
-            [clojure.math.combinatorics :as combo]
-            [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
-            [matcher-combinators.test]
+            [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]
-            [matcher-combinators.utils :as utils]
+            [matcher-combinators.test]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 

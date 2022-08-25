@@ -1,11 +1,11 @@
 (ns matcher-combinators.printer-test
-  (:require [midje.sweet :refer :all]
-            [midje.experimental :refer [for-all]]
-            [matcher-combinators.printer :as printer]
-            [matcher-combinators.model :as model]
+  (:require [clojure.pprint :as pprint]
             [clojure.test.check.generators :as gen]
             [colorize.core :as colorize]
-            [clojure.pprint :as pprint]))
+            [matcher-combinators.model :as model]
+            [matcher-combinators.printer :as printer]
+            [midje.experimental :refer [for-all]]
+            [midje.sweet :refer :all]))
 
 (def simple-double (gen/double* {:infinite? false
                                  :NaN?      false}))
