@@ -87,8 +87,8 @@
 
        (core/matcher? ~matcher)
        (let [result# (core/match
-                      (matchers/match-with ~type->matcher ~matcher)
-                      ~actual)]
+                       (matchers/match-with ~type->matcher ~matcher)
+                       ~actual)]
          (clojure.test/do-report
           (if (core/indicates-match? result#)
             {:type     :pass
@@ -179,10 +179,10 @@
 
           (core/matcher? matcher#)
           (let [result# (core/match
-                         (matchers/match-with
-                          type->matcher#
-                          matcher#)
-                         actual#)]
+                          (matchers/match-with
+                           type->matcher#
+                           matcher#)
+                          actual#)]
             (clojure.test/do-report
              (if (core/indicates-match? result#)
                {:type     :pass

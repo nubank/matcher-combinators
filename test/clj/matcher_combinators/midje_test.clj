@@ -301,14 +301,12 @@
                          :f 5
                          :g 17}}}]
     (fact "nested maps inside of an `embeds` of a match-equals are treated as equals"
-          payload
-          =not=> (match-equals {:a {:b {:c 1}
-                                    :d (m/embeds {:e {:inner-e {:x 1}}})}})
-          payload
-          => (match-equals {:a {:b {:c 1}
-                                :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}}))))
-
-
+      payload
+      =not=> (match-equals {:a {:b {:c 1}
+                                :d (m/embeds {:e {:inner-e {:x 1}}})}})
+      payload
+      => (match-equals {:a {:b {:c 1}
+                            :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}}))))
 
 (facts "match-equals"
   (fact "normal loose matching passes"

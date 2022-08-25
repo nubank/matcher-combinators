@@ -159,30 +159,30 @@
 
 (deftest equals-with-records
   (testing "matching"
-        (let [a (->Point 1 2)]
-          (is (match? {::result/type :match
-                       ::result/value a
-                       ::result/weight 0}
-                      (c/match (m/equals a) a)))))
+    (let [a (->Point 1 2)]
+      (is (match? {::result/type :match
+                   ::result/value a
+                   ::result/weight 0}
+                  (c/match (m/equals a) a)))))
 
   (testing "mismatching with same type and different values"
-        (let [a (->Point 1 2)
-              b (->Point 2 2)]
-          (is (match? {::result/type :mismatch
-                       ::result/value {:x {:actual 2
-                                           :expected 1}
-                                       :y 2}
-                       ::result/weight 1}
-                      (c/match (m/equals a) b)))))
+    (let [a (->Point 1 2)
+          b (->Point 2 2)]
+      (is (match? {::result/type :mismatch
+                   ::result/value {:x {:actual 2
+                                       :expected 1}
+                                   :y 2}
+                   ::result/weight 1}
+                  (c/match (m/equals a) b)))))
 
   (testing "mismatching with same values and different type"
-        (let [a (->Point 1 2)
-              b (->BluePoint 1 2)]
-          (is (match? {::result/type :mismatch
-                          ::result/value {:actual b
-                                          :expected a}
-                          ::result/weight 1}
-                      (c/match (m/equals a) b))))))
+    (let [a (->Point 1 2)
+          b (->BluePoint 1 2)]
+      (is (match? {::result/type :mismatch
+                   ::result/value {:actual b
+                                   :expected a}
+                   ::result/weight 1}
+                  (c/match (m/equals a) b))))))
 
 (deftest embeds-with-records
   (testing "matching"
@@ -228,9 +228,9 @@
                                  (not (instance? java.util.regex.Pattern v))
                                  (not (fn? v))))
                     gen/any)]
-                (= m/equals
-                   (m/matcher-for v)
-                   (m/matcher-for v {}))))
+    (= m/equals
+       (m/matcher-for v)
+       (m/matcher-for v {}))))
 
 (deftest matcher-for-special-cases
   (testing "matcher for a fn is pred"
@@ -353,10 +353,10 @@
                  expected (gen/one-of [gen/small-integer
                                        gen-processable-double
                                        gen-bigdec])]
-                (c/indicates-match?
-                 (c/match
-                  (m/within-delta delta expected)
-                  (+ expected delta)))))
+    (c/indicates-match?
+     (c/match
+       (m/within-delta delta expected)
+       (+ expected delta)))))
 
 (deftest within-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"

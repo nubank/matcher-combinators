@@ -77,12 +77,12 @@
 (defspec test-scalars
   (testing "scalar values act as equals matchers"
     (prop/for-all [i gen-scalar]
-                  (= (core/match i i)
-                     (core/match (equals i) i)))
+      (= (core/match i i)
+         (core/match (equals i) i)))
 
     (prop/for-all [[i j] gen-scalar-pair]
-                  (= (core/match i j)
-                     (core/match (equals i) j)))))
+      (= (core/match i j)
+         (core/match (equals i) j)))))
 
 (deftest test-maps
   (testing "act as equals matcher"
