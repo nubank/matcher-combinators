@@ -1,10 +1,7 @@
 (ns matcher-combinators.test-helpers
-  (:require [clojure.test.check.generators :as gen]
-            #?(:cljs [clojure.spec.test.alpha :as spec.test]
+  (:require #?(:cljs [clojure.spec.test.alpha :as spec.test]
                :clj  [orchestra.spec.test :as spec.test])
-            [matcher-combinators.core :as core]
-            [matcher-combinators.result :as result]
-            [matcher-combinators.model :as model]))
+            [matcher-combinators.core :as core]))
 
 (defn instrument
   "Test fixture to turn on clojure.spec instrumentation."
