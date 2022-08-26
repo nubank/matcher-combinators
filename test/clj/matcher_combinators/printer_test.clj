@@ -1,77 +1,61 @@
 (ns matcher-combinators.printer-test
   (:require [clojure.pprint :as pprint]
+            [clojure.test :refer [deftest is testing]]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
             [colorize.core :as colorize]
             [matcher-combinators.model :as model]
-            [matcher-combinators.printer :as printer]
-            [midje.experimental :refer [for-all]]
-            [midje.sweet :refer :all]))
+            [matcher-combinators.printer :as printer]))
 
 (def simple-double (gen/double* {:infinite? false
                                  :NaN?      false}))
 
 (def scalars
-  (gen/one-of [gen/int gen/large-integer simple-double gen/char-ascii
+  (gen/one-of [gen/small-integer gen/large-integer simple-double gen/char-ascii
                gen/string-ascii gen/ratio gen/boolean gen/keyword
                gen/keyword-ns gen/symbol gen/symbol-ns gen/uuid]))
 (def any (gen/recursive-gen gen/container-type scalars))
 
-(facts "on how we markup expressions that need special coloring"
-  (fact "regular clojure expressions are not marked-up at all"
-    (for-all [expression any]
-      {:num-tests 100}
-      (printer/markup-expression expression) => expression))
+(defspec markup-expression-ignores-regular-clojure-expressions
+  (prop/for-all [expression any]
+    (= expression (printer/markup-expression expression))))
 
-  (fact "Mismatches are marked up in yellow and red"
-    (printer/markup-expression (model/->Mismatch 1 2))
-    => (list 'mismatch
-             (list 'expected (printer/->ColorTag :yellow 1))
-             (list 'actual (printer/->ColorTag :red 2)))
+(defspec markup-expression-marks-up-mismatches-in-yellow-and-red
+  (prop/for-all [expected any
+                 actual   any]
+    (or (= expected actual)
+        (= (list 'mismatch
+                 (list 'expected (printer/->ColorTag :yellow expected))
+                 (list 'actual (printer/->ColorTag :red actual)))
+           (printer/markup-expression (model/->Mismatch expected actual))))))
 
-    (for-all [expected any
-              actual   any]
-      {:num-tests 100}
-      (printer/markup-expression (model/->Mismatch expected actual))
-      => (list 'mismatch
-               (list 'expected (printer/->ColorTag :yellow expected))
-               (list 'actual (printer/->ColorTag :red actual)))))
+(defspec markup-expression-marks-up-missing-values-in-red
+  (prop/for-all [expected any
+                 actual   any]
+    (or (= expected actual)
+        (= (list 'missing
+                 (printer/->ColorTag :red expected))
+           (printer/markup-expression (model/->Missing expected))))))
 
-  (fact "Missing values are marked up in red"
-    (printer/markup-expression (model/->Missing 42))
-    => (list 'missing
-             (printer/->ColorTag :red 42))
+(defspec markup-expression-marks-up-unexpected-values-in-red
+  (prop/for-all [expected any
+                 actual   any]
+    (or (= expected actual)
+        (= (list 'unexpected
+                 (printer/->ColorTag :red expected))
+           (printer/markup-expression (model/->Unexpected expected))))))
 
-    (for-all [expected any]
-      {:num-tests 100}
-      (printer/markup-expression (model/->Missing expected))
-      => (list 'missing
-               (printer/->ColorTag :red expected))))
+(defspec pprint-uses-as-string
+  (prop/for-all [exp any]
+    (= (with-out-str (pprint/pprint exp))
+       (printer/as-string exp))))
 
-  (fact "Unexpected values are also marked up in red"
-    (printer/markup-expression (model/->Unexpected 42))
-    => (list 'unexpected
-             (printer/->ColorTag :red 42))
-
-    (for-all [actual any]
-      {:num-tests 100}
-      (printer/markup-expression (model/->Unexpected actual))
-      => (list 'unexpected
-               (printer/->ColorTag :red actual)))))
-
-(midje.config/with-augmented-config {:partial-prerequisites true}
-  (facts "On printing"
-    (fact "When an expression can be marked up, will use color tags to as-string in color"
-      (printer/as-string ..markupable..)
-      => (str "(foo " (colorize/red "bar") ")" "\n")
-      (provided
-        (printer/markup-expression ..markupable..)
-        => (list 'foo (printer/->ColorTag :red 'bar))))
-
-    (fact "When printing a regular expression, just pprint it"
-      (printer/as-string {:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000]
-                          :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]})
-      => "{:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000],\n :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]}\n"
-
-      (for-all [exp any]
-        {:num-tests 100}
-        (printer/as-string exp) => (with-out-str (pprint/pprint exp))))))
+(deftest test-as-string
+  (testing "when an expression can be marked up, uses color tags to as-string in color"
+    (is (= (str "(unexpected " (colorize/red 1) ")\n")
+           (printer/as-string (list 'unexpected (printer/->ColorTag :red 1)))))
+    (testing "when printing a regular expression, just pprint it"
+      (is (= "{:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000],\n :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]}\n"
+             (printer/as-string {:aaaaaaaaaaaa [100000000 100000000 100000000 100000000 100000000]
+                                 :bbbbbbbbbbbb [200000000 200000000 200000000 200000000 200000000]}))))))

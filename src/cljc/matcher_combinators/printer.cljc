@@ -9,7 +9,6 @@
                                                         TypeMismatch
                                                         InvalidMatcherContext
                                                         InvalidMatcherType]])
-            [matcher-combinators.result :as result]
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
      (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing

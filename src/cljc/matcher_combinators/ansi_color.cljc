@@ -1,5 +1,6 @@
 (ns matcher-combinators.ansi-color
-  "Colorize console text. Mostly copied from Bruce Hauman's Figwheel project")
+  "Colorize console text. Mostly copied from Bruce Hauman's Figwheel project"
+  (:require [clojure.string :as str]))
 
 (def ^:dynamic *use-color* true)
 
@@ -39,7 +40,7 @@
     (str \u001b code)))
 
 (defn- style* [s & codes]
-  (str (clojure.string/join (map ansi-code codes)) s (ansi-code "[0m")))
+  (str (str/join (map ansi-code codes)) s (ansi-code "[0m")))
 
 (defn style [s & codes]
   (apply style* s (map ANSI-CODES codes)))
