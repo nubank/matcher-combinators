@@ -4,7 +4,7 @@
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [matcher-combinators.core :as core]
-            [matcher-combinators.matchers :refer :all]
+            [matcher-combinators.matchers :as m]
             [matcher-combinators.parser :as parser])
   (:import [java.net URI]))
 
@@ -78,22 +78,22 @@
   (testing "scalar values act as equals matchers"
     (prop/for-all [i gen-scalar]
       (= (core/match i i)
-         (core/match (equals i) i)))
+         (core/match (m/equals i) i)))
 
     (prop/for-all [[i j] gen-scalar-pair]
       (= (core/match i j)
-         (core/match (equals i) j)))))
+         (core/match (m/equals i) j)))))
 
 (deftest test-maps
   (testing "act as equals matcher"
-    (is (= (core/match (equals {:a (equals 10)}) {:a 10})
-           (core/match (equals {:a 10}) {:a 10})
+    (is (= (core/match (m/equals {:a (m/equals 10)}) {:a 10})
+           (core/match (m/equals {:a 10}) {:a 10})
            (core/match {:a 10} {:a 10})))))
 
 (deftest test-vectors
   (testing "vectors act as equals matchers"
-    (is (= (core/match (equals [(equals 10)]) [10])
-           (core/match (equals [10]) [10])
+    (is (= (core/match (m/equals [(m/equals 10)]) [10])
+           (core/match (m/equals [10]) [10])
            (core/match [10] [10])))))
 
 (deftest test-chunked-seq
@@ -102,26 +102,26 @@
 
 (deftest test-lists
   (testing "lists act as equals matchers"
-    (is (= (core/match (equals [(equals 10)]) [10])
-           (core/match (equals '(10)) [10])
+    (is (= (core/match (m/equals [(m/equals 10)]) [10])
+           (core/match (m/equals '(10)) [10])
            (core/match '(10) [10])))))
 
 (deftest test-nil
   (testing "`nil` is parsed as an equals"
-    (is (= (core/match (equals nil) nil)
+    (is (= (core/match (m/equals nil) nil)
            (core/match nil nil)))))
 
 (deftest test-classes
   (testing "java classes are parsed as an equals"
     (is
-     (= (core/match (equals java.lang.String) java.lang.String)
+     (= (core/match (m/equals java.lang.String) java.lang.String)
         (core/match java.lang.String java.lang.String)))))
 
 (deftest test-object
   (let [an-object (Object.)
         another-object (RuntimeException.)]
     (testing "Objects default to equality matching"
-      (is (= (core/match (equals an-object)
+      (is (= (core/match (m/equals an-object)
                          an-object)
              (core/match an-object
                          an-object)))

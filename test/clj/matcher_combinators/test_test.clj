@@ -1,7 +1,9 @@
 (ns matcher-combinators.test-test
   (:require [clojure.test :refer [are deftest is testing use-fixtures]]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.test :refer :all]
+            [matcher-combinators.test :refer [build-match-assert
+                                              match-roughly? match-with? match?
+                                              thrown-match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [clojure.lang ExceptionInfo]))
 
@@ -89,7 +91,7 @@
   (is (match-with? {java.lang.Long abs-value-matcher}
                    -5
                    5)))
-
+(declare match-abs-value?)
 (defmethod clojure.test/assert-expr 'match-abs-value? [msg form]
   (build-match-assert 'match-abs-value? {java.lang.Long abs-value-matcher} msg form))
 

@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.6.1]
+- deprecate the matcher-combinators.midje ns and functions in it
+- move midje dependency to :scope "provided"
+  - this eliminates the transitive dep for those not using midje features
+  - add the dep explicitly to your project config if you use midje features
+
 ## [3.6.0]
 - add `via` matcher, which transforms the `actual` data-structure before applying the
   `expected` matcher.
