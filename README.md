@@ -103,6 +103,12 @@ For example:
                                :name/last  "Lacerda"}]
                :band/recordings []})))
 
+(deftest test-matching-transformed-value-via-via
+  ;; via applies read-string to the actual value "{:foo :bar}" before
+  ;; matching against the expected value {:foo :bar}
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads [\"{:foo :bar}\"]})))
+
 (deftest exception-matching
   (is (thrown-match? clojure.lang.ExceptionInfo
                      {:foo 1}
@@ -192,6 +198,8 @@ for a specific value, e.g.
 - `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep stucture) (see Overriding default matchers, below)
 
 - `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
+
+- `via`: transforms the `actual` data-structure before applying the `expected` matcher.
 
 #### negative matchers
 
