@@ -1,8 +1,8 @@
 (ns matcher-combinators.matchers
-  (:require [clojure.string :as string]
+  (:require #?(:cljs [matcher-combinators.core :refer [Absent]])
+            [clojure.string :as string]
             [matcher-combinators.core :as core]
-            [matcher-combinators.utils :as utils]
-            #?(:cljs [matcher-combinators.core :refer [Absent]]))
+            [matcher-combinators.utils :as utils])
   #?(:clj (:import [matcher_combinators.core Absent])))
 
 (defn- non-internal-record? [v]
@@ -15,10 +15,10 @@
 
   When `expected` is:
    - A scalar or function: Value equality is used
-   - A composite data-structure (map, vector, etc): each element in `actual` must 
-  match a corresponding element in `expected`. Consistent with other matchers, 
-  equals is not recursively applied to sub-elements. This means that nested maps, 
-  for example, continue using their default matcher. If you want to do a deep  
+   - A composite data-structure (map, vector, etc): each element in `actual` must
+  match a corresponding element in `expected`. Consistent with other matchers,
+  equals is not recursively applied to sub-elements. This means that nested maps,
+  for example, continue using their default matcher. If you want to do a deep
   match, consider using `match-with` instead."
   [expected]
   (cond
@@ -65,7 +65,7 @@
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
   `expected` list but with elements in a different order.
-  
+
   WARNING: in-any-order can match each expected element against every value
   in the actual sequence, which may be cost prohibitive for large sequences
   Consider sorting the expected and actual sequences and comparing those instead."
@@ -100,6 +100,19 @@
   leads to very unreadable match assertions"
   [expected]
   (core/->Mismatcher expected))
+
+(defn via
+  "A matcher that transforms the `actual` data-structure before applying the
+  `expected` matcher.
+
+  For example, it allows one to match a nested string as an edn map:
+  ```
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads [\"{:foo :bar}\"]}))
+  ```
+  "
+  [transform-actual-fn expected]
+  (core/->ViaMatcher transform-actual-fn expected))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))

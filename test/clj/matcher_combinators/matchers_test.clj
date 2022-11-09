@@ -7,7 +7,7 @@
             [matcher-combinators.core :as c]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]
-            [matcher-combinators.test]
+            [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
@@ -395,3 +395,29 @@
     (is (match? (m/in-any-order
                  [odd? pos? (m/mismatch odd?)])
                 [1 2 3]))))
+
+(deftest via-matcher
+  (testing "normal usage"
+    (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+                {:payloads ["{:foo :bar}"]})))
+
+  (testing "via + match-with allows pre-processing `actual` before applying matching"
+    (is (match? (m/match-with
+                 [vector? (fn [expected] (m/via reverse expected))]
+                 {:payloads [1 2 3]})
+                {:payloads [3 2 1]})))
+
+  (testing "mismatch after parsing string as a map"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads [{:foo mismatch?}]}
+                 ::result/weight number?}
+                (c/match {:payloads [(m/via read-string {:foo :qux})]}
+                         {:payloads ["{:foo :bar}"]}))))
+
+  (testing "erroring shows `(mismatch (expected (via some-fn expected-data))
+                                      (actual actual-data))`"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads [mismatch?]}
+                 ::result/weight number?}
+                (c/match {:payloads [(m/via read-string {:foo :barz})]}
+                         {:payloads [1]})))))

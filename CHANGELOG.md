@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## [3.6.0]
+- add `via` matcher, which transforms the `actual` data-structure before applying the
+  `expected` matcher.
+
+  For example, it allows one to match a nested string as an edn map:
+  ```
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads [\"{:foo :bar}\"]}))
+  ```
+
+  (additional context in [#148](https://github.com/nubank/matcher-combinators/issues/148) and [#175](https://github.com/nubank/matcher-combinators/issues/175))
+
 ## [3.5.1]
 - warn that in-any-order is expensive
 

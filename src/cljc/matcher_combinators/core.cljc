@@ -2,8 +2,8 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.pprint]
             [clojure.spec.alpha :as s]
-            [matcher-combinators.result :as result]
             [matcher-combinators.model :as model]
+            [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]))
 
 (defprotocol Matcher
@@ -254,6 +254,19 @@
        ::result/value  (model/->Unexpected actual)
        ::result/weight 1})
     (-base-name [_] 'unexpected)))
+
+(defrecord ViaMatcher [transform-actual-fn expected]
+    Matcher
+    (-matcher-for [_this] (-matcher-for expected))
+    (-matcher-for [_this x] (-matcher-for expected x))
+    (-match [_ actual]
+      (let [transformed (try (transform-actual-fn actual) (catch Exception e e))]
+        (if (instance? Exception transformed)
+          {::result/type   :mismatch
+           ::result/value  (model/->Mismatch (list 'via (-> transform-actual-fn str symbol) expected) actual)
+           ::result/weight 1}
+          (match expected transformed))))
+    (-base-name [_] (-base-name expected)))
 
 (defn- normalize-inputs-length
   "Modify the matchers and actuals sequences to match in length.
