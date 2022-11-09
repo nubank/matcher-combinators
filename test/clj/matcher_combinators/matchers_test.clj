@@ -397,15 +397,19 @@
                 [1 2 3]))))
 
 (deftest via-matcher
+  (testing "without via things are annoying"
+    (let [result {:payloads ["{:foo :bar :baz :qux}"]}]
+      (is (match? {:payloads [{:foo :bar}]}
+                  (update result :payloads (partial map read-string))))))
   (testing "normal usage"
     (is (match? {:payloads [(m/via read-string {:foo :bar})]}
-                {:payloads ["{:foo :bar}"]})))
+                {:payloads ["{:foo :bar :baz :qux}"]})))
 
   (testing "via + match-with allows pre-processing `actual` before applying matching"
     (is (match? (m/match-with
-                 [vector? (fn [expected] (m/via reverse expected))]
+                 [vector? (fn [expected] (m/via sort expected))]
                  {:payloads [1 2 3]})
-                {:payloads [3 2 1]})))
+                {:payloads (shuffle [3 2 1])})))
 
   (testing "mismatch after parsing string as a map"
     (is (match? {::result/type   :mismatch

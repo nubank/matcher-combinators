@@ -193,6 +193,40 @@ for a specific value, e.g.
 
 - `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
 
+#### `via` matcher: transform the `actual` before matching
+
+In some cases one might want to match a serialized string against a parsed data-structure.
+
+Without help this might look like the following, which becomes tedious for deeply nested structures:
+
+```clojure
+(let [result {:payloads ["{:foo :bar :baz :qux}"]}]
+ (is (match? {:payloads [{:foo :bar}]}
+      (update result :payloads (partial map read-string)))))
+```
+
+The `via` matcher can help us out with this:
+
+```clojure
+(let [result {:payloads ["{:foo :bar :baz :qux}"]}]
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads result})))
+```
+
+`via`, when paired with `match-with`, can be used to apply `actual` pre-processing before applying an underlying matcher:
+
+```clojure
+(testing "using `match-with` + `via` we can sort the actual result before matching"
+  (is (match? (m/match-with
+               [vector? (fn [expected] (m/via sort expected))]
+               {:payloads [1 2 3]})
+              {:payloads (shuffle [3 2 1])}))))
+```
+
+In this example we decorate `vector?`'s matcher to first sort the `actual` and then do matching.
+When operating over sort-able values this can be a stand-in for the computationally slower `in-any-order`.
+
+
 #### negative matchers
 
 Negative matchers, that is, those asserting the absence of something, are generally discouraged due to the adverse effect they can have on code readability.
