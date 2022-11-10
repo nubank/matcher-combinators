@@ -26,7 +26,7 @@
         true
         (checking/as-data-laden-falsehood {:notes [(printer/as-string [type value])]})))))
 
-(checkers.defining/defchecker match
+(checkers.defining/defchecker ^:deprecated match
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
   
   Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"
@@ -95,7 +95,7 @@
                   "2-arity throws-match must be provided a matcher and a throwable subclass")))
       (throw (ArityException. arg-count "throws-match")))))
 
-(checkers.defining/defchecker throws-match
+(checkers.defining/defchecker ^:deprecated throws-match
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
   
   Takes in a matcher or a matcher and throwable subclass.
@@ -138,13 +138,13 @@
          ::result/value  mismatch-val
          ::result/weight 1}))))
 
-(def match-equals
+(def ^:deprecated match-equals
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
   
   match but using strict `equals` matching behavior for maps, even nested ones."
   (match-with [map? matchers/equals]))
 
-(def match-roughly
+(def ^:deprecated match-roughly
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
   
   match where all numbers match if they are within the delta of their expected value"
