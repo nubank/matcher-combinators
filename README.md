@@ -5,6 +5,7 @@ Library for making assertions about nested data structures.
 _current version:_
 
 [![Current Version](https://img.shields.io/clojars/v/nubank/matcher-combinators.svg)](https://clojars.org/nubank/matcher-combinators)
+[![join chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C04ABMF89D3)
 
 _docs:_
 [Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/)
@@ -102,6 +103,12 @@ For example:
                               {:name/first "Benedito"
                                :name/last  "Lacerda"}]
                :band/recordings []})))
+
+(deftest test-matching-transformed-value-via-via
+  ;; via applies read-string to the actual value "{:foo :bar}" before
+  ;; matching against the expected value {:foo :bar}
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads [\"{:foo :bar}\"]})))
 
 (deftest exception-matching
   (is (thrown-match? clojure.lang.ExceptionInfo
@@ -225,7 +232,6 @@ The `via` matcher can help us out with this:
 
 In this example we decorate `vector?`'s matcher to first sort the `actual` and then do matching.
 When operating over sort-able values this can be a stand-in for the computationally slower `in-any-order`.
-
 
 #### negative matchers
 
