@@ -11,7 +11,7 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/spec.alpha "0.3.218"]
                  [org.clojure/math.combinatorics "0.1.6"]
-                 [midje "1.10.6" :exclusions [org.clojure/clojure]]]
+                 [midje "1.10.7" :exclusions [org.clojure/clojure]]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths   ["test/clj" "test/cljc"]
