@@ -197,6 +197,20 @@
          (core/indicates-match?
           (core/match (m expected) actual))))))
 
+(deftest minimize-sequence-mismatches
+  (testing "missing"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  [1 (model/->Missing 2) 3 4]
+                 ::result/weight 1}
+                (core/match (matchers/equals [1 2 3 4])
+                            [1 3 4]))))
+  (testing "unexpected"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  [1 (model/->Unexpected 2) 3 4]
+                 ::result/weight 1}
+                (core/match (matchers/equals [1 3 4])
+                            [1 2 3 4])))))
+
 (deftest sequence-matchers
   (testing "on the equals matcher for sequences"
     (testing "on element mismatches, marks each mismatch"
