@@ -6,6 +6,12 @@ change log follows the conventions of
 ## unreleased
 - Address cljs warning about Exception after `via` matcher was added
 
+## [3.7.1]
+- Bump midje to 1.10.9
+
+## [3.7.0]
+- Bump midje to 1.10.7
+
 ## [3.6.0]
 - add `via` matcher, which transforms the `actual` data-structure before applying the
   `expected` matcher.
