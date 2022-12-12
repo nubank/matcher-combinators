@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## unreleased
+- Address cljs warning about Exception after `via` matcher was added
+
 ## [3.7.1]
 - Bump midje to 1.10.9
 

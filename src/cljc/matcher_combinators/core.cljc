@@ -260,8 +260,9 @@
     (-matcher-for [_this] (-matcher-for expected))
     (-matcher-for [_this x] (-matcher-for expected x))
     (-match [_ actual]
-      (let [transformed (try (transform-actual-fn actual) (catch Exception e e))]
-        (if (instance? Exception transformed)
+      (let [transformed (try (transform-actual-fn actual)
+                             (catch #?(:clj Exception :cljs js/Error) e e))]
+        (if (instance? #?(:clj Exception :cljs js/Error) transformed)
           {::result/type   :mismatch
            ::result/value  (model/->Mismatch (list 'via (-> transform-actual-fn str symbol) expected) actual)
            ::result/weight 1}
