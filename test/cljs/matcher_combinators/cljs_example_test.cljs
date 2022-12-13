@@ -52,11 +52,18 @@
                      {:foo 1}
                      (bang!))))
 
+
+(deftest passing-match
+  (is (match? {:a 2} {:a 2 :b 1})))
+
 (comment
   (deftest match?-no-actual-arg
     (testing "fails with nice message when you don't provide an `actual` arg to `match?`"
       (is (match? 1)
           :in-wrong-place)))
+
+  (deftest failing-match
+    (is (match? 1 2)))
 
   (deftest thrown-match?-no-actual-arg
     (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"
