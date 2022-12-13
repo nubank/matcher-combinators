@@ -1,0 +1,9 @@
+{:deps   {}
+ :source-paths ["src/clj" "src/cljc" "src/cljs" "test"]
+ :builds {:browser-test {:target           :browser-test
+                         :test-dir         "web/public/js/test"
+                         :ns-regexp        "-test$"
+                         :compiler-options {:static-fns false}
+                         :devtools         {:http-port          9158
+                                            :http-resource-root "public"
+                                            :http-root          "web/public/js/test"}}}}
