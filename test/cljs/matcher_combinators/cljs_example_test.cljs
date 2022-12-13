@@ -52,7 +52,6 @@
                      {:foo 1}
                      (bang!))))
 
-
 (deftest passing-match
   (is (match? {:a 2} {:a 2 :b 1})))
 
