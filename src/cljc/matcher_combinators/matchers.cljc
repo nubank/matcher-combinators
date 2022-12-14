@@ -120,6 +120,11 @@
   [transform-actual-fn expected]
   (core/->ViaMatcher transform-actual-fn expected))
 
+(defn either
+  "A matcher that successfully matches if one of the two provided matchers matches."
+  [left-expected right-expected]
+  (core/->Either left-expected right-expected))
+
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
 

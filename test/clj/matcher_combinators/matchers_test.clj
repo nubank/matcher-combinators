@@ -434,3 +434,23 @@
   (is (match? (m/seq-of {:name string? :id uuid?})
               [{:name "Michael"
                 :id    #uuid "c70e35eb-9eb6-4e3d-b5da-1f7f80932db9"}])))
+
+(deftest either-matcher
+  (testing "top-level use of `either` gives poor mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:expected (list 'either {:a 1} {:a 2})
+                                 :actual {:a 3}}}
+                (c/match (m/either {:a 1} {:a 2}) {:a 3}))))
+  (testing "low-level use of `either` gives better mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:a {:expected (list 'either 1 2)
+                                     :actual 3}}}
+                (c/match {:a (m/either 1 2)} {:a 3}))))
+
+  (testing "`either` + `seq-of` works great"
+    (is (match? {::result/type :mismatch
+                 ::result/value [1 "2" mismatch? 4 "5" mismatch?]}
+          (c/match (m/seq-of (m/either string? int?))
+                   [1 "2" :3 4 "5" :6])))
+    (is (match? (m/seq-of (m/either string? int?))
+                [1 "2" 3 "4"]))))

@@ -513,6 +513,22 @@
        ::result/weight 1}))
   (-base-name [_] 'predicate))
 
+(defrecord Either [left right]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (let [left-match-result (match left actual)]
+      (if (indicates-match? left-match-result)
+        left-match-result
+        (let [right-match-result (match right actual)]
+          (if (indicates-match? right-match-result)
+            right-match-result
+            {::result/type   :mismatch
+             ::result/value  (model/->Mismatch (list 'either left right) actual)
+             ::result/weight (max (::result/weight left-match-result) (::result/weight right-match-result))})))))
+  (-base-name [_] 'either))
+
 (defn- printable-matcher [matcher]
   (try
     (if-let [n (-base-name matcher)]
