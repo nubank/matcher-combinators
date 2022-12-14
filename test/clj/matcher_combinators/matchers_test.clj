@@ -425,3 +425,12 @@
                  ::result/weight number?}
                 (c/match {:payloads [(m/via read-string {:foo :barz})]}
                          {:payloads [1]})))))
+
+(deftest seq-of-matcher
+  (is (match? {::result/type   :mismatch
+               ::result/value  {:expected "seq-of expects a non-empty sequence" :actual []}
+               ::result/weight number?}
+        (c/match (m/seq-of int?) [])))
+  (is (match? (m/seq-of {:name string? :id uuid?})
+              [{:name "Michael"
+                :id    #uuid "c70e35eb-9eb6-4e3d-b5da-1f7f80932db9"}])))

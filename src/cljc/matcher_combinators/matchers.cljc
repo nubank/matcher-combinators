@@ -28,6 +28,12 @@
     (map? expected)                 (core/->EqualsMap expected)
     :else                           (core/->Value expected)))
 
+(defn seq-of
+  "Matcher that will match when given a sequence where every element matches
+  the provided `expected` matcher"
+  [expected]
+  (core/->SeqOf expected))
+
 (defn set-equals
   "Matches a set in the way `(equals some-set)` would, but accepts sequences as
   the expected matcher argument, allowing one to use matchers with the same

@@ -283,27 +283,23 @@
        actuals])))
 
 (defn- sequence-match [expected actual subseq?]
-  (if-not (sequential? actual)
-    {::result/type   :mismatch
-     ::result/value  (model/->Mismatch expected actual)
-     ::result/weight 1}
-    (let [[matchers
-           actual-elems] (normalize-inputs-length expected actual)
-          match-results' (map (fn [matcher actual-element] (match matcher actual-element))
-                              matchers actual-elems)
-          match-size     (if subseq?
-                           (count expected)
-                           (max (count actual) (count expected)))
-          match-results  (take match-size match-results')]
-      (if (some (complement indicates-match?) match-results)
-        {::result/type   :mismatch
-         ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
-         ::result/weight (->> match-results
-                              (map ::result/weight)
-                              (reduce + 0))}
-        {::result/type   :match
-         ::result/value  actual
-         ::result/weight 0}))))
+  (let [[matchers
+         actual-elems] (normalize-inputs-length expected actual)
+        match-results' (map (fn [matcher actual-element] (match matcher actual-element))
+                            matchers actual-elems)
+        match-size     (if subseq?
+                         (count expected)
+                         (max (count actual) (count expected)))
+        match-results  (take match-size match-results')]
+    (if (some (complement indicates-match?) match-results)
+      {::result/type   :mismatch
+       ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+       ::result/weight (->> match-results
+                            (map ::result/weight)
+                            (reduce + 0))}
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0})))
 
 (defrecord EqualsSeq [expected]
   Matcher
@@ -315,6 +311,20 @@
       issue
       (sequence-match expected actual false)))
   (-base-name [_] 'equals))
+
+(defrecord SeqOf [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual any? sequential? (-base-name this) "sequential")]
+      issue
+      (if (seq actual)
+        (sequence-match (repeat (count actual) expected) actual false)
+        {::result/type  :mismatch
+         ::result/value (model/->Mismatch "seq-of expects a non-empty sequence" actual)
+         ::result/weight 1})))
+  (-base-name [_] 'seq-of))
 
 (defn- matched-successfully? [unmatched elements subset?]
   (or (and subset? (empty? unmatched))
