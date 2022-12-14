@@ -9,7 +9,8 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
-  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
+  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]
+           [java.time Instant]))
 
 (use-fixtures :once test-helpers/instrument)
 
@@ -425,3 +426,17 @@
                  ::result/weight number?}
                 (c/match {:payloads [(m/via read-string {:foo :barz})]}
                          {:payloads [1]})))))
+
+(deftest pred-matcher
+  (testing "pred matcher without description argument gives mismatch info with the pred function's object representation"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads {:expected (list 'pred ifn?) :actual -1}}
+                 ::result/weight number?}
+                (c/match {:payloads (m/pred pos?)}
+                         {:payloads -1}))))
+  (testing "you can provide a description for clearer mismatch info"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads {:expected "positive numbers only please" :actual -1}}
+                 ::result/weight number?}
+                (c/match {:payloads (m/pred pos? "positive numbers only please")}
+                         {:payloads -1})))))
