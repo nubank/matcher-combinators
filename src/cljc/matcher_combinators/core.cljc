@@ -1,7 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
             [clojure.pprint]
-            [clojure.spec.alpha :as s]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]))
@@ -30,10 +29,6 @@
                                         Only present when :match/result is :mismatch"
   [expected actual]
   (-match expected actual))
-
-(s/fdef indicates-match?
-  :args (s/cat :match-result ::result/result)
-  :ret boolean?)
 
 (defn indicates-match?
   "Returns true if match-result (the map returned by `(match expected actual)`) indicates a match."
@@ -193,7 +188,7 @@
                               (into actual))
             weight        (->> entry-results
                                (map second)
-                               (reduce (fn [acc-weight {::result/keys [weight]}] (+ acc-weight weight))
+                               (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))
                                        (if allow-unexpected? 0 (count unexpected-entries))))]
         {::result/type   :mismatch
          ::result/value  mismatch-val
@@ -321,7 +316,7 @@
       (and (not subset?) (empty? unmatched) (empty? elements))))
 
 (defn- residual-matching-weight [matchers elements]
-  (reduce (fn [w {::result/keys [weight]}] (+ w weight))
+  (reduce (fn [w result] (+ w (::result/weight result)))
           0
           (map match matchers elements)))
 
@@ -427,11 +422,8 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (let [{::result/keys [type value weight]} (match-any-order
-                                                 (vec expected) (vec actual) false)]
-        {::result/type   type
-         ::result/value  (set value)
-         ::result/weight weight})))
+      (update (match-any-order (vec expected) (vec actual) false)
+              ::result/value set)))
   (-base-name [_] (if accept-seq? 'set-equals 'equals)))
 
 (defrecord Prefix [expected]
@@ -474,11 +466,8 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (let [{::result/keys [type value weight]} (match-any-order
-                                                 (vec expected) (vec actual) true)]
-        {::result/type   type
-         ::result/value  (set value)
-         ::result/weight weight})))
+      (update (match-any-order (vec expected) (vec actual) true)
+              ::result/value set)))
   (-base-name [_] (if accept-seq? 'set-embeds 'embeds)))
 
 (defrecord PredMatcher [pred desc]
@@ -517,17 +506,23 @@
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [this actual]
-    (let [{::result/keys [type weight] :as result} (match expected actual)]
-      (if (= :match type)
+    (let [result (match expected actual)]
+      (if (= :match (::result/type result))
         {::result/type   :mismatch
          ::result/value  (model/->ExpectedMismatch
                           (printable-matcher expected)
                           actual)
-         ::result/weight weight}
+         ::result/weight (::result/weight result)}
         {::result/type   :match
          ::result/value  actual
          ::result/weight 0})))
   (-base-name [_] 'mismatch))
+
+(defn- backport-uri?
+  "backport uri? to clojure 1.8"
+  [x]
+  #?(:clj  (instance? java.net.URI x)
+     :cljs (instance? goog.Uri x)))
 
 (defrecord CljsUriEquals [expected]
   Matcher
@@ -535,7 +530,7 @@
   (-matcher-for [this _] this)
   (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual uri? (-base-name this) "goog.Uri")]
+                    expected actual backport-uri? (-base-name this) "goog.Uri")]
       issue
       (value-match (.toString expected)
                    (.toString actual))))

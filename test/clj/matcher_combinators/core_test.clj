@@ -1,4 +1,5 @@
 (ns matcher-combinators.core-test
+  (:refer-clojure :exclude [any?])
   (:require [clojure.string :as str]
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [clojure.test.check.clojure-test :refer [defspec]]
@@ -14,7 +15,7 @@
             [matcher-combinators.test-helpers :as test-helpers])
   (:import (clojure.lang Associative)))
 
-(use-fixtures :once test-helpers/instrument)
+(defn any? [_x] true)
 
 (defspec equals-matcher-matches-when-values-are-equal
   {:max-size 10}

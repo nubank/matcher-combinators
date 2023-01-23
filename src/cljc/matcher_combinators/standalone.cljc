@@ -1,6 +1,5 @@
 (ns matcher-combinators.standalone
-  (:require [clojure.spec.alpha :as s]
-            [matcher-combinators.core :as core]
+  (:require [matcher-combinators.core :as core]
             [matcher-combinators.parser]))
 
 (defn match
@@ -19,13 +18,6 @@
     (cond-> {:match/result type}
       (= :mismatch type)
       (assoc :mismatch/detail value))))
-
-(s/fdef match?
-  :args (s/alt :partial (s/cat :matcher (fn [matcher] (satisfies? core/Matcher matcher)))
-               :full    (s/cat :matcher (fn [matcher] (satisfies? core/Matcher matcher))
-                               :actual any?))
-  :ret (s/or :partial fn?
-             :full boolean?))
 
 (defn match?
   "Given a `matcher` and `actual`, returns `true` if

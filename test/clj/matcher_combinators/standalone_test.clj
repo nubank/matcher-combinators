@@ -1,14 +1,7 @@
 (ns matcher-combinators.standalone-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [matcher-combinators.matchers :as m]
-            [matcher-combinators.standalone :as standalone]
-            [orchestra.spec.test :as spec.test]))
-
-(use-fixtures :once
-  (fn [f]
-    (spec.test/instrument)
-    (f)
-    (spec.test/unstrument)))
+            [matcher-combinators.standalone :as standalone]))
 
 (def java-set (doto (new java.util.HashSet) (.add 1) (.add 2)))
 

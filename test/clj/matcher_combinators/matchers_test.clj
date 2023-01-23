@@ -1,6 +1,6 @@
 (ns matcher-combinators.matchers-test
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [clojure.test :refer [deftest is testing]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -10,8 +10,6 @@
             [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
-
-(use-fixtures :once test-helpers/instrument)
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
@@ -249,12 +247,12 @@
 (deftest match-with-matcher
   (testing "processes overrides in order"
     (let [matcher (m/match-with [pos? abs-value-matcher
-                                 int? m/equals]
+                                 integer? m/equals]
                                 5)]
       (is (match? matcher 5))
       (is (match? matcher -5)))
     (let [matcher (m/match-with [pos? abs-value-matcher
-                                 int? m/equals]
+                                 integer? m/equals]
                                 -5)]
       (is (no-match? matcher 5))
       (is (match? matcher -5))))
@@ -360,9 +358,9 @@
 
 (deftest within-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"
-    (is (no-match? (m/within-delta 0.1 100) ##Inf))
-    (is (no-match? (m/within-delta 0.1 100) ##-Inf))
-    (is (no-match? (m/within-delta 0.1 100) ##NaN))))
+    (is (no-match? (m/within-delta 0.1 100) Double/POSITIVE_INFINITY))
+    (is (no-match? (m/within-delta 0.1 100) Double/NEGATIVE_INFINITY))
+    (is (no-match? (m/within-delta 0.1 100) Double/NaN))))
 
 (deftest within-delta-in-match-with
   (testing "works with a vec"

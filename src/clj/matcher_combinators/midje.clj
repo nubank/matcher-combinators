@@ -19,10 +19,11 @@
   (if (exception/captured-throwable? actual)
     (checking/as-data-laden-falsehood
      {:notes [(exception/friendly-stacktrace actual)]})
-    (let [{::result/keys [type value] :as result} (core/match matcher actual)]
+    (let [result (core/match matcher actual)]
       (if (core/indicates-match? result)
         true
-        (checking/as-data-laden-falsehood {:notes [(printer/as-string [type value])]})))))
+        (checking/as-data-laden-falsehood {:notes [(printer/as-string [(::result/type result)
+                                                                       (::result/value result)])]})))))
 
 (checkers.defining/defchecker match
   "Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"

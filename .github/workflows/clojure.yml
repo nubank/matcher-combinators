@@ -29,6 +29,9 @@ jobs:
     - name: Run clj tests
       run: lein test
 
+    - name: Run clj tests with clojure 1.8
+      run: lein with-profile 1.8 test
+
     - name: Run cljs tests
       run: lein test-node
 

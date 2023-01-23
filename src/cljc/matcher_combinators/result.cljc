@@ -1,14 +1,13 @@
-(ns matcher-combinators.result
-  (:require [clojure.spec.alpha :as s]))
+(ns matcher-combinators.result)
 
 ;; the weight of the mismatch. `0` is a match, and any number above is the
 ;; number of leaf matchers that mismatch
-(s/def ::weight nat-int?)
+#_(s/def ::weight nat-int?)
 
-(s/def ::type #{:mismatch :match})
+#_(s/def ::type #{:mismatch :match})
 
 ;; either the original value, when matching, or the value with mismatches
 ;; annotated
-(s/def ::value any?)
+#_(s/def ::value any?)
 
-(s/def ::result (s/keys :req [::weight ::type ::value]))
+#_(s/def ::result (s/keys :req [::weight ::type ::value]))
