@@ -15,6 +15,7 @@
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths   ["test/clj" "test/cljc"]
+  :resource-paths ["resources"]
 
   :profiles {:dev {:plugins [[com.github.clojure-lsp/lein-clojure-lsp "1.3.11"]
                              [lein-project-version "0.1.0"]
