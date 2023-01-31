@@ -269,41 +269,91 @@
           (match expected transformed))))
     (-base-name [_] (-base-name expected)))
 
+(defn insert-all-combinations
+  "List of all ways of inserting elements from `insert-list` into `base-list`
+  while preserving the ordering that `base-list` elements have with respect to
+  each other"
+  [base-list insert-list]
+  (let [insert (fn [v i e] (vec (concat (take i v) [e] (drop i v))))
+        insert-count (count insert-list)
+        insert-indice-sets (reverse (combo/combinations (range (+ (count base-list) insert-count))
+                                                        insert-count))]
+    (map #(first (reduce (fn [[result-list remaining-insert-elems] index]
+                           [(insert result-list index (first remaining-insert-elems))
+                            (rest remaining-insert-elems)])
+                           [base-list insert-list]
+                           %))
+         insert-indice-sets)))
+
+#_(insert-all-combinations [1 2 3] [0 0])
+
 (defn- normalize-inputs-length
   "Modify the matchers and actuals sequences to match in length.
-  When `matchers` is longer, add `missing` elements to `actuals`.
-  When `actuals` is longer, add unexpected entry matchers to `matchers`."
+
+   - When `matchers` is longer, return pairs of `matchers` and all combinations
+     of `missing` inserted into `actuals`.
+   - When `actuals` is longer, return pairs of `actuals` and all combinations
+     of `unexpected` inserted into `matchers`.
+
+    The all-combinations results help compute minimized mismatches for sequences"
   [matchers actuals]
   (let [matchers-count (count matchers)
         actuals-count  (count actuals)]
-    (if (< actuals-count matchers-count)
-      [matchers
-       (take matchers-count (concat actuals (repeat ::missing)))]
-      [(take actuals-count (concat matchers (repeat unexpected-matcher)))
-       actuals])))
+    (cond (= actuals-count matchers-count)
+          [[matchers actuals]]
+
+          (< actuals-count matchers-count)
+          (map vector
+               (repeat matchers)
+               (insert-all-combinations actuals
+                                        (repeat (- matchers-count (count actuals))
+                                                ::missing)))
+
+          :else
+          (map vector
+               (insert-all-combinations matchers (repeat (- actuals-count (count matchers))
+                                                         unexpected-matcher))
+               (repeat actuals)))))
 
 (defn- sequence-match [expected actual subseq?]
   (if-not (sequential? actual)
     {::result/type   :mismatch
      ::result/value  (model/->Mismatch expected actual)
      ::result/weight 1}
-    (let [[matchers
-           actual-elems] (normalize-inputs-length expected actual)
-          match-results' (map (fn [matcher actual-element] (match matcher actual-element))
-                              matchers actual-elems)
-          match-size     (if subseq?
-                           (count expected)
-                           (max (count actual) (count expected)))
-          match-results  (take match-size match-results')]
-      (if (some (complement indicates-match?) match-results)
-        {::result/type   :mismatch
-         ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
-         ::result/weight (->> match-results
-                              (map ::result/weight)
-                              (reduce + 0))}
+    (let [match-size (if subseq?
+                       (count expected)
+                       (max (count actual) (count expected)))
+          result (reduce (fn [{:keys [matched-count weight] :as best} [matchers actuals]]
+                           (let [res (take match-size
+                                           ;; TODO: use a `reduce` to fail-fast
+                                           ;; if we mismatch more than the best
+                                           ;; `matched-count`
+                                           (map match matchers actuals))
+                                 res-matched-count (count (filter indicates-match? res))
+                                 res-weight (->> res (map ::result/weight) (reduce + 0))]
+                             (cond (every? indicates-match? res)
+                                   (reduced ::match-found)
+
+                                   (and (>= res-matched-count matched-count)
+                                        (<= res-weight weight))
+                                   {:weight res-weight
+                                    :result res
+                                    :matched-count res-matched-count}
+
+                                   :else
+                                   best)))
+                         {:matched-count 0
+                          :result []
+                          :weight        #?(:clj Integer/MAX_VALUE
+                                            :cljs (.-MAX_SAFE_INTEGER js/Number))}
+                         (normalize-inputs-length expected actual))]
+      (if (= ::match-found result)
         {::result/type   :match
          ::result/value  actual
-         ::result/weight 0}))))
+         ::result/weight 0}
+        {::result/type   :mismatch
+         ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value (:result result)))
+         ::result/weight (:weight result)}))))
 
 (defrecord EqualsSeq [expected]
   Matcher
@@ -366,7 +416,7 @@
 (defn- match-all-permutations [expected elements subset?]
   (let [[matchers elements] (if subset?
                               [expected elements]
-                              (normalize-inputs-length expected elements))
+                              (first (normalize-inputs-length expected elements)))
         matcher-perms       (combo/permutations matchers)
         find-best-match     (matched-or-best-matchers elements subset?)
         result              (reduce find-best-match
