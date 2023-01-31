@@ -28,6 +28,12 @@
     (map? expected)                 (core/->EqualsMap expected)
     :else                           (core/->Value expected)))
 
+(defn seq-of
+  "Matcher that will match when given a sequence where every element matches
+  the provided `expected` matcher"
+  [expected]
+  (core/->SeqOf expected))
+
 (defn set-equals
   "Matches a set in the way `(equals some-set)` would, but accepts sequences as
   the expected matcher argument, allowing one to use matchers with the same
@@ -113,6 +119,16 @@
   "
   [transform-actual-fn expected]
   (core/->ViaMatcher transform-actual-fn expected))
+
+(defn any-of
+  "A matcher that successfully matches if one of the two provided matchers matches."
+  [& matchers]
+  (core/->AnyOf matchers))
+
+(defn all-of
+  "A matcher that successfully matches if all provided matchers match."
+  [& matchers]
+  (core/->AllOf matchers))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))
