@@ -7,6 +7,8 @@ git checkout master
 git pull
 ```
 
+Ensure that CHANGELOG.md and project.clj have the new version number! If not, update them, commit, and push.
+
 Now run this command:
 ```
 ./release.sh

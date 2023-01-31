@@ -10,6 +10,7 @@ change log follows the conventions of
 - Add 2-arity `pred` matcher where the second argument is a description text.
   - Useful for mismatch messages when the pred is an anonymous function.
 - Allow globally configuring ANSI color emission via newly added `enable!` and `disable!` functions in `matcher-combinators.ansi-color`
+- Export clj-kondo config to silence unresolved-symbol warnings on match? and thrown-match?
 
 ## [3.7.2]
 - Address cljs warning about Exception after `via` matcher was added
