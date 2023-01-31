@@ -196,7 +196,9 @@ for a specific value, e.g.
 
 - `seq-of` takes an expected matcher and creates a new matcher over a sequence, where each element matches the provided expected matcher. Analogous to `clojure.core/every?`.
 
-- `either` given two matchers, successfully matches if one of them matches.
+- `any-of` given any number of matchers, successfully matches if at least one of them matches.
+
+- `all-of` given any number of matchers, successfully matches if all of them match.
 
 - `regex`: matches the `actual` value when provided an `expected-regex` using `(re-find expected-regex actual)`
 

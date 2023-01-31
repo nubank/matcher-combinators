@@ -513,21 +513,48 @@
        ::result/weight 1}))
   (-base-name [_] 'predicate))
 
-(defrecord Either [left right]
+(defrecord AnyOf [matchers]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [this actual]
-    (let [left-match-result (match left actual)]
-      (if (indicates-match? left-match-result)
-        left-match-result
-        (let [right-match-result (match right actual)]
-          (if (indicates-match? right-match-result)
-            right-match-result
-            {::result/type   :mismatch
-             ::result/value  (model/->Mismatch (list 'either left right) actual)
-             ::result/weight (max (::result/weight left-match-result) (::result/weight right-match-result))})))))
-  (-base-name [_] 'either))
+    (reduce (fn [min-mismatch-weight matcher]
+              (if (= ::end matcher)
+                {::result/type   :mismatch
+                 ::result/value  (model/->Mismatch (concat ['any-of] matchers) actual)
+                 ::result/weight min-mismatch-weight}
+                (let [result (match matcher actual)]
+                  (if (indicates-match? result)
+                    (reduced {::result/type   :match
+                              ::result/value  actual
+                              ::result/weight 0})
+                    (min (::result/weight result)
+                         min-mismatch-weight)))))
+            #?(:clj Integer/MAX_VALUE
+               :cljs (.-MAX_SAFE_INTEGER js/Number))
+            (conj (into [] matchers) ::end)))
+  (-base-name [_] 'any-of))
+
+(defrecord AllOf [matchers]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (reduce (fn [_acc matcher]
+              (if (= ::end matcher)
+                {::result/type   :match
+                 ::result/value  actual
+                 ::result/weight 0}
+                (let [result (match matcher actual)]
+                  (when-not (indicates-match? result)
+                    (reduced
+                      {::result/type   :mismatch
+                       ::result/value  (model/->Mismatch (concat ['all-of] matchers) actual)
+                       ;; using just one mismatch weight is potentially not so useful:
+                       ::result/weight (::result/weight result)})))))
+            nil
+            (conj (into [] matchers) ::end)))
+  (-base-name [_] 'all-of))
 
 (defn- printable-matcher [matcher]
   (try
