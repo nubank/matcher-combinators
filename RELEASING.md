@@ -7,13 +7,15 @@ git checkout master
 git pull
 ```
 
+Ensure that `CHANGELOG.md` and `version.edn` have the new version number! If not, update them, commit, and push.
+
 Now run this command:
 ```
-./release.sh
+bb release
 ```
 
-The `release.sh` script creates a git tag with the project's current version and pushes it
-to github. This will trigger a GithubAction that tests and uploads JAR files to
+This creates a git tag with the project's current version and pushes it to
+github. This will trigger a GithubAction that tests and uploads JAR files to
 Clojars.
 
 ### Credentials

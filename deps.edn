@@ -30,10 +30,7 @@
    :main-opts ["-m" "cognitect.test-runner"]}
 
   :deploy
-  {:extra-deps {slipset/deps-deploy {:mvn/version "fd8ff2de9c4bda82a1c69c387d56217473b394be"}}
-   :exec-fn deps-deploy.deps-deploy/deploy
-   :exec-args {:installer      :remote
-               :sign-releases? false
-               :artifact       "deps-deploy.jar"}}
-
-  }}
+  {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.0"}
+                io.github.clojure/tools.build {:git/sha "fe6b1405ba888720c813c7488c03880be73bbe20"}}
+   :extra-paths ["src" "bb"]
+   :ns-default build}}}

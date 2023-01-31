@@ -298,6 +298,8 @@ This verbosity can be avoided by redefining the matcher data-type defaults using
 bb dev
 ```
 
+(requires [babashka](https://github.com/babashka/babashka) to run `bb` commands)
+
 ### Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.

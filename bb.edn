@@ -2,8 +2,15 @@
  :paths ["bb" "src"]
 
  :tasks
- {dev {:doc "Starts a nREPL"
-       :task (apply clojure "-Adev -Sdeps '{:deps {cider/cider-nrepl {:mvn/version \"0.29.0\"}}}' -m nrepl.cmdline --middleware \"[cider.nrepl/cider-middleware]\"" *command-line-args*)}
+ {:requires ([tasks :as t])
+
+  release
+  {:doc "Creates a git tag with the library's current version and pushes it to GitHub. This will trigger a GitHub Action that tests and uploads JAR files to Clojars."
+   :task (t/release)}
+
+  dev
+  {:doc "Starts a nREPL"
+   :task (apply clojure "-Adev -Sdeps '{:deps {cider/cider-nrepl {:mvn/version \"0.29.0\"}}}' -m nrepl.cmdline --middleware \"[cider.nrepl/cider-middleware]\"" *command-line-args*)}
 
   test:clj
   {:doc "run Clojure clojure.test tests"
@@ -27,7 +34,7 @@
 
   deploy
   {:doc "publish to clojars"
-   :task (apply clojure "-X:deploy" *command-line-args*)}
+   :task (apply clojure "-T:build deploy!" *command-line-args*)}
 
   format
   {:doc "check if code is formatted"
