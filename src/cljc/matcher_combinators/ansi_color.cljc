@@ -2,7 +2,24 @@
   "Colorize console text. Mostly copied from Bruce Hauman's Figwheel project"
   (:require [clojure.string :as str]))
 
-(def ^:dynamic *use-color* true)
+(def ^{:dynamic true
+       :doc "thread-local way to control, via `binding`, the usage of ANSI color codes in matcher-combinator output"}
+  *use-color*
+  true)
+
+(defn- set-use-color! [v]
+  #?(:clj (alter-var-root #'*use-color* (constantly v))
+     :cljs (set! *use-color* v)))
+
+(defn enable!
+  "Thread-global way to enable the usage of ANSI color codes in matcher-combinator output."
+  []
+  (set-use-color! true))
+
+(defn disable!
+  "Thread-global way to disable the usage of ANSI color codes in matcher-combinator output."
+  []
+  (set-use-color! false))
 
 (def ANSI-CODES
   {:reset              "[0m"
