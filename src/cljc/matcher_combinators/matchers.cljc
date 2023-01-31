@@ -88,9 +88,9 @@
   (core/->Absent))
 
 (defn pred
-  "Matcher that will match when `pred` of the actual value returns true."
-  [pred]
-  (core/->PredMatcher pred `(~'pred ~pred)))
+  "Matcher that will match when `pred-fn` of the actual value returns true."
+  ([pred-fn] (pred pred-fn `(~'pred ~pred)))
+  ([pred-fn desc] (core/->PredMatcher pred-fn desc)))
 
 (defn mismatch
   "Negation matcher that takes in an `expected` matcher and passes when it
