@@ -4,13 +4,9 @@ change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## Unreleased
-- Introduce `seq-of`, `any-of`, and `all-of` matchers combinators
-   * `seq-of` takes an expected matcher and creates a new matcher over a
-     sequence, where each element matches the provided expected matcher.
-   * `any-of` takes any number of matchers, successfully matching when at least
-     one matches.
-   * `all-of` takes any number of matchers, successfully matching when all
-     match.
+- Add `seq-of` matcher, which takes a matcher, successfully matching when each element matches the provided matcher.
+* Add `any-of` matcher, which takes any number of matchers, successfully matching when at least one matches.
+* Add `all-of` matcher, which takes any number of matchers, successfully matching when all match.
 
 - Add 2-arity `pred` matcher where the second argument is a description text.
   Useful for mismatch messages when the pred is an anonymous function.
