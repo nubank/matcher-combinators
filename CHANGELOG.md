@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## Unreleased
+- Add 2-arity `pred` matcher where the second argument is a description text.
+  Useful for mismatch messages when the pred is an anonymous function.
+- Allow globally configuring ANSI color emission via newly added `enable!` and
+  `disable!` functions in `matcher-combinators.ansi-color`
+
 ## [3.7.2]
 - Address cljs warning about Exception after `via` matcher was added
 
