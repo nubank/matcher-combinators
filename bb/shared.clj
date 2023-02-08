@@ -9,5 +9,5 @@
   (let [{:keys [major minor release qualifier]} (version-map)]
     (format "%s.%s.%s%s"
             major minor release (if qualifier
-                                  (str "-" qualifier)
+                                  (str "-" (name qualifier))
                                   ""))))
