@@ -21,8 +21,7 @@
   {:extra-paths ["test/cljc" "test/clj"]}
 
   :midje-test
-  {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}
-   :extra-paths ["test/cljc" "test/clj" "bin"]}
+  {:extra-paths ["test/cljc" "test/clj" "bin"]}
 
   :cljs-test
   {:extra-paths ["test/cljc" "test/cljs"]
