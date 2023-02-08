@@ -1,7 +1,7 @@
 (ns matcher-combinators.matchers
-  (:require #?(:cljs [matcher-combinators.core :refer [Absent]])
+  (:require #?(:cljs [matcher-combinators.core :as core :refer [Absent]]
+               :clj [matcher-combinators.core :as core])
             [clojure.string :as string]
-            [matcher-combinators.core :as core]
             [matcher-combinators.utils :as utils])
   #?(:clj (:import [matcher_combinators.core Absent])))
 

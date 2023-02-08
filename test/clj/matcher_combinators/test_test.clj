@@ -1,11 +1,9 @@
 (ns matcher-combinators.test-test
-  (:require [clojure.test :refer [are deftest is testing use-fixtures]]
+  (:require [clojure.test :refer [are deftest is testing]]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.test :refer :all]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [clojure.lang ExceptionInfo]))
-
-(use-fixtures :once test-helpers/instrument)
 
 (def example-matcher {:username string?
                       :account  {:id        integer?

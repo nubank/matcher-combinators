@@ -1,6 +1,7 @@
 (ns matcher-combinators.matchers-test
+  (:refer-clojure :exclude [any?])
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [clojure.test :refer [deftest is testing]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -9,14 +10,12 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
-  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]
-           [java.time Instant]))
+  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
-(use-fixtures :once test-helpers/instrument)
+(defn any? [_x] true)
 
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
-(def an-id (java.util.UUID/fromString an-id-string))
 (def another-id (java.util.UUID/fromString "8f488446-374e-4975-9670-35ca0a633da1"))
 (def response-time (java.time.LocalDateTime/now))
 
@@ -250,12 +249,12 @@
 (deftest match-with-matcher
   (testing "processes overrides in order"
     (let [matcher (m/match-with [pos? abs-value-matcher
-                                 int? m/equals]
+                                 integer? m/equals]
                                 5)]
       (is (match? matcher 5))
       (is (match? matcher -5)))
     (let [matcher (m/match-with [pos? abs-value-matcher
-                                 int? m/equals]
+                                 integer? m/equals]
                                 -5)]
       (is (no-match? matcher 5))
       (is (match? matcher -5))))
@@ -361,9 +360,9 @@
 
 (deftest within-delta-edge-cases
   (testing "+/-infinity and NaN return false (instead of throwing)"
-    (is (no-match? (m/within-delta 0.1 100) ##Inf))
-    (is (no-match? (m/within-delta 0.1 100) ##-Inf))
-    (is (no-match? (m/within-delta 0.1 100) ##NaN))))
+    (is (no-match? (m/within-delta 0.1 100) Double/POSITIVE_INFINITY))
+    (is (no-match? (m/within-delta 0.1 100) Double/NEGATIVE_INFINITY))
+    (is (no-match? (m/within-delta 0.1 100) Double/NaN))))
 
 (deftest within-delta-in-match-with
   (testing "works with a vec"
@@ -431,8 +430,8 @@
   (is (match? {::result/type   :mismatch
                ::result/value  {:expected "seq-of expects a non-empty sequence" :actual []}
                ::result/weight number?}
-        (c/match (m/seq-of int?) [])))
-  (is (match? (m/seq-of {:name string? :id uuid?})
+        (c/match (m/seq-of integer?) [])))
+  (is (match? (m/seq-of {:name string? :id (partial instance? java.util.UUID)})
               [{:name "Michael"
                 :id    #uuid "c70e35eb-9eb6-4e3d-b5da-1f7f80932db9"}])))
 
@@ -455,9 +454,9 @@
   (testing "`any-of` + `seq-of` works great"
     (is (match? {::result/type :mismatch
                  ::result/value [1 "2" mismatch? 4 "5" mismatch?]}
-          (c/match (m/seq-of (m/any-of string? int?))
+          (c/match (m/seq-of (m/any-of string? integer?))
                    [1 "2" :3 4 "5" :6])))
-    (is (match? (m/seq-of (m/any-of string? int?))
+    (is (match? (m/seq-of (m/any-of string? integer?))
                 [1 "2" 3 "4"]))))
 
 (deftest all-of-matcher
@@ -472,16 +471,16 @@
                 (c/match (m/all-of {:a 3} {:a 2}) {:a 3}))))
   (testing "low-level use of `all-of` gives better mismatch info"
     (is (match? {::result/type  :mismatch
-                 ::result/value {:a {:expected (list 'all-of (m/equals int?) (m/equals odd?) any?)
+                 ::result/value {:a {:expected (list 'all-of (m/equals integer?) (m/equals odd?) any?)
                                      :actual 3}}}
-                (c/match {:a (m/all-of int? odd? #(> % 5))} {:a 3}))))
+                (c/match {:a (m/all-of integer? odd? #(> % 5))} {:a 3}))))
 
   (testing "`all-of` + `seq-of` works great"
     (is (match? {::result/type :mismatch
                  ::result/value [1 mismatch? mismatch? mismatch? mismatch? mismatch?]}
-          (c/match (m/seq-of (m/all-of int? odd?))
+          (c/match (m/seq-of (m/all-of integer? odd?))
                    [1 "2" :3 4 "5" :6])))
-    (is (match? (m/seq-of (m/all-of int? odd?))
+    (is (match? (m/seq-of (m/all-of integer? odd?))
                 [1 -1 3 -3]))))
 
 (deftest pred-matcher

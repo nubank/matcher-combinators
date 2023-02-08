@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.8.3 / 2023-02-08
+- Add support down to Clojure 1.8
+
 ## 3.8.2 / 2023-02-08
 - Fix compatibility with CLJS test setups run in the browser
 

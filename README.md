@@ -10,6 +10,8 @@ _current version:_
 _docs:_
 [Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/)
 
+_Clojure version compatibility:_ 1.8 and up
+
 ## Motivation
 
 Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missing a comprehensive yet extensible way to assert that the data fits a particular structure.
@@ -151,6 +153,10 @@ Note that you can also use the `match` checker to match arguments within midje's
   (provided
     (f (match [odd? even? odd?])) => 1))
 ```
+
+### Standalone:
+
+The `matcher-combinators.standalone` namespace provides an API for using matcher-combinators outside the context of a test framework.
 
 ## Matchers
 
