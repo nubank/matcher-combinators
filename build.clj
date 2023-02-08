@@ -20,7 +20,7 @@
                 :scm {:url "http://github.com/nubank/matcher-combinators"
                       :connection "scm:git:git://github.com/nubank/matcher-combinators.git"
                       :developerConnection "scm:git:ssh://git@github.com/nubank/matcher-combinators.git"
-                      :tag (str "v" version)}
+                      :tag version}
                 :src-dirs ["src"]})
   (b/copy-dir {:src-dirs ["src/clj" "src/cljc" "resources"]
                :target-dir class-dir})
