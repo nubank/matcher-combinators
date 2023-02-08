@@ -154,6 +154,10 @@ Note that you can also use the `match` checker to match arguments within midje's
     (f (match [odd? even? odd?])) => 1))
 ```
 
+### Standalone:
+
+The `matcher-combinators.standalone` namespace provides an API for using matcher-combinators outside the context of a test framework.
+
 ## Matchers
 
 ### Default matchers

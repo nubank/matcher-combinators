@@ -1,4 +1,5 @@
 (ns matcher-combinators.standalone
+  "An API for using matcher-combinators outside the context of a test framework"
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.parser]))
 
