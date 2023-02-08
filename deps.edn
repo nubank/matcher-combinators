@@ -29,7 +29,7 @@
                                            :sha "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
    :main-opts ["-m" "cognitect.test-runner"]}
 
-  :build
+  :deploy
   {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.0"}
                 io.github.clojure/tools.build {:git/sha "fe6b1405ba888720c813c7488c03880be73bbe20"}}
    :extra-paths ["src" "bb"]
