@@ -19,17 +19,31 @@ jobs:
     - name: Print java version
       run: java -version
 
+    - name: Install clojure
+      uses: DeLaGuardo/setup-clojure@master
+      with:
+        cli: '1.10.3.1087'
+        bb: latest
+        clj-kondo: latest
+
+    - name: maven cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
+        restore-keys: ${{ runner.os }}-maven-
+
     - name: Install dependencies
-      run: lein deps
+      run: bb deps
 
     - name: Run midje tests
-      run: lein midje
+      run: bb test:midje
 
     - name: Run clj tests
-      run: lein test
+      run: bb test:clj
 
     - name: Run cljs tests
-      run: lein test-node
+      run: bb test:node
 
   test-using-java-11:
     name: 'Test using Java 11'
@@ -44,17 +58,31 @@ jobs:
     - name: Print java version
       run: java -version
 
+    - name: Install clojure
+      uses: DeLaGuardo/setup-clojure@master
+      with:
+        cli: '1.10.3.1087'
+        bb: latest
+        clj-kondo: latest
+
+    - name: maven cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
+        restore-keys: ${{ runner.os }}-maven-
+
     - name: Install dependencies
-      run: lein deps
+      run: bb deps
 
     - name: Run midje tests
-      run: lein midje
+      run: bb test:midje
 
     - name: Run clj tests
-      run: lein test
+      run: bb test:clj
 
     - name: Run cljs tests
-      run: lein test-node
+      run: bb test:node
 
   release:
     name: 'Publish on Clojars'
@@ -63,11 +91,24 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install clojure
+      uses: DeLaGuardo/setup-clojure@master
+      with:
+        cli: '1.10.3.1087'
+        bb: latest
+
+    - name: maven cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
+        restore-keys: ${{ runner.os }}-maven-
+
     - name: Install dependencies
-      run: lein deps
+      run: bb deps
 
     - name: Publish on Clojars
-      run: lein deploy publish
+      run: bb deploy
       env:
           CLOJARS_USERNAME: eng-prod-nubank
-          CLOJARS_PASSWD: ${{ secrets.CLOJARS_DEPLOY_TOKEN }}
+          CLOJARS_PASSWORD: ${{ secrets.CLOJARS_DEPLOY_TOKEN }}
