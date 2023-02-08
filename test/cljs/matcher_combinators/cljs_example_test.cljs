@@ -39,16 +39,30 @@
 
 (defn bang! [] (throw (ex-info "an exception" {:foo 1 :bar 2})))
 
+(deftest via-matcher
+  (testing "normal usage matches"
+    (is (standalone/match? (m/via sort [1 2 3])
+                           [2 3 1])))
+  (testing "`(sort 2)` throws and causes a mismatch"
+    (is (not (standalone/match? (m/via sort 2)
+                                2)))))
+
 (deftest exception-matching
   (is (thrown-match? ExceptionInfo
                      {:foo 1}
                      (bang!))))
+
+(deftest passing-match
+  (is (match? {:a 2} {:a 2 :b 1})))
 
 (comment
   (deftest match?-no-actual-arg
     (testing "fails with nice message when you don't provide an `actual` arg to `match?`"
       (is (match? 1)
           :in-wrong-place)))
+
+  (deftest failing-match
+    (is (match? 1 2)))
 
   (deftest thrown-match?-no-actual-arg
     (testing "fails with nice message when you don't provide an `actual` arg to `thrown-match?`"

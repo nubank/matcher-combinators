@@ -10,6 +10,8 @@ _current version:_
 _docs:_
 [Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/)
 
+_Clojure version compatibility:_ 1.8 and up
+
 ## Motivation
 
 Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missing a comprehensive yet extensible way to assert that the data fits a particular structure.
@@ -152,6 +154,10 @@ Note that you can also use the `match` checker to match arguments within midje's
     (f (match [odd? even? odd?])) => 1))
 ```
 
+### Standalone:
+
+The `matcher-combinators.standalone` namespace provides an API for using matcher-combinators outside the context of a test framework.
+
 ## Matchers
 
 ### Default matchers
@@ -192,15 +198,52 @@ for a specific value, e.g.
 
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
 
-- `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
+- `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
+
+- `seq-of` takes an expected matcher and creates a new matcher over a sequence, where each element matches the provided expected matcher. Analogous to `clojure.core/every?`.
+
+- `any-of` given any number of matchers, successfully matches if at least one of them matches.
+
+- `all-of` given any number of matchers, successfully matches if all of them match.
 
 - `regex`: matches the `actual` value when provided an `expected-regex` using `(re-find expected-regex actual)`
 
-- `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep stucture) (see Overriding default matchers, below)
+- `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep structure) (see Overriding default matchers, below)
 
 - `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
 
-- `via`: transforms the `actual` data-structure before applying the `expected` matcher.
+#### `via` matcher: transform the `actual` before matching
+
+In some cases one might want to match a serialized string against a parsed data-structure.
+
+Without help this might look like the following, which becomes tedious for deeply nested structures:
+
+```clojure
+(let [result {:payloads ["{:foo :bar :baz :qux}"]}]
+ (is (match? {:payloads [{:foo :bar}]}
+      (update result :payloads (partial map read-string)))))
+```
+
+The `via` matcher can help us out with this:
+
+```clojure
+(let [result {:payloads ["{:foo :bar :baz :qux}"]}]
+  (is (match? {:payloads [(m/via read-string {:foo :bar})]}
+              {:payloads result})))
+```
+
+`via`, when paired with `match-with`, can be used to apply `actual` pre-processing before applying an underlying matcher:
+
+```clojure
+(testing "using `match-with` + `via` we can sort the actual result before matching"
+  (is (match? (m/match-with
+               [vector? (fn [expected] (m/via sort expected))]
+               {:payloads [1 2 3]})
+              {:payloads (shuffle [3 2 1])}))))
+```
+
+In this example we decorate `vector?`'s matcher to first sort the `actual` and then do matching.
+When operating over sort-able values this can be a stand-in for the computationally slower `in-any-order`.
 
 #### negative matchers
 
@@ -253,18 +296,37 @@ This verbosity can be avoided by redefining the matcher data-type defaults using
               {:a {:b {:c 1}}}))
 ```
 
-## Running tests
+## Development
+
+### Start nREPL
+
+```
+bb dev
+```
+
+(requires [babashka](https://github.com/babashka/babashka) to run `bb` commands)
+
+### Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.
 
-To run Clojure tests:
+```
+bb test:clj   # run only Clojure tests
+bb test:midje # run only Midje tests
+bb test:node  # run only ClojureScript tests
+bb test:browser # run ClojureScript tests in browser at `http://localhost:9158/`
+```
+
+### Linting and formatting
+
+Check formatting and linting:
 
 ```
-lein midje
+bb lint
 ```
 
-To run Clojurescript tests:
+Auto-fix formatting and linting:
 
 ```
-lein test-node
+bb lint:fix
 ```

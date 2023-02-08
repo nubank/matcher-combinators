@@ -1,0 +1,41 @@
+{:mvn/repos {"central"  {:url "https://repo1.maven.org/maven2/"}
+             "clojars"  {:url "https://clojars.org/repo/"}}
+ :paths ["src/clj" "src/cljc" "src/cljs"]
+ :deps {org.clojure/clojure {:mvn/version "1.8.0"}
+        org.clojure/math.combinatorics {:mvn/version "0.1.6"}}
+
+ :aliases
+ {:1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
+  :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
+  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
+
+  :dev
+  {:extra-paths ["dev" "test/cljc" "test/cljs" "test/clj"]
+   :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
+                midje/midje {:mvn/version "1.10.9"}}}
+
+  :clj-test
+  {:extra-paths ["test/cljc" "test/clj"]}
+
+  :midje-test
+  {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}
+   :extra-paths ["test/cljc" "test/clj" "bin"]}
+
+  :cljs-test
+  {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+   :extra-paths ["test/cljc" "test/cljs"]
+   :main-opts ["-m" "shadow.cljs.devtools.cli"]
+   :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
+                thheller/shadow-cljs {:mvn/version "2.18.0"}}}
+
+  :test-runner
+  {:extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                           :sha "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
+   :main-opts ["-m" "cognitect.test-runner"]}
+
+  :build
+  {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.0"}
+                io.github.clojure/tools.build {:git/sha "fe6b1405ba888720c813c7488c03880be73bbe20"}}
+   :extra-paths ["src" "bb"]
+   :ns-default build}}}

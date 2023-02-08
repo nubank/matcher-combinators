@@ -1,7 +1,6 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
             [clojure.pprint]
-            [clojure.spec.alpha :as s]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]))
@@ -30,10 +29,6 @@
                                         Only present when :match/result is :mismatch"
   [expected actual]
   (-match expected actual))
-
-(s/fdef indicates-match?
-  :args (s/cat :match-result ::result/result)
-  :ret boolean?)
 
 (defn indicates-match?
   "Returns true if match-result (the map returned by `(match expected actual)`) indicates a match."
@@ -193,7 +188,7 @@
                               (into actual))
             weight        (->> entry-results
                                (map second)
-                               (reduce (fn [acc-weight {::result/keys [weight]}] (+ acc-weight weight))
+                               (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))
                                        (if allow-unexpected? 0 (count unexpected-entries))))]
         {::result/type   :mismatch
          ::result/value  mismatch-val
@@ -260,8 +255,9 @@
     (-matcher-for [_this] (-matcher-for expected))
     (-matcher-for [_this x] (-matcher-for expected x))
     (-match [_ actual]
-      (let [transformed (try (transform-actual-fn actual) (catch Exception e e))]
-        (if (instance? Exception transformed)
+      (let [transformed (try (transform-actual-fn actual)
+                             (catch #?(:clj Exception :cljs js/Error) e e))]
+        (if (instance? #?(:clj Exception :cljs js/Error) transformed)
           {::result/type   :mismatch
            ::result/value  (model/->Mismatch (list 'via (-> transform-actual-fn str symbol) expected) actual)
            ::result/weight 1}
@@ -282,27 +278,23 @@
        actuals])))
 
 (defn- sequence-match [expected actual subseq?]
-  (if-not (sequential? actual)
-    {::result/type   :mismatch
-     ::result/value  (model/->Mismatch expected actual)
-     ::result/weight 1}
-    (let [[matchers
-           actual-elems] (normalize-inputs-length expected actual)
-          match-results' (map (fn [matcher actual-element] (match matcher actual-element))
-                              matchers actual-elems)
-          match-size     (if subseq?
-                           (count expected)
-                           (max (count actual) (count expected)))
-          match-results  (take match-size match-results')]
-      (if (some (complement indicates-match?) match-results)
-        {::result/type   :mismatch
-         ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
-         ::result/weight (->> match-results
-                              (map ::result/weight)
-                              (reduce + 0))}
-        {::result/type   :match
-         ::result/value  actual
-         ::result/weight 0}))))
+  (let [[matchers
+         actual-elems] (normalize-inputs-length expected actual)
+        match-results' (map (fn [matcher actual-element] (match matcher actual-element))
+                            matchers actual-elems)
+        match-size     (if subseq?
+                         (count expected)
+                         (max (count actual) (count expected)))
+        match-results  (take match-size match-results')]
+    (if (some (complement indicates-match?) match-results)
+      {::result/type   :mismatch
+       ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+       ::result/weight (->> match-results
+                            (map ::result/weight)
+                            (reduce + 0))}
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0})))
 
 (defrecord EqualsSeq [expected]
   Matcher
@@ -315,12 +307,26 @@
       (sequence-match expected actual false)))
   (-base-name [_] 'equals))
 
+(defrecord SeqOf [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual (constantly true) sequential? (-base-name this) "sequential")]
+      issue
+      (if (seq actual)
+        (sequence-match (repeat (count actual) expected) actual false)
+        {::result/type  :mismatch
+         ::result/value (model/->Mismatch "seq-of expects a non-empty sequence" actual)
+         ::result/weight 1})))
+  (-base-name [_] 'seq-of))
+
 (defn- matched-successfully? [unmatched elements subset?]
   (or (and subset? (empty? unmatched))
       (and (not subset?) (empty? unmatched) (empty? elements))))
 
 (defn- residual-matching-weight [matchers elements]
-  (reduce (fn [w {::result/keys [weight]}] (+ w weight))
+  (reduce (fn [w result] (+ w (::result/weight result)))
           0
           (map match matchers elements)))
 
@@ -385,9 +391,9 @@
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
-    {:result/type   :mismatch
-     :result/value  (model/->Mismatch expected actual)
-     :result/weight 1}
+    {::result/type   :mismatch
+     ::result/value  (model/->Mismatch expected actual)
+     ::result/weight 1}
     (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
@@ -426,11 +432,8 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (let [{::result/keys [type value weight]} (match-any-order
-                                                 (vec expected) (vec actual) false)]
-        {::result/type   type
-         ::result/value  (set value)
-         ::result/weight weight})))
+      (update (match-any-order (vec expected) (vec actual) false)
+              ::result/value set)))
   (-base-name [_] (if accept-seq? 'set-equals 'equals)))
 
 (defrecord Prefix [expected]
@@ -473,11 +476,8 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (let [{::result/keys [type value weight]} (match-any-order
-                                                 (vec expected) (vec actual) true)]
-        {::result/type   type
-         ::result/value  (set value)
-         ::result/weight weight})))
+      (update (match-any-order (vec expected) (vec actual) true)
+              ::result/value set)))
   (-base-name [_] (if accept-seq? 'set-embeds 'embeds)))
 
 (defrecord PredMatcher [pred desc]
@@ -502,6 +502,49 @@
        ::result/weight 1}))
   (-base-name [_] 'predicate))
 
+(defrecord AnyOf [matchers]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (reduce (fn [min-mismatch-weight matcher]
+              (if (= ::end matcher)
+                {::result/type   :mismatch
+                 ::result/value  (model/->Mismatch (concat ['any-of] matchers) actual)
+                 ::result/weight min-mismatch-weight}
+                (let [result (match matcher actual)]
+                  (if (indicates-match? result)
+                    (reduced {::result/type   :match
+                              ::result/value  actual
+                              ::result/weight 0})
+                    (min (::result/weight result)
+                         min-mismatch-weight)))))
+            #?(:clj Integer/MAX_VALUE
+               :cljs (.-MAX_SAFE_INTEGER js/Number))
+            (conj (into [] matchers) ::end)))
+  (-base-name [_] 'any-of))
+
+(defrecord AllOf [matchers]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (reduce (fn [_acc matcher]
+              (if (= ::end matcher)
+                {::result/type   :match
+                 ::result/value  actual
+                 ::result/weight 0}
+                (let [result (match matcher actual)]
+                  (when-not (indicates-match? result)
+                    (reduced
+                      {::result/type   :mismatch
+                       ::result/value  (model/->Mismatch (concat ['all-of] matchers) actual)
+                       ;; using just one mismatch weight is potentially not so useful:
+                       ::result/weight (::result/weight result)})))))
+            nil
+            (conj (into [] matchers) ::end)))
+  (-base-name [_] 'all-of))
+
 (defn- printable-matcher [matcher]
   (try
     (if-let [n (-base-name matcher)]
@@ -516,17 +559,23 @@
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [this actual]
-    (let [{::result/keys [type weight] :as result} (match expected actual)]
-      (if (= :match type)
+    (let [result (match expected actual)]
+      (if (= :match (::result/type result))
         {::result/type   :mismatch
          ::result/value  (model/->ExpectedMismatch
                           (printable-matcher expected)
                           actual)
-         ::result/weight weight}
+         ::result/weight (::result/weight result)}
         {::result/type   :match
          ::result/value  actual
          ::result/weight 0})))
   (-base-name [_] 'mismatch))
+
+(defn- backport-uri?
+  "backport uri? to clojure 1.8"
+  [x]
+  #?(:clj  (instance? java.net.URI x)
+     :cljs (instance? goog.Uri x)))
 
 (defrecord CljsUriEquals [expected]
   Matcher
@@ -534,7 +583,7 @@
   (-matcher-for [this _] this)
   (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual uri? (-base-name this) "goog.Uri")]
+                    expected actual backport-uri? (-base-name this) "goog.Uri")]
       issue
       (value-match (.toString expected)
                    (.toString actual))))

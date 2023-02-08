@@ -7,11 +7,8 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.test-helpers :refer [abs-value-matcher]]
             [midje.emission.api :as emission]
-            [midje.sweet :as midje :refer [=> fact facts falsey]]
-            [orchestra.spec.test :as spec.test])
+            [midje.sweet :as midje :refer [=> fact facts falsey]])
   (:import [clojure.lang ExceptionInfo]))
-
-(spec.test/instrument)
 
 (fact "sequence matching"
   [] => (match [])
@@ -281,16 +278,16 @@
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 2} ExceptionInfo)
   (throw (ex-info "foo" {:foo 1 :bar 2})) =not=> (throws-match {:foo 1} clojure.lang.ArityException))
 
-(def match-abs (match-with [int? abs-value-matcher]))
+(def match-abs (match-with [integer? abs-value-matcher]))
 
 (facts "match-with checker behavior"
   (core/indicates-match? (core/match -1 1)) => false
 
   (fact "using 2-arg match-with"
-    1 => (match-with [int? abs-value-matcher] 1)
-    1 => (match-with [int? abs-value-matcher] -1)
-    -1 => (match-with [int? abs-value-matcher] 1)
-    -1 => (match-with [int? abs-value-matcher] -1))
+    1 => (match-with [integer? abs-value-matcher] 1)
+    1 => (match-with [integer? abs-value-matcher] -1)
+    -1 => (match-with [integer? abs-value-matcher] 1)
+    -1 => (match-with [integer? abs-value-matcher] -1))
   (fact "binding 1-arg match-with to new checker"
     1 => (match-abs 1)
     1 => (match-abs -1)
@@ -320,5 +317,3 @@
                                    {:a 1 :b 3.0})
   {:a 1 :b 3.05} =not=> (match-roughly 0.001
                                        {:a 1 :b 3.0}))
-
-(spec.test/unstrument)
