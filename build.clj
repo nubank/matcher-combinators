@@ -9,7 +9,7 @@
 (def version (shared/version))
 (def jar-file (format "target/%s-%s.jar" (name lib) version))
 
-(defn jar []
+(defn jar [_]
   (b/delete {:path class-dir})
   (b/delete {:path jar-file})
   (println "Writing pom:" jar-file)
@@ -30,7 +30,7 @@
 (defn deploy!
   "Deploy built jar to clojars"
   [& _args]
-  (jar)
+  (jar nil)
   (dd/deploy {:installer :remote
               :artifact jar-file
               :pom-file (b/pom-path {:lib lib :class-dir class-dir})}))

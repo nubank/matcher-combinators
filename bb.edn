@@ -40,6 +40,10 @@
   {:doc "publish to clojars"
    :task (apply clojure "-T:build deploy!" *command-line-args*)}
 
+  jar
+  {:doc "build jar"
+   :task (apply clojure "-T:build jar" *command-line-args*)}
+
   format
   {:doc "check if code is formatted"
    :task (shell "clojure-lsp" "format" "--dry")}
