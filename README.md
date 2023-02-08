@@ -290,26 +290,37 @@ This verbosity can be avoided by redefining the matcher data-type defaults using
               {:a {:b {:c 1}}}))
 ```
 
-## Running tests
+## Development
+
+### Start nREPL
+
+```
+bb dev
+```
+
+(requires [babashka](https://github.com/babashka/babashka) to run `bb` commands)
+
+### Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.
 
-To run Clojure tests:
-
 ```
-lein midje
-```
-
-To run terminal-based Clojurescript tests:
-
-```
-lein test-node
+bb test:clj   # run only Clojure tests
+bb test:midje # run only Midje tests
+bb test:node  # run only ClojureScript tests
+bb test:browser # run ClojureScript tests in browser at `http://localhost:9158/`
 ```
 
-To run browser-based Clojurescript tests:
+### Linting and formatting
+
+Check formatting and linting:
 
 ```
-clj -M:cljs-test watch browser-test
+bb lint
 ```
 
-then navigate to `http://localhost:9158/`
+Auto-fix formatting and linting:
+
+```
+bb lint:fix
+```
