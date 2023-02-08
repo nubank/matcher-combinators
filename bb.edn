@@ -24,6 +24,10 @@
   {:doc "run ClojureScript tests via node"
    :task (apply clojure "-M:cljs-test compile cli-test" *command-line-args*)}
 
+  test:browser
+  {:doc "run ClojureScript tests in browser at `http://localhost:9158/`"
+   :task (apply clojure "-M:cljs-test watch browser-test" *command-line-args*)}
+
   test
   {:doc "Run entire test suite"
    :depends [test:node test:clj test:midje]}

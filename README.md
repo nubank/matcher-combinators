@@ -308,16 +308,8 @@ The project contains `midje`, `clojure.test`, and `cljs.test` tests.
 bb test:clj   # run only Clojure tests
 bb test:midje # run only Midje tests
 bb test:node  # run only ClojureScript tests
+bb test:browser # run ClojureScript tests in browser at `http://localhost:9158/`
 ```
-
-#### browser-based tests
-To run browser-based Clojurescript tests:
-
-```
-clj -M:cljs-test watch browser-test
-```
-
-then navigate to `http://localhost:9158/`
 
 ### Linting and formatting
 
