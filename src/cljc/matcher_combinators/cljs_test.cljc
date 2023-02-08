@@ -9,6 +9,18 @@
             [matcher-combinators.result :as result]
             [cljs.test :as t :refer-macros [deftest is]]))
 
+(defrecord CljsMismatch [summary match-result])
+
+(defn tagged-for-pretty-printing [actual-summary result]
+  (->CljsMismatch actual-summary result))
+
+#?(:cljs
+   (extend-protocol IPrintWithWriter
+     CljsMismatch
+     (-pr-writer [cljs-mismatch writer _]
+       (-write writer (printer/as-string (-> cljs-mismatch :match-result ::result/value))))))
+
+
 (defn with-file+line-info [report]
   #?(:cljs (merge (t/file-and-line (js/Error.) 4) report)))
 
@@ -45,10 +57,11 @@
               :expected '~form
               :actual   (list 'match? matcher# actual#)}
              (with-file+line-info
-               {:type     :matcher-combinators/mismatch
+               {:type     :fail
                 :message  ~msg
                 :expected '~form
-                :actual   (list '~'not (list 'match? matcher# actual#))
+                :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
+                                                      result#)
                 :markup   (::result/value result#)}))))
        :else
        (t/do-report
@@ -92,31 +105,11 @@
                   :expected '~form
                   :actual   (list 'thrown-match? ~klass ~matcher '~body)}
                  (with-file+line-info
-                   {:type     :matcher-combinators/exception-mismatch
+                   {:type     :fail
                     :message  ~msg
                     :expected '~form
-                    :actual   (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                    :actual   (tagged-for-pretty-printing (list '~'not (list 'thrown-match? ~klass ~matcher '~body))
+                                                          result#)
                     :ex-class ~klass
                     :markup   (::result/value result#)}))))
             e#))))))
-
-#?(:cljs (do
-(defmethod t/report [::t/default :matcher-combinators/exception-mismatch] [m]
-  (t/inc-report-counter! :fail)
-  (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq (:testing-contexts (t/get-current-env)))
-    (println (t/testing-contexts-str)))
-  (when-let [message (:message m)]
-    (println message))
-  (println (:ex-class m) "data mismatches:")
-  (printer/pretty-print (:markup m)))
-
-(defmethod t/report [::t/default :matcher-combinators/mismatch] [m]
-  (t/inc-report-counter! :fail)
-  (println "\nFAIL in" (t/testing-vars-str m))
-  (when (seq (:testing-contexts (t/get-current-env)))
-    (println (t/testing-contexts-str)))
-  (when-let [message (:message m)]
-    (println message))
-  (println "mismatch:")
-  (printer/pretty-print (:markup m)))))

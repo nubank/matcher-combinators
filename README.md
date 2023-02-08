@@ -300,8 +300,16 @@ To run Clojure tests:
 lein midje
 ```
 
-To run Clojurescript tests:
+To run terminal-based Clojurescript tests:
 
 ```
 lein test-node
 ```
+
+To run browser-based Clojurescript tests:
+
+```
+clj -M:cljs-test watch browser-test
+```
+
+then navigate to `http://localhost:9158/`
