@@ -192,11 +192,17 @@ for a specific value, e.g.
 
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
 
-- `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get arround this one should use `(set-equals [odd? odd])`.
+- `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
+
+- `seq-of` takes an expected matcher and creates a new matcher over a sequence, where each element matches the provided expected matcher. Analogous to `clojure.core/every?`.
+
+- `any-of` given any number of matchers, successfully matches if at least one of them matches.
+
+- `all-of` given any number of matchers, successfully matches if all of them match.
 
 - `regex`: matches the `actual` value when provided an `expected-regex` using `(re-find expected-regex actual)`
 
-- `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep stucture) (see Overriding default matchers, below)
+- `match-with`: overrides default matchers for `expected` (scalar or arbitrarily deep structure) (see Overriding default matchers, below)
 
 - `within-delta`: matches numeric values that are within `expected` +/- `delta` (inclusive)
 
@@ -284,18 +290,37 @@ This verbosity can be avoided by redefining the matcher data-type defaults using
               {:a {:b {:c 1}}}))
 ```
 
-## Running tests
+## Development
+
+### Start nREPL
+
+```
+bb dev
+```
+
+(requires [babashka](https://github.com/babashka/babashka) to run `bb` commands)
+
+### Running tests
 
 The project contains `midje`, `clojure.test`, and `cljs.test` tests.
 
-To run Clojure tests:
+```
+bb test:clj   # run only Clojure tests
+bb test:midje # run only Midje tests
+bb test:node  # run only ClojureScript tests
+bb test:browser # run ClojureScript tests in browser at `http://localhost:9158/`
+```
+
+### Linting and formatting
+
+Check formatting and linting:
 
 ```
-lein midje
+bb lint
 ```
 
-To run Clojurescript tests:
+Auto-fix formatting and linting:
 
 ```
-lein test-node
+bb lint:fix
 ```

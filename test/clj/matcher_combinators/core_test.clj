@@ -1,7 +1,7 @@
 (ns matcher-combinators.core-test
   (:refer-clojure :exclude [any?])
   (:require [clojure.string :as str]
-            [clojure.test :refer [are deftest is testing use-fixtures]]
+            [clojure.test :refer [are deftest is testing]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -11,8 +11,7 @@
             [matcher-combinators.parser]
             [matcher-combinators.result :as result]
             [matcher-combinators.standalone :as standalone]
-            [matcher-combinators.test :refer [match?]]
-            [matcher-combinators.test-helpers :as test-helpers])
+            [matcher-combinators.test :refer [match?]])
   (:import (clojure.lang Associative)))
 
 (defn any? [_x] true)

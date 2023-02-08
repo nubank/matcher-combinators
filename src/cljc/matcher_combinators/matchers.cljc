@@ -1,7 +1,7 @@
 (ns matcher-combinators.matchers
-  (:require #?(:cljs [matcher-combinators.core :refer [Absent]])
+  (:require #?(:cljs [matcher-combinators.core :as core :refer [Absent]]
+               :clj [matcher-combinators.core :as core])
             [clojure.string :as string]
-            [matcher-combinators.core :as core]
             [matcher-combinators.utils :as utils])
   #?(:clj (:import [matcher_combinators.core Absent])))
 
@@ -27,6 +27,12 @@
     (non-internal-record? expected) (core/->EqualsRecord expected)
     (map? expected)                 (core/->EqualsMap expected)
     :else                           (core/->Value expected)))
+
+(defn seq-of
+  "Matcher that will match when given a sequence where every element matches
+  the provided `expected` matcher"
+  [expected]
+  (core/->SeqOf expected))
 
 (defn set-equals
   "Matches a set in the way `(equals some-set)` would, but accepts sequences as
@@ -88,9 +94,9 @@
   (core/->Absent))
 
 (defn pred
-  "Matcher that will match when `pred` of the actual value returns true."
-  [pred]
-  (core/->PredMatcher pred `(~'pred ~pred)))
+  "Matcher that will match when `pred-fn` of the actual value returns true."
+  ([pred-fn] (pred pred-fn `(~'pred ~pred)))
+  ([pred-fn desc] (core/->PredMatcher pred-fn desc)))
 
 (defn mismatch
   "Negation matcher that takes in an `expected` matcher and passes when it
@@ -113,6 +119,16 @@
   "
   [transform-actual-fn expected]
   (core/->ViaMatcher transform-actual-fn expected))
+
+(defn any-of
+  "A matcher that successfully matches if one of the two provided matchers matches."
+  [& matchers]
+  (core/->AnyOf matchers))
+
+(defn all-of
+  "A matcher that successfully matches if all provided matchers match."
+  [& matchers]
+  (core/->AllOf matchers))
 
 #?(:cljs (defn- cljs-uri [expected]
            (core/->CljsUriEquals expected)))

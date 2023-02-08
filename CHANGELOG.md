@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.8.2 / 2023-02-08
+- Fix compatibility with CLJS test setups run in the browser
+
+## 3.8.1 / 2023-02-08
+- version with broken JAR artifact; don't use
+
+## 3.8.0 / 2023-01-31
+- Add `seq-of` matcher, which takes a matcher, successfully matching when each element matches the provided matcher.
+- Add `any-of` matcher, which takes any number of matchers, successfully matching when at least one matches.
+- Add `all-of` matcher, which takes any number of matchers, successfully matching when all match.
+- Add 2-arity `pred` matcher where the second argument is a description text.
+  - Useful for mismatch messages when the pred is an anonymous function.
+- Allow globally configuring ANSI color emission via newly added `enable!` and `disable!` functions in `matcher-combinators.ansi-color`
+- Export clj-kondo config to silence unresolved-symbol warnings on match? and thrown-match?
+
 ## [3.7.2]
 - Address cljs warning about Exception after `via` matcher was added
 

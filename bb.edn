@@ -1,0 +1,69 @@
+{:min-bb-version "0.9.159"
+ :paths ["bb" "src"]
+
+ :tasks
+ {:requires ([tasks :as t])
+
+  release
+  {:doc "Creates a git tag with the library's current version and pushes it to GitHub. This will trigger a GitHub Action that tests and uploads JAR files to Clojars."
+   :task (t/release)}
+
+  dev
+  {:doc "Starts a nREPL"
+   :task (apply clojure "-Adev -Sdeps '{:deps {cider/cider-nrepl {:mvn/version \"0.29.0\"}}}' -m nrepl.cmdline --middleware \"[cider.nrepl/cider-middleware]\"" *command-line-args*)}
+
+  test:clj
+  {:doc "run Clojure clojure.test tests"
+   :task (apply clojure "-A:dev:clj-test:test-runner" *command-line-args*)}
+
+  test:midje
+  {:doc "run Clojure midje tests"
+   :task (apply clojure "-X:midje-test:dev midje/test!" *command-line-args*)}
+
+  test:node
+  {:doc "run ClojureScript tests via node"
+   :task (apply clojure "-M:cljs-test compile cli-test" *command-line-args*)}
+
+  test:browser
+  {:doc "run ClojureScript tests in browser at `http://localhost:9158/`"
+   :task (apply clojure "-M:cljs-test watch browser-test" *command-line-args*)}
+
+  test
+  {:doc "Run entire test suite"
+   :depends [test:node test:clj test:midje]}
+
+  deps
+  {:doc "download dependencies"
+   :task (apply clojure "-Stree -A:dev:test" *command-line-args*)}
+
+  deploy
+  {:doc "publish to clojars"
+   :task (apply clojure "-T:build deploy!" *command-line-args*)}
+
+  jar
+  {:doc "build jar"
+   :task (apply clojure "-T:build jar" *command-line-args*)}
+
+  format
+  {:doc "check if code is formatted"
+   :task (shell "clojure-lsp" "format" "--dry")}
+
+  format:fix
+  {:doc "format code"
+   :task (shell "clojure-lsp" "format")}
+
+  clean-ns
+  {:doc "check if namespaces are clean"
+   :task (shell "clojure-lsp" "clean-ns" "--dry")}
+
+  clean-ns:fix
+  {:doc "clean namespaces"
+   :task (shell "clojure-lsp" "clean-ns")}
+
+  lint
+  {:doc "clean namespaces"
+   :depends [format clean-ns]}
+
+  lint:fix
+  {:doc "clean namespaces"
+   :depends [format:fix clean-ns:fix]}}}

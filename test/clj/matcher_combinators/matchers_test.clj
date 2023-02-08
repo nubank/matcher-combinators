@@ -1,4 +1,5 @@
 (ns matcher-combinators.matchers-test
+  (:refer-clojure :exclude [any?])
   (:require [clojure.math.combinatorics :as combo]
             [clojure.test :refer [deftest is testing]]
             [clojure.test.check.clojure-test :refer [defspec]]
@@ -11,9 +12,10 @@
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
+(defn any? [_x] true)
+
 (def now (java.time.LocalDateTime/now))
 (def an-id-string "67b22046-7e9f-46b2-a3b9-e68618242864")
-(def an-id (java.util.UUID/fromString an-id-string))
 (def another-id (java.util.UUID/fromString "8f488446-374e-4975-9670-35ca0a633da1"))
 (def response-time (java.time.LocalDateTime/now))
 
@@ -423,3 +425,74 @@
                  ::result/weight number?}
                 (c/match {:payloads [(m/via read-string {:foo :barz})]}
                          {:payloads [1]})))))
+
+(deftest seq-of-matcher
+  (is (match? {::result/type   :mismatch
+               ::result/value  {:expected "seq-of expects a non-empty sequence" :actual []}
+               ::result/weight number?}
+        (c/match (m/seq-of integer?) [])))
+  (is (match? (m/seq-of {:name string? :id (partial instance? java.util.UUID)})
+              [{:name "Michael"
+                :id    #uuid "c70e35eb-9eb6-4e3d-b5da-1f7f80932db9"}])))
+
+(deftest any-of-matcher
+  (testing "simple any-of match"
+    (is (match? {::result/type  :match
+                 ::result/value {:a 3}}
+                (c/match (m/any-of {:a 1} {:a 3}) {:a 3}))))
+  (testing "top-level use of `any-of` gives poor mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:expected (list 'any-of {:a 1} {:a 2})
+                                 :actual {:a 3}}}
+                (c/match (m/any-of {:a 1} {:a 2}) {:a 3}))))
+  (testing "low-level use of `any-of` gives better mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:a {:expected (list 'any-of 1 2)
+                                     :actual 3}}}
+                (c/match {:a (m/any-of 1 2)} {:a 3}))))
+
+  (testing "`any-of` + `seq-of` works great"
+    (is (match? {::result/type :mismatch
+                 ::result/value [1 "2" mismatch? 4 "5" mismatch?]}
+          (c/match (m/seq-of (m/any-of string? integer?))
+                   [1 "2" :3 4 "5" :6])))
+    (is (match? (m/seq-of (m/any-of string? integer?))
+                [1 "2" 3 "4"]))))
+
+(deftest all-of-matcher
+  (testing "simple all-of match"
+    (is (match? {::result/type  :match
+                 ::result/value {:a 3}}
+                (c/match (m/all-of {:a odd?} {:a 3}) {:a 3}))))
+  (testing "top-level use of `all-of` gives poor mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:expected (list 'all-of {:a 3} {:a 2})
+                                 :actual {:a 3}}}
+                (c/match (m/all-of {:a 3} {:a 2}) {:a 3}))))
+  (testing "low-level use of `all-of` gives better mismatch info"
+    (is (match? {::result/type  :mismatch
+                 ::result/value {:a {:expected (list 'all-of (m/equals integer?) (m/equals odd?) any?)
+                                     :actual 3}}}
+                (c/match {:a (m/all-of integer? odd? #(> % 5))} {:a 3}))))
+
+  (testing "`all-of` + `seq-of` works great"
+    (is (match? {::result/type :mismatch
+                 ::result/value [1 mismatch? mismatch? mismatch? mismatch? mismatch?]}
+          (c/match (m/seq-of (m/all-of integer? odd?))
+                   [1 "2" :3 4 "5" :6])))
+    (is (match? (m/seq-of (m/all-of integer? odd?))
+                [1 -1 3 -3]))))
+
+(deftest pred-matcher
+  (testing "pred matcher without description argument gives mismatch info with the pred function's object representation"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads {:expected (list 'pred ifn?) :actual -1}}
+                 ::result/weight number?}
+                (c/match {:payloads (m/pred pos?)}
+                         {:payloads -1}))))
+  (testing "you can provide a description for clearer mismatch info"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:payloads {:expected "positive numbers only please" :actual -1}}
+                 ::result/weight number?}
+                (c/match {:payloads (m/pred pos? "positive numbers only please")}
+                         {:payloads -1})))))
