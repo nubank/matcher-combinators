@@ -91,12 +91,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install clojure
-      uses: DeLaGuardo/setup-clojure@master
-      with:
-        cli: '1.10.3.1087'
-        bb: latest
-
     - name: maven cache
       uses: actions/cache@v3
       with:
