@@ -3,11 +3,8 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.8.2 / 2023-02-08
-- Fix compatibility with CLJS test setups run in the browser
-
 ## 3.8.1 / 2023-02-08
-- version with broken JAR artifact; don't use
+- Fix compatibility with CLJS test setups run in the browser
 
 ## 3.8.0 / 2023-01-31
 - Add `seq-of` matcher, which takes a matcher, successfully matching when each element matches the provided matcher.
