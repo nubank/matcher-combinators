@@ -22,7 +22,7 @@
                       :developerConnection "scm:git:ssh://git@github.com/nubank/matcher-combinators.git"
                       :tag (str "v" version)}
                 :src-dirs ["src"]})
-  (b/copy-dir {:src-dirs ["src" "resources"]
+  (b/copy-dir {:src-dirs ["src/clj" "src/cljc" "resources"]
                :target-dir class-dir})
   (b/jar {:class-dir class-dir
           :jar-file jar-file}))
