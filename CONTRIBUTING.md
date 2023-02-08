@@ -10,7 +10,7 @@ interactions with the project.
 
 1. Provide a reasonable amount of context describing the changes you've made.
    Linking to issues or previous pull requests is always helpful.
-2. Ensure tests pass by running `bb test`
+2. Ensure tests pass by running `lein midje`
 3. Please point out docs that should added or updated and consider updating
    them yourself
 

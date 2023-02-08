@@ -20,31 +20,17 @@ jobs:
     - name: Print java version
       run: java -version
 
-    - name: Install clojure
-      uses: DeLaGuardo/setup-clojure@master
-      with:
-        cli: '1.10.3.1087'
-        bb: latest
-        clj-kondo: latest
-
-    - name: maven cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
-        restore-keys: ${{ runner.os }}-maven-
-
     - name: Install dependencies
-      run: bb deps
+      run: lein deps
 
     - name: Run midje tests
-      run: bb test:midje
+      run: lein midje
 
     - name: Run clj tests
-      run: bb test:clj
+      run: lein test
 
     - name: Run cljs tests
-      run: bb test:node
+      run: lein test-node
 
   test-using-java-11:
     name: 'Test using Java 11'
@@ -59,28 +45,14 @@ jobs:
     - name: Print java version
       run: java -version
 
-    - name: Install clojure
-      uses: DeLaGuardo/setup-clojure@master
-      with:
-        cli: '1.10.3.1087'
-        bb: latest
-        clj-kondo: latest
-
-    - name: maven cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
-        restore-keys: ${{ runner.os }}-maven-
-
     - name: Install dependencies
-      run: bb deps
+      run: lein deps
 
     - name: Run midje tests
-      run: bb test:midje
+      run: lein midje
 
     - name: Run clj tests
-      run: bb test:clj
+      run: lein test
 
     - name: Run cljs tests
-      run: bb test:node
+      run: lein test-node
