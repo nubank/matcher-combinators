@@ -391,9 +391,9 @@
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
-    {:result/type   :mismatch
-     :result/value  (model/->Mismatch expected actual)
-     :result/weight 1}
+    {::result/type   :mismatch
+     ::result/value  (model/->Mismatch expected actual)
+     ::result/weight 1}
     (match-all-permutations expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
