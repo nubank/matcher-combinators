@@ -12,6 +12,16 @@ _docs:_
 
 _Clojure version compatibility:_ 1.8 and up
 
+## Stewards
+
+matcher-combinators is maintained by:
+* [devflow](https://github.com/orgs/nubank/teams/devflow/members)
+* [Phillip Mates](https://github.com/philomates)
+
+For questions and more info:
+* [#devflow](https://nubank.slack.com/archives/CS9MK8MGX)
+* [#matcher-combinators](https://clojurians.slack.com/archives/C04ABMF89D3)
+
 ## Motivation
 
 Clojure's built-in data structures get you a long way when trying to codify and solve difficult problems. A solid selection of core functions allow you to easily create and access core data structures. Unfortunately, this flexibility does not extend to testing: we seem to be missing a comprehensive yet extensible way to assert that the data fits a particular structure.
