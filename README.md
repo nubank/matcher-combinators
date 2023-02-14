@@ -18,9 +18,7 @@ matcher-combinators is maintained by:
 * Devflow team at Nubank
 * [Phillip Mates](https://github.com/philomates)
 
-For questions and more info:
-* Nubankers, please reach us on [#devflow](https://nubank.slack.com/archives/CS9MK8MGX)
-* Clojure community, please use the Clojurians channel [#matcher-combinators](https://clojurians.slack.com/archives/C04ABMF89D3)
+For questions and more info, please use the Clojurians channel [#matcher-combinators](https://clojurians.slack.com/archives/C04ABMF89D3).
 
 ## Motivation
 
