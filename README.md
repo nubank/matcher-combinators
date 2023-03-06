@@ -120,39 +120,7 @@ For example:
 
 ### Midje:
 
-The `matcher-combinators.midje` namespace defines the `match` and `throws-match` midje-style checkers. These should be used on the right-side of the midje `fact` check arrows (`=>`)
-
- - `match`: This checker is used to wrap a matcher-combinator asserts that the provided value satisfies the matcher.
- - `throws-match`: This checker wraps a matcher-combinator and optionally a throwable subclass. It asserts that an exception (of the given class) is raised and the `ex-data` satisfies the provided matcher.
-
-For example:
-
-```clojure
-(require '[midje.sweet :refer :all]
-         '[matcher-combinators.matchers :as m]
-         '[matcher-combinators.midje :refer [match]])
-(fact "matching a map exactly"
-  {:a {:bb 1 :cc 2} :d 3} => (match (m/equals {:a (m/embeds {:bb 1}) :d 3}))
-  ;; but when a map isn't immediately wrapped, it is interpreted as an `embeds` matcher
-  ;; so you can write the previous check as:
-  {:a {:bb 1 :cc 2} :d 3} => (match (m/equals {:a {:bb 1} :d 3})))
-
-(fact "you can assert an exception is thrown "
-  ;; Assert _some_ exception is raised and the ex-data inside satisfies the matcher
-  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match {:foo 1})
-  ;; Assert _a specific_ exception is raised and the ex-data inside satisfies the matcher
-  (throw (ex-info "foo" {:foo 1 :bar 2})) => (throws-match ExceptionInfo {:foo 1}))
-```
-
-Note that you can also use the `match` checker to match arguments within midje's `provided` construct:
-
-```clojure
-(unfinished f)
-(fact "using matchers in provided statements"
-  (f [1 2 3]) => 1
-  (provided
-    (f (match [odd? even? odd?])) => 1))
-```
+We've deprecated support for [Midje](https://github.com/marick/midje) in `matcher-combinators`. We continue to ship with the `matcher-combinators.midje` namespace to avoid breaking changes, but we no longer include `midje` as a transitive dependency.
 
 ### Standalone:
 

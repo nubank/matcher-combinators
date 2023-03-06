@@ -3,14 +3,15 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.8.4 / 2023-02-08
-- deprecate the matcher-combinators.midje ns and functions in it
-- move midje dependency to :scope "provided"
-  - this eliminates the transitive dep for those not using midje features
-  - add the dep explicitly to your project config if you use midje features
+## 3.8.4 / 2023-03-06
+- Deprecate support for Midje
+  - deprecate the `matcher-combinators.midje` namespace and functions in it
 
 ## 3.8.3 / 2023-02-08
 - Add support down to Clojure 1.8
+- Switch from lein (project.clj) to tools.deps (deps.edn)
+- Move midje dependency to a dev dependency
+  - If you're using midje features, you should have an explicit dependency on it
 
 ## 3.8.2 / 2023-02-08
 - Fix compatibility with CLJS test setups run in the browser
