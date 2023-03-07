@@ -1,4 +1,4 @@
-(ns matcher-combinators.midje
+(ns ^:deprecated matcher-combinators.midje
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model]
@@ -15,7 +15,9 @@
            [midje.data.metaconstant Metaconstant]
            [midje.util.exceptions ICapturedThrowable]))
 
-(defn check-match [matcher actual]
+(defn ^:deprecated check-match
+  "DEPRECATED: support for midje in matcher-combinators is deprecated."
+  [matcher actual]
   (if (exception/captured-throwable? actual)
     (checking/as-data-laden-falsehood
      {:notes [(exception/friendly-stacktrace actual)]})
@@ -25,8 +27,10 @@
         (checking/as-data-laden-falsehood {:notes [(printer/as-string [(::result/type result)
                                                                        (::result/value result)])]})))))
 
-(checkers.defining/defchecker match
-  "Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"
+(checkers.defining/defchecker ^:deprecated match
+  "DEPRECATED: support for midje in matcher-combinators is deprecated.
+  
+  Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"
   [matcher]
   (checkers.defining/checker [actual]
                              (if (core/matcher? matcher)
@@ -34,7 +38,10 @@
                                (checking/as-data-laden-falsehood
                                 {:notes [(str "Input wasn't a matcher: " matcher)]}))))
 
-(defmacro ^{:doc "Validates that the provided values satisfies the matcher but
+(defmacro ^{:deprecated true
+            :doc "DEPRECATED: support for midje in matcher-combinators is deprecated.
+            
+                 Validates that the provided values satisfies the matcher but
                  uses the provided type->matcher map to redefine the default
                  matchers used for the specified types.
 
@@ -89,8 +96,10 @@
                   "2-arity throws-match must be provided a matcher and a throwable subclass")))
       (throw (ArityException. arg-count "throws-match")))))
 
-(checkers.defining/defchecker throws-match
-  "Takes in a matcher or a matcher and throwable subclass.
+(checkers.defining/defchecker ^:deprecated throws-match
+  "DEPRECATED: support for midje in matcher-combinators is deprecated.
+  
+  Takes in a matcher or a matcher and throwable subclass.
   Returns a checker that asserts an exception was raised and the ex-data within it satisfies the matcher"
   [& args]
   (checkers.defining/checker [actual]
@@ -130,12 +139,16 @@
          ::result/value  mismatch-val
          ::result/weight 1}))))
 
-(def match-equals
-  "match but using strict `equals` matching behavior for maps, even nested ones."
+(def ^:deprecated match-equals
+  "DEPRECATED: support for midje in matcher-combinators is deprecated.
+  
+  match but using strict `equals` matching behavior for maps, even nested ones."
   (match-with [map? matchers/equals]))
 
-(def match-roughly
-  "match where all numbers match if they are within the delta of their expected value"
+(def ^:deprecated match-roughly
+  "DEPRECATED: support for midje in matcher-combinators is deprecated.
+  
+  match where all numbers match if they are within the delta of their expected value"
   (fn [delta matcher]
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
                                                     (utils/within-delta? delta expected actual))
