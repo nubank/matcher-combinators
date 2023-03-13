@@ -6,3 +6,6 @@
    (fn [actual] (= (Math/abs expected)
                    (Math/abs actual)))
    (str "equal to abs value of " expected)))
+
+(defn no-match? [expected actual]
+  (not (core/indicates-match? (core/match expected actual))))

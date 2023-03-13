@@ -130,7 +130,7 @@
   [& matchers]
   (core/->AllOf matchers))
 
-#?(:cljs (defn- cljs-uri [expected]
+#?(:cljs (defn cljs-uri [expected]
            (core/->CljsUriEquals expected)))
 
 (defn matcher-for

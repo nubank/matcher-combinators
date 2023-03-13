@@ -9,7 +9,7 @@
             [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]
             [matcher-combinators.test :refer [match?]]
-            [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
+            [matcher-combinators.test-helpers :as test-helpers :refer [no-match? abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
 (defn any? [_x] true)
@@ -242,9 +242,6 @@
   (testing "matcher for a regex"
     (is (= m/regex
            (m/matcher-for #"abc")))))
-
-(defn no-match? [expected actual]
-  (not (c/indicates-match? (c/match expected actual))))
 
 (deftest match-with-matcher
   (testing "processes overrides in order"
