@@ -152,6 +152,6 @@
   core/Matcher
   (-matcher-for
     ([this] (matchers/pred this))
-    ([this _t->m] (matchers/pred this)))
+    ([this t->m] (matchers/lookup-matcher this t->m)))
   (-match [this actual]
     (core/match (matchers/pred this) actual)))))

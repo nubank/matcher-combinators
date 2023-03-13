@@ -293,6 +293,10 @@
            #{1 2}))
 
       (is (match?
+            (m/match-with [set? m/embeds]
+                          #{(m/pred odd?)})
+            #{1 2}))
+      (is (match?
            (m/match-with [set? m/embeds]
                          #{odd?})
            #{1 2}))))

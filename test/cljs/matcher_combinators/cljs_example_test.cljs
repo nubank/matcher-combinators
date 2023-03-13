@@ -59,6 +59,12 @@
 (deftest passing-match
   (is (match? {:a 2} {:a 2 :b 1})))
 
+(deftest pred-match
+  (is (match? #{odd?}
+              #{1}))
+  (is (match? #{(m/pred odd?)}
+              #{1})))
+
 (comment
   (deftest match?-no-actual-arg
     (testing "fails with nice message when you don't provide an `actual` arg to `match?`"
@@ -104,19 +110,25 @@
                   {:b :c}))))
 
   (testing "sets"
-    (testing "passing cases"
-      (is (match?
-            (m/match-with [set? m/embeds]
-                          #{1})
-            #{1 2}))
+    (is (match?
+          (m/match-with [set? m/embeds]
+                        #{1})
+          #{1 2}))
 
-      (is (match?
-            (m/match-with [set? m/embeds]
-                          #{(m/pred odd?)})
-            #{1 2}))))
+    (is (match?
+          (m/match-with [set? m/embeds]
+                        #{(m/pred odd?)})
+          #{1 2})))
 
   (let [matcher (m/match-with [pos? abs-value-matcher
                                integer? m/equals]
                               5)]
     (is (match? matcher 5))
     (is (match? matcher -5))))
+
+(comment
+(ifn? odd?)
+(fn? odd?)
+(ifn? (m/pred odd?))
+(fn? (m/pred odd?))
+)
