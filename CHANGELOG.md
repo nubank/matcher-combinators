@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.8.5 / 2023-03-24
+- fix clj-kondo lint warnings for `match?` in Clojurescript
+
 ## 3.8.4 / 2023-03-06
 - Deprecate support for Midje
   - deprecate the `matcher-combinators.midje` namespace and functions in it
