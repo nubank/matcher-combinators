@@ -1,6 +1,18 @@
 (ns matcher-combinators.test
   "Integration with clojure.test or cljs.test (depending on which platform
-  you're running on)."
+  you're running on).
+
+  This namespace provides useful placeholder
+  vars for match?, match-with?, thrown-match? and match-roughly?;
+  the placeholders are nil (the actual implementations are extended
+  via the clojure.test/assert-expr multimethod), but importing these will prevent
+  linters from flagging otherwise undefined names.
+
+  Even if not concerned about linting, it is necessary to have
+  some namespace require matcher-combinators.test to ensure that
+  match? and friends can be used withing clojure.test/is.
+
+  Commonly, a dev-only user namespace will require this namespace."
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
        :clj  [clojure.test :as t :refer        [is are deftest testing]])
