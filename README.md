@@ -37,7 +37,7 @@ This library addresses this issue by providing composable matcher combinators th
 
 ### `clojure.test`
 
-Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
+Refer `match?` and `thrown-match?` from the `matcher-combinators.test`:
 
  - `match?`: The first argument should be the matcher-combinator represented the expected value, and the second argument should be the expression being checked.
  - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinators, and the third the expression being checked.
@@ -46,7 +46,7 @@ For example:
 
 ```clojure
 (require '[clojure.test :refer [deftest is]]
-         '[matcher-combinators.test] ;; adds support for `match?` and `thrown-match?` in `is` expressions
+         '[matcher-combinators.test :refer [match? thrown-match?]]
          '[matcher-combinators.matchers :as m])
 
 (deftest test-matching-with-explicit-matchers
@@ -100,7 +100,7 @@ For example:
   (is (match? {:name/first "Alfredo"}
               {:name/first  "Alfredo"
                :name/last   "da Rocha Viana"
-               :name/suffix "Jr."}))))
+               :name/suffix "Jr."})))
 
 (deftest test-matching-nested-datastructures
   ;; Maps, sequences, and sets follow the same semantics whether at
