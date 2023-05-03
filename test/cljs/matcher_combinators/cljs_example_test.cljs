@@ -7,7 +7,7 @@
             [matcher-combinators.parser]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.core :as c]
-            [matcher-combinators.test]
+            [matcher-combinators.test :refer-macros [match? thrown-match? match-with? match-equals? match-roughly?]]
             [matcher-combinators.test-helpers :as helpers])
   (:import [goog.Uri]))
 
@@ -54,6 +54,28 @@
 
 (deftest passing-match
   (is (match? {:a 2} {:a 2 :b 1})))
+
+(deftest bad-usage-test
+  (is (thrown? js/Error
+               (match? :expected :actual)))
+  (is (thrown? js/Error
+               (thrown-match? {:foo 1}
+                              (throw (ex-info "bang!" {:foo 1})))))
+  (is (thrown? js/Error
+               (thrown-match? ExceptionInfo
+                              {:foo 1}
+                              (throw (ex-info "bang!" {:foo 1})))))
+  (is (thrown? js/Error
+               (match-with? {js/number :stub}
+                            -5
+                            5)))
+  (is (thrown? js/Error
+               (match-equals? {:a 1}
+                              {:a 1})))
+  (is (thrown? js/Error
+               (match-roughly? 0.1
+                               {:a 1 :b 3.0}
+                               {:a 1 :b 3.05}))))
 
 (comment
   (deftest match?-no-actual-arg

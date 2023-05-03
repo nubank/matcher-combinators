@@ -8,7 +8,7 @@
             [matcher-combinators.core :as c]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]
-            [matcher-combinators.test :refer [match?]]
+            [matcher-combinators.test :refer [match? thrown-match? match-with? match-roughly? match-equals?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
   (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
 
@@ -496,3 +496,25 @@
                  ::result/weight number?}
                 (c/match {:payloads (m/pred pos? "positive numbers only please")}
                          {:payloads -1})))))
+
+(deftest bad-usage-test
+  (is (thrown? IllegalArgumentException
+               (match? :expected :actual)))
+  (is (thrown? IllegalArgumentException
+               (thrown-match? {:foo 1}
+                              (throw (ex-info "bang!" {:foo 1})))))
+  (is (thrown? IllegalArgumentException
+               (thrown-match? clojure.lang.ExceptionInfo
+                              {:foo 1}
+                              (throw (ex-info "bang!" {:foo 1})))))
+  (is (thrown? IllegalArgumentException
+               (match-with? {java.lang.Long abs-value-matcher}
+                            -5
+                            5)))
+  (is (thrown? IllegalArgumentException
+               (match-equals? {:a 1}
+                              {:a 1})))
+  (is (thrown? IllegalArgumentException
+               (match-roughly? 0.1
+                               {:a 1 :b 3.0}
+                               {:a 1 :b 3.05}))))
