@@ -58,6 +58,8 @@
              (with-file+line-info
                {:type     :fail
                 :message  ~msg
+                ; TODO
+                ;:expected (if matcher-combinators.printer/*print-summary* '~'redacted '~form)
                 :expected '~form
                 :actual   (tagged-for-pretty-printing (list '~'not (list 'match? matcher# actual#))
                                                       result#)})))

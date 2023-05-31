@@ -11,8 +11,10 @@
                                                         InvalidMatcherType]])
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
-     (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing
+     (:import [matcher_combinators.model Match ExpectedMismatch Mismatch Missing
                Unexpected TypeMismatch InvalidMatcherContext InvalidMatcherType])))
+
+(def ^:dynamic *print-summary* false)
 
 (defrecord ColorTag [color expression])
 
@@ -49,6 +51,9 @@
   (list 'invalid-matcher-context
         (->ColorTag :red (:message invalid-context))))
 
+(defmethod markup-expression Match [{:keys [actual]}]
+  actual)
+
 (defmethod markup-expression :default [expression]
   expression)
 
@@ -66,10 +71,30 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
+; Could this lead to a Stackoverflow?
+(defn filter-expr [action expr]
+  (cond
+    (instance? Match expr) (case action
+                             :redact 'matched
+                             :drop   nil
+                             :keep   expr)
+    ;; TODO if into isn't lazy how to return a lazy map that makes transformations over the map?
+    (map? expr) (or (not-empty (into {} (mapcat (fn [[k v]]
+                                                  (when-let [new-val (filter-expr :drop v)]
+                                                    [[k new-val]]))
+                                                expr)))
+                    ; TODO is this ok or should I do it based on action?
+                    'matched)
+    (vector? expr) (vec (map (partial filter-expr :redact) expr))
+    (list? expr) (map (partial filter-expr :redact) expr)
+    :else expr))
+
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
     print-diff-dispatch
-    (pprint/pprint expr)))
+    (pprint/pprint (if *print-summary*
+                     (filter-expr :keep expr)
+                     expr))))
 
 (defn as-string [value]
   (with-out-str

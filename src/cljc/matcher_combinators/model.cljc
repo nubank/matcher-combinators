@@ -1,5 +1,6 @@
 (ns matcher-combinators.model)
 
+(defrecord Match [actual])
 (defrecord Mismatch [expected actual])
 (defrecord ExpectedMismatch [expected actual])
 (defrecord Missing  [expected])

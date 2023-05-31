@@ -53,7 +53,7 @@
                           ::result/value  (model/->Missing expected)
                           ::result/weight 1}
     (= expected actual)  {::result/type   :match
-                          ::result/value  actual
+                          ::result/value  (model/->Match actual)
                           ::result/weight 0}
     :else                {::result/type   :mismatch
                           ::result/value  (model/->Mismatch expected actual)
@@ -112,7 +112,7 @@
       (try
         (if-let [match (re-find expected actual)]
           {::result/type   :match
-           ::result/value  match
+           ::result/value  (model/->Match match)
            ::result/weight 0}
           {::result/type  :mismatch
            ::result/value (model/->Mismatch expected actual)
@@ -180,7 +180,7 @@
     (if (and (every? (comp indicates-match? second) entry-results)
              (or allow-unexpected? (empty? unexpected-entries)))
       {::result/type   :match
-       ::result/value  actual
+       ::result/value  (model/->Match actual)
        ::result/weight 0}
       (let [mismatch-val (->> entry-results
                               (map (fn [[key match-result]] [key (::result/value match-result)]))
@@ -293,7 +293,7 @@
                             (map ::result/weight)
                             (reduce + 0))}
       {::result/type   :match
-       ::result/value  actual
+       ::result/value  (model/->Match actual)
        ::result/weight 0})))
 
 (defrecord EqualsSeq [expected]
@@ -383,7 +383,7 @@
                                     matcher-perms)]
     (if (= ::match-found result)
       {::result/type   :match
-       ::result/value  elements
+       ::result/value  (model/->Match elements)
        ::result/weight 0}
       (match (->EqualsSeq (concat (:matched result)
                                   (:unmatched result)))
@@ -432,8 +432,10 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (update (match-any-order (vec expected) (vec actual) false)
-              ::result/value set)))
+      (let [{result-type ::result/type :as result} (match-any-order (vec expected) (vec actual) false)]
+        (if (= result-type :match)
+          (update-in result [::result/value :actual] set)
+          (update result ::result/value set)))))
   (-base-name [_] (if accept-seq? 'set-equals 'equals)))
 
 (defrecord Prefix [expected]
@@ -476,8 +478,10 @@
                                      (-base-name this)
                                      "set"))]
       issue
-      (update (match-any-order (vec expected) (vec actual) true)
-              ::result/value set)))
+      (let [{result-type ::result/type :as result} (match-any-order (vec expected) (vec actual) true)]
+        (if (= result-type :match)
+          (update-in result [::result/value :actual] set)
+          (update result ::result/value set)))))
   (-base-name [_] (if accept-seq? 'set-embeds 'embeds)))
 
 (defrecord PredMatcher [pred desc]
@@ -493,7 +497,7 @@
 
       (pred actual)
       {::result/type   :match
-       ::result/value  actual
+       ::result/value  (model/->Match actual)
        ::result/weight 0}
 
       :else
@@ -515,7 +519,7 @@
                 (let [result (match matcher actual)]
                   (if (indicates-match? result)
                     (reduced {::result/type   :match
-                              ::result/value  actual
+                              ::result/value  (model/->Match actual)
                               ::result/weight 0})
                     (min (::result/weight result)
                          min-mismatch-weight)))))
@@ -532,7 +536,7 @@
     (reduce (fn [_acc matcher]
               (if (= ::end matcher)
                 {::result/type   :match
-                 ::result/value  actual
+                 ::result/value  (model/->Match actual)
                  ::result/weight 0}
                 (let [result (match matcher actual)]
                   (when-not (indicates-match? result)
@@ -567,7 +571,7 @@
                           actual)
          ::result/weight (::result/weight result)}
         {::result/type   :match
-         ::result/value  actual
+         ::result/value  (model/->Match actual)
          ::result/weight 0})))
   (-base-name [_] 'mismatch))
 
