@@ -246,7 +246,7 @@
 
 (fact "matching midje's metaconstants"
   (core/match {:a ..b..} (f ..a..)) => {::result/type   :match
-                                        ::result/value  {:a ..b..}
+                                        ::result/value  (model/->Match {:a ..b..})
                                         ::result/weight 0}
   (provided (x ..a..) => {:a ..b..})
 

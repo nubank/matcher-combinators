@@ -129,7 +129,7 @@
                  (= actual thread-safe-var-nesting/unbound-marker))
              (.equals this actual))
       {::result/type   :match
-       ::result/value  actual
+       ::result/value  (model/->Match actual)
        ::result/weight 0}
       (let [mismatch-val (if (and (keyword? actual)
                                   (= ::core/missing actual))
