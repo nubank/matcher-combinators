@@ -71,6 +71,14 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
+(defn mismatch? [expr]
+  (or (instance? Mismatch expr)
+      (instance? Missing expr)
+      (instance? Unexpected expr)
+      (instance? InvalidMatcherType expr)
+      (instance? InvalidMatcherContext expr)
+      (instance? TypeMismatch expr)))
+
 ; Could this lead to a Stackoverflow?
 (defn filter-expr [action expr]
   (cond
@@ -78,6 +86,7 @@
                              :redact 'matched
                              :drop   nil
                              :keep   expr)
+    (mismatch? expr) expr
     ;; TODO if into isn't lazy how to return a lazy map that makes transformations over the map?
     (map? expr) (or (not-empty (into {} (mapcat (fn [[k v]]
                                                   (when-let [new-val (filter-expr :drop v)]
@@ -87,7 +96,10 @@
                     'matched)
     (vector? expr) (vec (map (partial filter-expr :redact) expr))
     (list? expr) (map (partial filter-expr :redact) expr)
-    :else expr))
+    :else (case action
+            :redact 'matched
+            :drop   nil
+            :keep   expr)))
 
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
@@ -99,3 +111,13 @@
 (defn as-string [value]
   (with-out-str
     (pretty-print value)))
+
+(comment
+
+  (->> (matcher-combinators.core/match 1 1)
+       :matcher-combinators.result/value
+       (filter-expr :keep))
+
+  (->> (matcher-combinators.core/match {:b 3 :a 1} {:a 1 :b 2 :e 3})
+       :matcher-combinators.result/value
+       (filter-expr :keep)))
