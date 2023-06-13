@@ -191,7 +191,7 @@
                                (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))
                                        (if allow-unexpected? 0 (count unexpected-entries))))]
         {::result/type   :mismatch
-         ::result/value  mismatch-val
+         ::result/value  (with-meta mismatch-val {:mismatch :mismatch-map})
          ::result/weight weight}))))
 
 (def ^:private map-like?
@@ -288,7 +288,8 @@
         match-results  (take match-size match-results')]
     (if (some (complement indicates-match?) match-results)
       {::result/type   :mismatch
-       ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+       ::result/value  (with-meta (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+                                  {:mismatch :mismatch-sequence})
        ::result/weight (->> match-results
                             (map ::result/weight)
                             (reduce + 0))}
