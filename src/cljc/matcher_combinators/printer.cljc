@@ -1,6 +1,7 @@
 (ns matcher-combinators.printer
   (:refer-clojure :exclude [print])
   (:require [clojure.pprint :as pprint]
+            [matcher-combinators.core :as core]
             #?(:clj  [matcher-combinators.model]
                :cljs [matcher-combinators.model :refer [ExpectedMismatch
                                                         Mismatch
@@ -9,10 +10,24 @@
                                                         TypeMismatch
                                                         InvalidMatcherContext
                                                         InvalidMatcherType]])
+            [clojure.walk :as walk]
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
      (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing
                Unexpected TypeMismatch InvalidMatcherContext InvalidMatcherType])))
+
+(defn mismatch? [expr]
+  (or (instance? Mismatch expr)
+      (instance? Missing expr)
+      (instance? Unexpected expr)
+      (instance? InvalidMatcherType expr)
+      (instance? InvalidMatcherContext expr)
+      (instance? TypeMismatch expr)))
+
+(defn mismatch+? [x]
+  (or (matcher-combinators.printer/mismatch? x)
+      (= :mismatch-map (:mismatch (meta x)))
+      (= :mismatch-sequence (:mismatch (meta x)))))
 
 (defrecord ColorTag [color expression])
 
@@ -66,11 +81,37 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
+
+(defn redacted [expr]
+  (walk/prewalk (fn [x]
+                  (cond (mismatch? x)
+                        x
+
+                        (= :mismatch-map (:mismatch (meta x)))
+                        (into {} (filter (fn [[_k v]] (mismatch+? v))) x)
+
+                        (= :mismatch-sequence (:mismatch (meta x)))
+                        (#'core/type-preserving-mismatch (empty x) (filter mismatch+? x))
+
+                        :else
+                        x))
+                expr))
+
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
     print-diff-dispatch
-    (pprint/pprint expr)))
+    (pprint/pprint (redacted expr))))
 
 (defn as-string [value]
   (with-out-str
     (pretty-print value)))
+
+(comment
+  (require '[clojure.test :refer [is]]
+           '[matcher-combinators.test :refer [match?]])
+  (is (match? {:name/first "Alfredo"
+               :f [1 2 3]}
+              {:name/first  "Afredo"
+               :f [3 2 1]
+               :name/last   "da Rocha Viana"
+               :name/suffix "Jr."})))
