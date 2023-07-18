@@ -30,7 +30,7 @@
 
 (defn seq-of
   "Matcher that will match when given a sequence where every element matches
-  the provided `expected` matcher"
+  the provided `expected` matcher. It expects a non-empty sequence."
   [expected]
   (core/->SeqOf expected))
 
