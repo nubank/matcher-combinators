@@ -1,4 +1,6 @@
-(ns ^:deprecated matcher-combinators.midje
+(ns matcher-combinators.midje
+  {:deprecated true
+   :no-doc true}
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]
             [matcher-combinators.model :as model]
@@ -29,7 +31,7 @@
 
 (checkers.defining/defchecker ^:deprecated match
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
-  
+
   Takes in a matcher and returns a checker that asserts that the provided value satisfies the matcher"
   [matcher]
   (checkers.defining/checker [actual]
@@ -40,7 +42,7 @@
 
 (defmacro ^{:deprecated true
             :doc "DEPRECATED: support for midje in matcher-combinators is deprecated.
-            
+
                  Validates that the provided values satisfies the matcher but
                  uses the provided type->matcher map to redefine the default
                  matchers used for the specified types.
@@ -98,7 +100,7 @@
 
 (checkers.defining/defchecker ^:deprecated throws-match
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
-  
+
   Takes in a matcher or a matcher and throwable subclass.
   Returns a checker that asserts an exception was raised and the ex-data within it satisfies the matcher"
   [& args]
@@ -141,13 +143,13 @@
 
 (def ^:deprecated match-equals
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
-  
+
   match but using strict `equals` matching behavior for maps, even nested ones."
   (match-with [map? matchers/equals]))
 
 (def ^:deprecated match-roughly
   "DEPRECATED: support for midje in matcher-combinators is deprecated.
-  
+
   match where all numbers match if they are within the delta of their expected value"
   (fn [delta matcher]
     (let [func (fn [expected] (core/->PredMatcher (fn [actual]
