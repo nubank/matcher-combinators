@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.8.6 / unreleased
+## 3.8.6 / 2023-07-18
 - fix issue when using non-composite matchers (`m/regex`, `m/pred`, etc)
   inside `match-with`.
 - fix issue where `match-with` misbehaves in ClojureScript
