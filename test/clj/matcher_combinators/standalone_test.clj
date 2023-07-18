@@ -1,5 +1,5 @@
 (ns matcher-combinators.standalone-test
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [clojure.test :refer [deftest is testing]]
             [matcher-combinators.matchers :as m]
             [matcher-combinators.standalone :as standalone]))
 
