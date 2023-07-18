@@ -10,7 +10,7 @@
             [matcher-combinators.result :as result]
             [matcher-combinators.test :refer [match?]]
             [matcher-combinators.test-helpers :as test-helpers :refer [abs-value-matcher]])
-  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherType]))
+  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherContext InvalidMatcherType]))
 
 (defn any? [_x] true)
 
@@ -42,6 +42,8 @@
   (instance? Missing actual))
 (defn invalid-type? [actual]
   (instance? InvalidMatcherType actual))
+(defn invalid-matcher-context? [actual]
+  (instance? InvalidMatcherContext actual))
 
 (defn one-mismatch? [mismatch-list]
   (= 1 (count (filter #(or (mismatch? %) (missing? %)) mismatch-list))))
@@ -300,6 +302,26 @@
                          #{odd?})
            #{1 2}))))
 
+  (testing "non-nested matchers"
+    (testing "irrelevant match-with doesn't affect results"
+      (is (match? (m/match-with [map? m/equals]
+                                [:key (m/regex #"valu*")])
+                  [:key "value"]))
+      (is (match? [:key (m/regex #"valu*")]
+                  [:key "value"]))
+
+      (is (match? (m/match-with [map? m/equals]
+                                [:key (m/pred even?)])
+                  [:key 2]))
+      (is (match? [:key (m/pred even?)]
+                  [:key 2]))
+
+      (is (match? (m/match-with [vector? m/equals]
+                                {:key (m/regex #"value")})
+                  {:key "value"}))
+      (is (match? {:key (m/regex #"value")}
+                  {:key "value"}))))
+
   (testing "multiple scopes"
     (let [expected
           {:a (m/match-with [map? m/equals]
@@ -431,6 +453,11 @@
                ::result/value  {:expected "seq-of expects a non-empty sequence" :actual []}
                ::result/weight number?}
         (c/match (m/seq-of integer?) [])))
+  (testing "`seq-of` + `absent` fails because absent should only be used in maps"
+    (is (match? {::result/type  :mismatch
+                 ::result/value [invalid-matcher-context?]}
+                (c/match (m/seq-of m/absent)
+                         [1]))))
   (is (match? (m/seq-of {:name string? :id (partial instance? java.util.UUID)})
               [{:name "Michael"
                 :id    #uuid "c70e35eb-9eb6-4e3d-b5da-1f7f80932db9"}])))
