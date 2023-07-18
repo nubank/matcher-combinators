@@ -6,6 +6,7 @@ change log follows the conventions of
 ## 3.8.6 / unreleased
 - fix issue when using non-composite matchers (`m/regex`, `m/pred`, etc)
   inside `match-with`.
+- fix issue where `match-with` misbehaves in ClojureScript
 
 ## 3.8.5 / 2023-03-24
 - fix clj-kondo lint warnings for `match?` in Clojurescript

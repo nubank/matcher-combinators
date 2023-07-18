@@ -125,10 +125,3 @@
                               5)]
     (is (match? matcher 5))
     (is (match? matcher -5))))
-
-(comment
-(ifn? odd?)
-(fn? odd?)
-(ifn? (m/pred odd?))
-(fn? (m/pred odd?))
-)
