@@ -1,9 +1,9 @@
 (ns matcher-combinators.matchers
-  (:require #?(:cljs [matcher-combinators.core :as core :refer [Absent]]
+  (:require #?(:cljs [matcher-combinators.core :as core :refer [Matcher]]
                :clj [matcher-combinators.core :as core])
             [clojure.string :as string]
             [matcher-combinators.utils :as utils])
-  #?(:clj (:import [matcher_combinators.core Absent])))
+  #?(:clj (:import [matcher_combinators.core Matcher])))
 
 (defn- non-internal-record? [v]
   (and (record? v)
@@ -30,7 +30,7 @@
 
 (defn seq-of
   "Matcher that will match when given a sequence where every element matches
-  the provided `expected` matcher"
+  the provided `expected` matcher. It expects a non-empty sequence."
   [expected]
   (core/->SeqOf expected))
 
@@ -223,7 +223,8 @@
          (and (record? value) (coll? (:expected value)))
          (update value :expected match-with-elements overrides)
 
-         (= Absent (type value))
+         ;; non-nested matcher like `(m/equals 1)` or `(m/regex #"hi")`
+         (instance? Matcher value)
          value
 
          (map? value)

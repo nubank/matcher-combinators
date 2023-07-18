@@ -51,11 +51,12 @@ jobs:
     - name: Run clj tests with Clojure 1.11
       run: bb test:clj -A:1.11
 
-    - name: Run cljs tests with Clojure 1.10
-      run: bb test:node -A:1.10
+    # new versions of shadow-cljs don't work on java 8
+    # - name: Run cljs tests with Clojure 1.10
+    #   run: bb test:node -A:1.10
 
-    - name: Run cljs tests with Clojure 1.11
-      run: bb test:node -A:1.11
+    # - name: Run cljs tests with Clojure 1.11
+    #   run: bb test:node -A:1.11
 
   test-using-java-11:
     name: 'Test using Java 11'
