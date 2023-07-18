@@ -300,6 +300,26 @@
                          #{odd?})
            #{1 2}))))
 
+  (testing "non-nested matchers"
+    (testing "irrelevant match-with doesn't affect results"
+      (is (match? (m/match-with [map? m/equals]
+                                [:key (m/regex #"valu*")])
+                  [:key "value"]))
+      (is (match? [:key (m/regex #"valu*")]
+                  [:key "value"]))
+
+      (is (match? (m/match-with [map? m/equals]
+                                [:key (m/pred even?)])
+                  [:key 2]))
+      (is (match? [:key (m/pred even?)]
+                  [:key 2]))
+
+      (is (match? (m/match-with [vector? m/equals]
+                                {:key (m/regex #"value")})
+                  {:key "value"}))
+      (is (match? {:key (m/regex #"value")}
+                  {:key "value"}))))
+
   (testing "multiple scopes"
     (let [expected
           {:a (m/match-with [map? m/equals]
