@@ -1,5 +1,5 @@
 (ns matcher-combinators.matchers
-  (:require #?(:cljs [matcher-combinators.core :as core :refer [Matcher]]
+  (:require #?(:cljs [matcher-combinators.core :as core :refer [Matcher Regex Value Absent PredMatcher]]
                :clj [matcher-combinators.core :as core])
             [clojure.string :as string]
             [matcher-combinators.utils :as utils])
@@ -224,7 +224,10 @@
          (update value :expected match-with-elements overrides)
 
          ;; non-nested matcher like `(m/equals 1)` or `(m/regex #"hi")`
-         (instance? Matcher value)
+         #?(:clj (instance? Matcher value)
+            ;; TODO: how do you do this in a comprehensive way?
+            ;; `(satisfies? Matcher value)` doesn't seem to work
+            :cljs (#{Absent PredMatcher Regex Value} (type value)))
          value
 
          (map? value)
