@@ -17,12 +17,14 @@
      :cljs (set! *use-redaction* v)))
 
 (defn enable-redaction!
-  "Thread-global way to enable the redaction of fully-matched data-structures in matcher-combinator output."
+  "**Experimental, subject to change**
+  Thread-global way to enable the redaction of fully-matched data-structures in matcher-combinator output."
   []
   (set-use-redaction! true))
 
 (defn disable-redaction!
-  "Thread-global way to disable the redaction of fully-matched data-structures in matcher-combinator output."
+  "**Experimental, subject to change**
+  Thread-global way to disable the redaction of fully-matched data-structures in matcher-combinator output."
   []
   (set-use-redaction! false))
 
