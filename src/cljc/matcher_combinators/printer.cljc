@@ -81,7 +81,6 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
-
 (defn redacted [expr]
   (walk/prewalk (fn [x]
                   (cond (mismatch? x)
@@ -97,10 +96,31 @@
                         x))
                 expr))
 
+(def ^{:dynamic true
+       :doc "thread-local way to control, via `binding`, the redacting of fully-matched data-structures in the matcher-combinator output"}
+  *use-redaction*
+  false)
+
+(defn- set-use-redaction! [v]
+  #?(:clj (alter-var-root #'*use-redaction* (constantly v))
+     :cljs (set! *use-redaction* v)))
+
+(defn enable-redaction!
+  "Thread-global way to enable the redaction of fully-matched data-structures in matcher-combinator output."
+  []
+  (set-use-redaction! true))
+
+(defn disable-redaction!
+  "Thread-global way to disable the redaction of fully-matched data-structures in matcher-combinator output."
+  []
+  (set-use-redaction! false))
+
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
     print-diff-dispatch
-    (pprint/pprint (redacted expr))))
+    (pprint/pprint (cond-> expr
+                     *use-redaction*
+                     redacted))))
 
 (defn as-string [value]
   (with-out-str
