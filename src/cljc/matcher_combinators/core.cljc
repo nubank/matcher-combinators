@@ -172,7 +172,10 @@
 (defn- with-mismatch-meta
   "Tags element with data that allows to redact matched data-structures from test output when desired"
   [elem mismatch-meta]
-  (with-meta elem {:mismatch mismatch-meta}))
+  (if #?(:clj (instance? clojure.lang.IMeta elem)
+         :cljs (satisfies? IMeta elem))
+    (with-meta elem {:mismatch mismatch-meta})
+    elem))
 
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (->> expected
