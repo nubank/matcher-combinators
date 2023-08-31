@@ -169,6 +169,11 @@
       nil)
     [key (match matcher (get actual key ::missing))]))
 
+(defn- with-mismatch-meta
+  "Tags element with data that allows to redact matched data-structures from test output when desired"
+  [elem mismatch-meta]
+  (with-meta elem {:mismatch mismatch-meta}))
+
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (->> expected
                                 (map (partial match-kv actual))
@@ -191,7 +196,7 @@
                                (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))
                                        (if allow-unexpected? 0 (count unexpected-entries))))]
         {::result/type   :mismatch
-         ::result/value  (with-meta mismatch-val {:mismatch :mismatch-map})
+         ::result/value  (with-mismatch-meta mismatch-val :mismatch-map)
          ::result/weight weight}))))
 
 (def ^:private map-like?
@@ -288,8 +293,9 @@
         match-results  (take match-size match-results')]
     (if (some (complement indicates-match?) match-results)
       {::result/type   :mismatch
-       ::result/value  (with-meta (type-preserving-mismatch (empty actual) (map ::result/value match-results))
-                                  {:mismatch :mismatch-sequence})
+       ::result/value  (with-mismatch-meta
+                         (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+                         :mismatch-sequence)
        ::result/weight (->> match-results
                             (map ::result/weight)
                             (reduce + 0))}

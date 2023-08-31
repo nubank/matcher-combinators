@@ -17,19 +17,6 @@
      (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing
                Unexpected TypeMismatch InvalidMatcherContext InvalidMatcherType])))
 
-(defn mismatch? [expr]
-  (or (instance? Mismatch expr)
-      (instance? Missing expr)
-      (instance? Unexpected expr)
-      (instance? InvalidMatcherType expr)
-      (instance? InvalidMatcherContext expr)
-      (instance? TypeMismatch expr)))
-
-(defn mismatch+? [x]
-  (or (matcher-combinators.printer/mismatch? x)
-      (= :mismatch-map (:mismatch (meta x)))
-      (= :mismatch-sequence (:mismatch (meta x)))))
-
 (defrecord ColorTag [color expression])
 
 (defmulti markup-expression type)
@@ -82,15 +69,30 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
+(defn- mismatch? [expr]
+  (or (instance? Mismatch expr)
+      (instance? Missing expr)
+      (instance? Unexpected expr)
+      (instance? InvalidMatcherType expr)
+      (instance? InvalidMatcherContext expr)
+      (instance? TypeMismatch expr)))
+
+(defn- mismatch+? [x]
+  (or (mismatch? x)
+      (= :mismatch-map (:mismatch (meta x)))
+      (= :mismatch-sequence (:mismatch (meta x)))))
+
 (defn redacted [expr]
   (walk/prewalk (fn [x]
                   (cond (mismatch? x)
                         x
 
                         (= :mismatch-map (:mismatch (meta x)))
+                        ;; keep only mismatched data from the mismatched map
                         (into {} (filter (fn [[_k v]] (mismatch+? v))) x)
 
                         (= :mismatch-sequence (:mismatch (meta x)))
+                        ;; keep only mismatched data from the sequence
                         (#'core/type-preserving-mismatch (empty x) (filter mismatch+? x))
 
                         :else
@@ -107,13 +109,3 @@
 (defn as-string [value]
   (with-out-str
     (pretty-print value)))
-
-(comment
-  (require '[clojure.test :refer [is]]
-           '[matcher-combinators.test :refer [match?]])
-  (is (match? {:name/first "Alfredo"
-               :f [1 2 3]}
-              {:name/first  "Afredo"
-               :f [3 2 1]
-               :name/last   "da Rocha Viana"
-               :name/suffix "Jr."})))

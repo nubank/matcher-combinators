@@ -12,3 +12,5 @@ pom.xml.asc
 .hg/
 .clj-kondo/*
 .shadow-cljs/*
+.cpcache/*
+.lsp/*

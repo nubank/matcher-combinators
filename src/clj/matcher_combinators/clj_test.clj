@@ -204,6 +204,7 @@
              :actual   '~form}))))))
 
 (defmethod clojure.test/assert-expr 'match-equals? [msg form]
+  ;; DEPRECATED
   (build-match-assert 'match-equals?
                       {clojure.lang.IPersistentMap matchers/equals}
                       msg
@@ -212,6 +213,7 @@
                            "                    Use (match? (matchers/match-with [map? matchers/equals] <expected>) <actual>) instead.")))
 
 (defmethod clojure.test/assert-expr 'match-roughly? [msg form]
+  ;; DEPRECATED
   (let [directive (first form)
         delta     (second form)
         the-rest  (rest (rest form))
