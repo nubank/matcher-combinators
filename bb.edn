@@ -26,7 +26,8 @@
 
   test:node
   {:doc "run ClojureScript tests via node"
-   :task (apply clojure "-M:cljs-test compile cli-test" *command-line-args*)}
+   :task (do (apply clojure "-M:cljs-test compile cli-test" *command-line-args*)
+             (shell "node ./out/node-tests.js"))}
 
   test:browser
   {:doc "run ClojureScript tests in browser at `http://localhost:9158/`"
