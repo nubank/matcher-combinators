@@ -2,31 +2,31 @@
   "Global output behavior configurations"
   (:require [matcher-combinators.ansi-color :as ansi-color]))
 
-;; Redacting fully-matched data-structures from output
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Abbreviating match results to only include mismatched data in the output
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^{:dynamic true
-       :doc "thread-local way to control, via `binding`, the redacting of fully-matched data-structures in the matcher-combinator output"}
-  *use-redaction*
+       :doc "thread-local way to control, via `binding`, the abbreviation of fully-matched data-structures in the matcher-combinator output"}
+  *use-abbreviation*
   false)
 
-(defn- set-use-redaction!
-  "internal function, use matcher-combinators.config/enable-redaction!"
+(defn- set-use-abbreviation!
+  "internal function, use matcher-combinators.config/{enable|disable}-abbreviation!"
   [v]
-  #?(:clj (alter-var-root #'*use-redaction* (constantly v))
-     :cljs (set! *use-redaction* v)))
+  #?(:clj (alter-var-root #'*use-abbreviation* (constantly v))
+     :cljs (set! *use-abbreviation* v)))
 
-(defn enable-redaction!
+(defn enable-abbreviation!
   "**Experimental, subject to change**
-  Thread-global way to enable the redaction of fully-matched data-structures in matcher-combinator output."
+  Thread-global way to enable the abbreviation of fully-matched data-structures in matcher-combinator output."
   []
-  (set-use-redaction! true))
+  (set-use-abbreviation! true))
 
-(defn disable-redaction!
+(defn disable-abbreviation!
   "**Experimental, subject to change**
-  Thread-global way to disable the redaction of fully-matched data-structures in matcher-combinator output."
+  Thread-global way to disable the abbreviation of fully-matched data-structures in matcher-combinator output."
   []
-  (set-use-redaction! false))
+  (set-use-abbreviation! false))
 
 
 ;; Disable special ANSI color characters in output

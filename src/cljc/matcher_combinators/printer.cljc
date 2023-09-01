@@ -75,8 +75,8 @@
 (def ellision-marker (EllisionMarker.))
 
 (defn with-ellision-marker
-  "Include `...` in mismatch data-structure to show that match output redaction
-  is enabled"
+  "Include `...` in mismatch data-structure to show that the match output has
+  been abbreviated"
   [expr]
   (cond (or (sequential? expr)
             (set? expr))
@@ -102,7 +102,7 @@
       (= :mismatch-map (:mismatch (meta x)))
       (= :mismatch-sequence (:mismatch (meta x)))))
 
-(defn redacted [expr]
+(defn abbreviated [expr]
   (walk/prewalk (fn [x]
                   (cond (mismatch? x)
                         x
@@ -122,8 +122,8 @@
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
     print-diff-dispatch
-    (pprint/pprint (if config/*use-redaction*
-                     ((comp redacted with-ellision-marker) expr)
+    (pprint/pprint (if config/*use-abbreviation*
+                     ((comp abbreviated with-ellision-marker) expr)
                      expr))))
 
 (defn as-string [value]

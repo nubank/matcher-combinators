@@ -7,7 +7,7 @@
 
 (defn set-config-defaults! []
   (config/enable-ansi-color!)
-  (config/disable-redaction!))
+  (config/disable-abbreviation!))
 
 (use-fixtures :each
               (fn [t]
@@ -24,14 +24,14 @@
     (is (= (str "(unexpected 1)\n")
            (printer/as-string (list 'unexpected (printer/->ColorTag :red 1)))))))
 
-(deftest redact-matched-output-test
+(deftest abbreviated-matched-output-test
   (is (= (str "[1\n 2\n {:a 2,\n  :b [4 (mismatch (expected " (colorize/yellow 5) ") (actual " (colorize/red 6) "))],\n  :c [2 [3 4]]}]\n")
          (printer/as-string
            (:matcher-combinators.result/value
              (c/match [1 2 {:a 2 :b [4 5] :c [2 [3 4]]}]
                       [1 2 {:a 2 :b [4 6] :c [2 [3 4]]}])))))
 
-  (config/enable-redaction!)
+  (config/enable-abbreviation!)
   (is (= (str "{:stuff [{:b [(mismatch (expected " (colorize/yellow 5) ") (actual " (colorize/red 6) "))]}],\n ... ...}\n")
          (printer/as-string
            (:matcher-combinators.result/value

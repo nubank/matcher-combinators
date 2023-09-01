@@ -171,7 +171,8 @@
     [key (match matcher (get actual key ::missing))]))
 
 (defn- with-mismatch-meta
-  "Tags element with data that allows to redact matched data-structures from test output when desired"
+  "Tags element with data that allows abbreviation of matched data-structures
+  in test output when desired"
   [elem mismatch-meta]
   (if #?(:clj (instance? clojure.lang.IMeta elem)
          :cljs (satisfies? IMeta elem))
