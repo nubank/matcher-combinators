@@ -3,7 +3,8 @@
             [colorize.core :as colorize]
             [matcher-combinators.config :as config]
             [matcher-combinators.core :as c]
-            [matcher-combinators.printer :as printer]))
+            [matcher-combinators.printer :as printer]
+            matcher-combinators.test))
 
 (defn set-config-defaults! []
   (config/enable-ansi-color!)
@@ -32,7 +33,7 @@
                       [1 2 {:a 2 :b [4 6] :c [2 [3 4]]}])))))
 
   (config/enable-abbreviation!)
-  (is (= (str "{:stuff [{:b [(mismatch (expected " (colorize/yellow 5) ") (actual " (colorize/red 6) "))]}],\n ... ...}\n")
+  (is (= (str "{:stuff [{:b [(mismatch (expected " (colorize/yellow 5) ") (actual " (colorize/red 6) "))]}],\n ... }\n")
          (printer/as-string
            (:matcher-combinators.result/value
              (c/match {:stuff [1 2 {:a 2 :b [4 5] :c [2 [3 4]]}]}

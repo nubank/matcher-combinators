@@ -70,9 +70,12 @@
       (pprint/simple-dispatch markup))))
 
 (defrecord EllisionMarker [])
-(defmethod markup-expression EllisionMarker [_]
-  '...)
+(defmethod markup-expression EllisionMarker [_] '...)
 (def ellision-marker (EllisionMarker.))
+
+(defrecord EmptyMarker [])
+(defmethod markup-expression EmptyMarker [_] (symbol ""))
+(def empty-marker (EmptyMarker.))
 
 (defn with-ellision-marker
   "Include `...` in mismatch data-structure to show that the match output has
@@ -83,13 +86,14 @@
         (conj expr ellision-marker)
 
         (and (map? expr) (not (core/non-internal-record? expr)))
-        (assoc expr ellision-marker ellision-marker)
+        (assoc expr ellision-marker empty-marker)
 
         :else
         expr))
 
 (defn- mismatch? [expr]
   (or (instance? EllisionMarker expr)
+      (instance? EmptyMarker expr)
       (instance? Mismatch expr)
       (instance? Missing expr)
       (instance? Unexpected expr)
