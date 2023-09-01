@@ -1,6 +1,7 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
             [clojure.pprint]
+            [clojure.string :as string]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]))
@@ -598,3 +599,7 @@
       (value-match (.toString expected)
                    (.toString actual))))
   (-base-name [_] 'equals))
+
+(defn non-internal-record? [v]
+  (and (record? v)
+       (not (string/starts-with? (-> v type str) "class matcher_combinators.core"))))

@@ -69,8 +69,28 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
+(defrecord EllisionMarker [])
+(defmethod markup-expression EllisionMarker [_]
+  '...)
+(def ellision-marker (EllisionMarker.))
+
+(defn with-ellision-marker
+  "Include `...` in mismatch data-structure to show that match output redaction
+  is enabled"
+  [expr]
+  (cond (or (sequential? expr)
+            (set? expr))
+        (conj expr ellision-marker)
+
+        (and (map? expr) (not (core/non-internal-record? expr)))
+        (assoc expr ellision-marker ellision-marker)
+
+        :else
+        expr))
+
 (defn- mismatch? [expr]
-  (or (instance? Mismatch expr)
+  (or (instance? EllisionMarker expr)
+      (instance? Mismatch expr)
       (instance? Missing expr)
       (instance? Unexpected expr)
       (instance? InvalidMatcherType expr)
@@ -102,9 +122,9 @@
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
     print-diff-dispatch
-    (pprint/pprint (cond-> expr
-                     config/*use-redaction*
-                     redacted))))
+    (pprint/pprint (if config/*use-redaction*
+                     ((comp redacted with-ellision-marker) expr)
+                     expr))))
 
 (defn as-string [value]
   (with-out-str
