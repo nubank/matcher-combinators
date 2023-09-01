@@ -2,8 +2,7 @@
  :source-paths ["src/clj" "src/cljc" "src/cljs" "test"]
  :builds {:cli-test {:target    :node-test
                      :output-to "out/node-tests.js"
-                     :ns-regexp "-test$"
-                     :autorun   true}
+                     :ns-regexp "-test$"}
           :browser-test {:target           :browser-test
                          :test-dir         "out/public/js/test"
                          :ns-regexp        "-test$"
