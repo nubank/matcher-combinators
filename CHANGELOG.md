@@ -3,9 +3,11 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.8.7 / 2023-08-31
+## 3.8.7 / 2023-09-01
 - [Experimental] add experimental feature to not print the entire actual data-structure on
   mismatch, but only the mismatches.
+- fix more issues when using non-composite matchers (`m/regex`, `m/pred`, etc)
+  inside `match-with`.
 
 ## 3.8.6 / 2023-07-18
 - fix issue when using non-composite matchers (`m/regex`, `m/pred`, etc)
