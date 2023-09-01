@@ -7,19 +7,20 @@
   *use-color*
   true)
 
-(defn- set-use-color! [v]
-  #?(:clj (alter-var-root #'*use-color* (constantly v))
-     :cljs (set! *use-color* v)))
-
-(defn enable!
-  "Thread-global way to enable the usage of ANSI color codes in matcher-combinator output."
+(defn
+  ^{:deprecated true
+    :doc "DEPRECATED! Use matcher-combinators.config/enable-ansi-color!"}
+  enable!
   []
-  (set-use-color! true))
+  #?(:clj (alter-var-root #'*use-color* (constantly true))
+     :cljs (set! *use-color* true)))
 
 (defn disable!
-  "Thread-global way to disable the usage of ANSI color codes in matcher-combinator output."
+  ^{:deprecated true
+    :doc "DEPRECATED! Use matcher-combinators.config/disable-ansi-color!"}
   []
-  (set-use-color! false))
+  #?(:clj (alter-var-root #'*use-color* (constantly false))
+     :cljs (set! *use-color* false)))
 
 (def ANSI-CODES
   {:reset              "[0m"

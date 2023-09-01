@@ -1,6 +1,7 @@
 (ns matcher-combinators.core
   (:require [clojure.math.combinatorics :as combo]
             [clojure.pprint]
+            [clojure.string :as string]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
             [matcher-combinators.utils :as utils]))
@@ -169,6 +170,15 @@
       nil)
     [key (match matcher (get actual key ::missing))]))
 
+(defn- with-mismatch-meta
+  "Tags element with data that allows abbreviation of matched data-structures
+  in test output when desired"
+  [elem mismatch-meta]
+  (if #?(:clj (instance? clojure.lang.IMeta elem)
+         :cljs (satisfies? IMeta elem))
+    (with-meta elem {:mismatch mismatch-meta})
+    elem))
+
 (defn- compare-maps [expected actual unexpected-handler allow-unexpected?]
   (let [entry-results      (->> expected
                                 (map (partial match-kv actual))
@@ -191,7 +201,7 @@
                                (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))
                                        (if allow-unexpected? 0 (count unexpected-entries))))]
         {::result/type   :mismatch
-         ::result/value  mismatch-val
+         ::result/value  (with-mismatch-meta mismatch-val :mismatch-map)
          ::result/weight weight}))))
 
 (def ^:private map-like?
@@ -288,7 +298,9 @@
         match-results  (take match-size match-results')]
     (if (some (complement indicates-match?) match-results)
       {::result/type   :mismatch
-       ::result/value  (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+       ::result/value  (with-mismatch-meta
+                         (type-preserving-mismatch (empty actual) (map ::result/value match-results))
+                         :mismatch-sequence)
        ::result/weight (->> match-results
                             (map ::result/weight)
                             (reduce + 0))}
@@ -588,3 +600,7 @@
       (value-match (.toString expected)
                    (.toString actual))))
   (-base-name [_] 'equals))
+
+(defn non-internal-record? [v]
+  (and (record? v)
+       (not (string/starts-with? (-> v type str) "class matcher_combinators.core"))))

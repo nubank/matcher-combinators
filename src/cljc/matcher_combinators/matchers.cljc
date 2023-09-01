@@ -1,13 +1,8 @@
 (ns matcher-combinators.matchers
   (:require #?(:cljs [matcher-combinators.core :as core :refer [Matcher Regex Value Absent PredMatcher]]
                :clj [matcher-combinators.core :as core])
-            [clojure.string :as string]
             [matcher-combinators.utils :as utils])
   #?(:clj (:import [matcher_combinators.core Matcher])))
-
-(defn- non-internal-record? [v]
-  (and (record? v)
-       (not (string/starts-with? (-> v type str) "class matcher_combinators.core"))))
 
 (defn equals
   "Matcher that will match when the given value is exactly the same as the
@@ -21,12 +16,20 @@
   for example, continue using their default matcher. If you want to do a deep
   match, consider using `match-with` instead."
   [expected]
-  (cond
-    (sequential? expected)          (core/->EqualsSeq expected)
-    (set? expected)                 (core/->SetEquals expected false)
-    (non-internal-record? expected) (core/->EqualsRecord expected)
-    (map? expected)                 (core/->EqualsMap expected)
-    :else                           (core/->Value expected)))
+  (cond (sequential? expected)
+        (core/->EqualsSeq expected)
+
+        (set? expected)
+        (core/->SetEquals expected false)
+
+        (core/non-internal-record? expected)
+        (core/->EqualsRecord expected)
+
+        (map? expected)
+        (core/->EqualsMap expected)
+
+        :else
+        (core/->Value expected)))
 
 (defn seq-of
   "Matcher that will match when given a sequence where every element matches
@@ -54,12 +57,20 @@
               matched with an element in the provided set. There may be more
               elements in the provided set than there are matchers."
   [expected]
-  (cond
-    (sequential? expected)          (core/->EmbedsSeq expected)
-    (set? expected)                 (core/->SetEmbeds expected false)
-    (non-internal-record? expected) (core/->EqualsRecord expected)
-    (map? expected)                 (core/->EmbedsMap expected)
-    :else                           (core/->InvalidType expected "embeds" "seq, set, map")))
+  (cond (sequential? expected)
+        (core/->EmbedsSeq expected)
+
+        (set? expected)
+        (core/->SetEmbeds expected false)
+
+        (core/non-internal-record? expected)
+        (core/->EqualsRecord expected)
+
+        (map? expected)
+        (core/->EmbedsMap expected)
+
+        :else
+        (core/->InvalidType expected "embeds" "seq, set, map")))
 
 (defn set-embeds
   "Matches a set in the way `(embeds some-set)` would, but accepts sequences

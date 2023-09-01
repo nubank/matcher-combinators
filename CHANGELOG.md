@@ -3,7 +3,12 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.8.7 / 2023-08-31
+## 3.8.7 / 2023-09-01
+- introduce `matcher-combinators.config` namespace to toggle use of ansi color
+  codes and the new output abbreviation mode.
+- [Experimental] add `(matcher-combinators.config/enable-abbreviation!)`, an
+  experimental feature to print only the mismatched parts of a data-structure
+  while elliding the matched parts.
 - fix more issues when using non-composite matchers (`m/regex`, `m/pred`, etc)
   inside `match-with`.
 
