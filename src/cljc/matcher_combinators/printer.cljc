@@ -108,7 +108,7 @@
 
 (defn- prewalk-with-skip
   "A specialization of clojure.prewalk that adds a predicate that stops
-  recurssion when satisfied"
+  recursion when satisfied."
   [f skip? form]
   (cond (skip? form)
         form
