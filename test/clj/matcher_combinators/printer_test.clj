@@ -63,28 +63,30 @@
 (deftype ExampleEntityMap [attrs]
   clojure.lang.Associative
   (containsKey [_ k] (.containsKey attrs k))
-  (entryAt [_ k]      (when (.containsKey attrs k)
-                           (clojure.lang.MapEntry/create k (.get attrs k))))
+  (entryAt [_ k] (when (.containsKey attrs k)
+                   (clojure.lang.MapEntry/create k (.get attrs k))))
   #_(assoc [_this k v])
 
-    clojure.lang.ILookup
-    (valAt [_ k]         (when (.containsKey attrs k)
-                                  (.get attrs k)))
+  clojure.lang.ILookup
+  (valAt [_ k] (when (.containsKey attrs k)
+                 (.get attrs k)))
 
-    (valAt [_ k _] (cond (.containsKey attrs k)
-                                  (.get attrs k)))
+  (valAt [_ k _] (cond (.containsKey attrs k)
+                       (.get attrs k)))
 
+  clojure.lang.Counted
+  (count [_] (.count attrs))
 
-    clojure.lang.Counted
-    (count [_] (.count attrs))
+  clojure.lang.IPersistentCollection
+  #_(cons  [this o])
 
-    clojure.lang.IPersistentCollection
-    #_(cons  [this o] )
-    (empty [this]  this) ;; mimic empty from datomic EntityMap; this is what messes with clojure.walk
-    (equiv [this o] (.equals this o))
+  ;; sorta mimic empty from datomic EntityMap
+  ;; this + no cons/assoc impl is messes with clojure.walk:
+  (empty [this] this)
+  (equiv [this o] (.equals this o))
 
-    clojure.lang.Seqable
-    (seq [_] (seq attrs)))
+  clojure.lang.Seqable
+  (seq [_] (seq attrs)))
 
 (deftest abbreviation-test
   (testing "Abbreviation doesn't descend into complete mismatch data (doing so would result in an exception)"
