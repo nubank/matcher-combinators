@@ -91,10 +91,9 @@
         :else
         expr))
 
-(defn- mismatch? [expr]
+(defn- complete-mismatch? [expr]
   (or (instance? EllisionMarker expr)
       (instance? EmptyMarker expr)
-      (instance? Mismatch expr)
       (instance? Missing expr)
       (instance? Unexpected expr)
       (instance? InvalidMatcherType expr)
@@ -102,26 +101,53 @@
       (instance? TypeMismatch expr)))
 
 (defn- mismatch+? [x]
-  (or (mismatch? x)
+  (or (complete-mismatch? x)
+      (instance? Mismatch x)
       (= :mismatch-map (:mismatch (meta x)))
       (= :mismatch-sequence (:mismatch (meta x)))))
 
+(defn- prewalk-with-skip
+  "A specialization of clojure.prewalk that adds a predicate that stops
+  recursion when satisfied."
+  [f skip? form]
+  (cond (skip? form)
+        form
+
+        (list? form)
+        (apply list (map f form))
+
+        #?(:clj (instance? clojure.lang.IMapEntry form)
+           :cljs (map-entry? form))
+        #?(:clj (vec (map f form))
+           :cljs (MapEntry. (f (key form)) (f (val form)) nil))
+
+        (seq? form)
+        (doall (map f form))
+
+        #?(:clj (instance? clojure.lang.IRecord form)
+           :cljs (record? form))
+        (reduce (fn [r x] (conj r (f x))) form form)
+
+        (coll? form)
+        (into (empty form) (map f form))
+
+        :else
+        form))
+
+(defn abbreviate-expr [expr]
+  (cond (= :mismatch-map (:mismatch (meta expr)))
+        ;; keep only mismatched data from the mismatched map
+        (into {} (filter (fn [[_k v]] (mismatch+? v))) expr)
+
+        (= :mismatch-sequence (:mismatch (meta expr)))
+        ;; keep only mismatched data from the sequence
+        (#'core/type-preserving-mismatch (empty expr) (filter mismatch+? expr))
+
+        :else
+        expr))
+
 (defn abbreviated [expr]
-  (walk/prewalk (fn [x]
-                  (cond (mismatch? x)
-                        x
-
-                        (= :mismatch-map (:mismatch (meta x)))
-                        ;; keep only mismatched data from the mismatched map
-                        (into {} (filter (fn [[_k v]] (mismatch+? v))) x)
-
-                        (= :mismatch-sequence (:mismatch (meta x)))
-                        ;; keep only mismatched data from the sequence
-                        (#'core/type-preserving-mismatch (empty x) (filter mismatch+? x))
-
-                        :else
-                        x))
-                expr))
+  (prewalk-with-skip abbreviated complete-mismatch? (abbreviate-expr expr)))
 
 (defn pretty-print [expr]
   (pprint/with-pprint-dispatch
