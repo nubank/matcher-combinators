@@ -31,6 +31,19 @@
         :else
         (core/->Value expected)))
 
+(declare match-with)
+
+(defn deep-equals
+  "Return a matcher for the expected value which matches nested maps with `equals`.
+  This solves a common need of matching nested maps with strict equality.
+  See also: `match-with`.
+
+  Usage:
+    (is (match? (deep-equals {:a :b})
+                {:a :b :c :d}))"
+  [expected]
+  (match-with [map? equals] expected))
+
 (defn seq-of
   "Matcher that will match when given a sequence where every element matches
   the provided `expected` matcher. It expects a non-empty sequence."
@@ -183,8 +196,6 @@
            first
            last)
       (matcher-for value)))
-
-(declare match-with)
 
 (defn- match-with-values [m overrides]
   (reduce-kv (fn [m* k v] (assoc m* k (match-with overrides v)))
