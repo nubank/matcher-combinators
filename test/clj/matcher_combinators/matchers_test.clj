@@ -361,6 +361,23 @@
                               :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
            actual)))))
 
+(deftest strictly-equals-matcher
+  (testing "passing case with one level map"
+    (is (match? (m/strictly-equals {:a :b})
+                {:a :b})))
+
+  (testing "passing case with multi level map"
+    (is (match? (m/strictly-equals {:a :b :c {:d {:e :f}}})
+                {:a :b :c {:d {:e :f}}})))
+
+  (testing "failing case with one level map"
+    (is (no-match? (m/strictly-equals {:a :b})
+                   {:a :b :c :d})))
+
+  (testing "failing case with multi level map"
+    (is (no-match? (m/strictly-equals {:a :b :c {:d {:e :f}}})
+                   {:a :b :c {:d :e}}))))
+
 (def gen-processable-double
   (gen/double* {:infinite? false :NaN? false}))
 
