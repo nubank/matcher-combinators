@@ -9,8 +9,8 @@
             [matcher-combinators.matchers :as m]
             [matcher-combinators.result :as result]
             [matcher-combinators.test :refer [match?]]
-            [matcher-combinators.test-helpers :as test-helpers :refer [no-match? abs-value-matcher]])
-  (:import [matcher_combinators.model Mismatch Missing InvalidMatcherContext InvalidMatcherType]))
+            [matcher-combinators.test-helpers :refer [abs-value-matcher no-match?]])
+  (:import [matcher_combinators.model InvalidMatcherContext InvalidMatcherType Mismatch Missing]))
 
 (defn any? [_x] true)
 
@@ -362,21 +362,48 @@
            actual)))))
 
 (deftest strictly-equals-matcher
-  (testing "passing case with one level map"
-    (is (match? (m/strictly-equals {:a :b})
-                {:a :b})))
+  (testing "nested maps"
+    (testing "passing case"
+      (is (match? (m/strictly-equals {:user1 {:id 5 :name "hennix"}
+                                      :user2 {:id 3 :name "flynt"}})
+                  {:user1 {:id 5 :name "hennix"}
+                   :user2 {:id 3 :name "flynt"}})))
 
-  (testing "passing case with multi level map"
-    (is (match? (m/strictly-equals {:a :b :c {:d {:e :f}}})
-                {:a :b :c {:d {:e :f}}})))
+    (testing "`strictly-equals` fails when nested maps have extra keys"
+      (is (no-match? (m/strictly-equals {:user1 {:id 5}
+                                         :user2 {:id 3}})
+                     {:user1 {:id 5 :name "hennix"}
+                      :user2 {:id 3 :name "flynt"}})))
 
-  (testing "failing case with one level map"
-    (is (no-match? (m/strictly-equals {:a :b})
-                   {:a :b :c :d})))
+    (testing "`equals` still matchs when nested maps have extra keys"
+      (is (match? (m/equals {:user1 {:id 5}
+                             :user2 {:id 3}})
+                  {:user1 {:id 5 :name "hennix"}
+                   :user2 {:id 3 :name "flynt"}})))
 
-  (testing "failing case with multi level map"
-    (is (no-match? (m/strictly-equals {:a :b :c {:d {:e :f}}})
-                   {:a :b :c {:d :e}}))))
+    (testing "`strictly-equals` is similar to using `equals` in each map"
+      (is (no-match? (m/equals {:user1 (m/equals {:id 5})
+                                :user2 (m/equals {:id 3})})
+                     {:user1 {:id 5 :name "hennix"}
+                      :user2 {:id 3 :name "flynt"}}))))
+
+  (testing "functions"
+    (testing "`strictly-equals` does not apply `equals` to functions"
+      (is (match? (m/strictly-equals {:x odd?})
+                  {:x 1})))
+
+    (testing "`equals` should be aplied directly to the function to fail"
+      (is (no-match? (m/equals {:x (m/equals odd?)})
+                     {:x 1}))))
+
+  (testing "regex"
+    (testing "`strictly-equals` does not apply `equals` to regex"
+      (is (match? (m/strictly-equals {:x #"\s+"})
+                  {:x "abc"})))
+
+    (testing "`equals` should be aplied directly to the regex to fail"
+      (is (no-match? (m/equals {:x (m/equals #"\s+")})
+                     {:x "abc"})))))
 
 (def gen-processable-double
   (gen/double* {:infinite? false :NaN? false}))

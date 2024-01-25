@@ -34,13 +34,17 @@
 (declare match-with)
 
 (defn strictly-equals
-  "Return a matcher for the expected value which matches nested maps with `equals`.
-  This solves a common need of matching nested maps with strict equality.
-  See also: `match-with`.
+  "A matcher that always uses the `equals` matcher at every level of nesting.
 
-  Usage:
-    (is (match? (strictly-equals {:a :b})
-                {:a :b :c :d}))"
+  Useful given that matchers usually only change the first level of the data
+  they are applied to, leaving nested data to use the default matcher of that
+  type of data. For instance, this can be used to assert that any nested map
+  has exactly the same keys and matching values as provided in the `expected`,
+  and no more.
+
+  Note: this excludes functions, which continue to be invoked
+  as predicates, and regex, which continue to be invoked with `regex`,
+  instead of being compared via the `equals` matcher."
   [expected]
   (match-with [map? equals] expected))
 
