@@ -398,11 +398,11 @@
 
   (testing "regex"
     (testing "`strictly-equals` does not apply `equals` to regex"
-      (is (match? (m/strictly-equals {:x #"\s+"})
+      (is (match? (m/strictly-equals {:x (m/regex #"\w+")})
                   {:x "abc"})))
 
     (testing "`equals` should be aplied directly to the regex to fail"
-      (is (no-match? (m/equals {:x (m/equals #"\s+")})
+      (is (no-match? (m/equals {:x (m/equals (m/regex #"\w+"))})
                      {:x "abc"})))))
 
 (def gen-processable-double
