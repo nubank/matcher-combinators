@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.9.0 / 2024-01-26
+- Add `strictly-equals` matcher, which always uses `equals` matcher at every level of nesting.
+
 ## 3.8.8 / 2023-09-04
 - refine abbreviation logic to not descend into fully mismatched data, because
   there is nothing to filter out in such sub-elements and it can cause issues
