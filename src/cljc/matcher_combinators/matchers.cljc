@@ -33,7 +33,7 @@
 
 (declare match-with)
 
-(defn strictly-equals
+(defn nested-equals
   "A matcher that always uses the `equals` matcher at every level of nesting.
 
   Useful given that matchers usually only change the first level of the data

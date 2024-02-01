@@ -361,16 +361,16 @@
                               :d (m/embeds {:e {:inner-e {:x 1 :y 2}}})}})
            actual)))))
 
-(deftest strictly-equals-matcher
+(deftest nested-equals-matcher
   (testing "nested maps"
     (testing "passing case"
-      (is (match? (m/strictly-equals {:user1 {:id 5 :name "hennix"}
+      (is (match? (m/nested-equals {:user1 {:id 5 :name "hennix"}
                                       :user2 {:id 3 :name "flynt"}})
                   {:user1 {:id 5 :name "hennix"}
                    :user2 {:id 3 :name "flynt"}})))
 
-    (testing "`strictly-equals` fails when nested maps have extra keys"
-      (is (no-match? (m/strictly-equals {:user1 {:id 5}
+    (testing "`nested-equals` fails when nested maps have extra keys"
+      (is (no-match? (m/nested-equals {:user1 {:id 5}
                                          :user2 {:id 3}})
                      {:user1 {:id 5 :name "hennix"}
                       :user2 {:id 3 :name "flynt"}})))
@@ -381,15 +381,15 @@
                   {:user1 {:id 5 :name "hennix"}
                    :user2 {:id 3 :name "flynt"}})))
 
-    (testing "`strictly-equals` is similar to using `equals` in each map"
+    (testing "`nested-equals` is similar to using `equals` in each map"
       (is (no-match? (m/equals {:user1 (m/equals {:id 5})
                                 :user2 (m/equals {:id 3})})
                      {:user1 {:id 5 :name "hennix"}
                       :user2 {:id 3 :name "flynt"}}))))
 
   (testing "functions"
-    (testing "`strictly-equals` does not apply `equals` to functions"
-      (is (match? (m/strictly-equals {:x odd?})
+    (testing "`nested-equals` does not apply `equals` to functions"
+      (is (match? (m/nested-equals {:x odd?})
                   {:x 1})))
 
     (testing "`equals` should be aplied directly to the function to fail"
@@ -397,8 +397,8 @@
                      {:x 1}))))
 
   (testing "regex"
-    (testing "`strictly-equals` does not apply `equals` to regex"
-      (is (match? (m/strictly-equals {:x (m/regex #"\w+")})
+    (testing "`nested-equals` does not apply `equals` to regex"
+      (is (match? (m/nested-equals {:x (m/regex #"\w+")})
                   {:x "abc"})))
 
     (testing "`equals` should be aplied directly to the regex to fail"
