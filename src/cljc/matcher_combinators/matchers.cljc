@@ -31,6 +31,23 @@
         :else
         (core/->Value expected)))
 
+(declare match-with)
+
+(defn nested-equals
+  "A matcher that always uses the `equals` matcher at every level of nesting.
+
+  Useful given that matchers usually only change the first level of the data
+  they are applied to, leaving nested data to use the default matcher of that
+  type of data. For instance, this can be used to assert that any nested map
+  has exactly the same keys and matching values as provided in the `expected`,
+  and no more.
+
+  Note: this excludes functions, which continue to be invoked
+  as predicates, and regex, which continue to be invoked with `regex`,
+  instead of being compared via the `equals` matcher."
+  [expected]
+  (match-with [map? equals] expected))
+
 (defn seq-of
   "Matcher that will match when given a sequence where every element matches
   the provided `expected` matcher. It expects a non-empty sequence."
@@ -183,8 +200,6 @@
            first
            last)
       (matcher-for value)))
-
-(declare match-with)
 
 (defn- match-with-values [m overrides]
   (reduce-kv (fn [m* k v] (assoc m* k (match-with overrides v)))

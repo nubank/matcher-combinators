@@ -163,6 +163,7 @@ for a specific value, e.g.
          - Note: Given that the default matcher for maps is `embeds`, nested maps continue being matched with embeds (instead of also being matched with `equals`). Check out 'Overriding default matchers' below for instructions on how to match nested maps with equals too.
   - sequence: matches when the `expected` sequences's matchers match the given sequence. Similar to midje's `(just expected)`
   - set: matches when all the elements in the given set can be matched with a matcher in `expected` set and each matcher is used exactly once.
+- `nested-equals`: overrides map's default matchers to `equals`, using it for nested structures (see Overriding default matchers, below)
 - `embeds` operates over maps, sequences, and sets
   - map: matches when the map contains some of the same key/values as the `expected` map.
   - sequence: order-agnostic matcher that will match when provided a subset of the `expected` sequence. Similar to midje's `(contains expected :in-any-order :gaps-ok)`
@@ -264,11 +265,11 @@ For example, if you want to do exact map matching you need to use a log of `m/eq
               {:a {:b {:c 1 :extra-c 0} :extra-b 0} :extra-a 0})))
 ```
 
-This verbosity can be avoided by redefining the matcher data-type defaults using the `match-with` matcher:
+For convenience we've also added the built-in matcher `nested-equals` to reduce this verbosity:
 
 ``` clojure
 (deftest exact-map-matching-with-match-with
-  (is (match? (m/match-with [map? m/equals] {:a {:b {:c odd?}}}))
+  (is (match? (m/nested-equals {:a {:b {:c odd?}}}))
               {:a {:b {:c 1}}}))
 ```
 
