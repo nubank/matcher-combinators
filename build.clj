@@ -21,7 +21,11 @@
                       :connection "scm:git:git://github.com/nubank/matcher-combinators.git"
                       :developerConnection "scm:git:ssh://git@github.com/nubank/matcher-combinators.git"
                       :tag version}
-                :src-dirs ["src"]})
+                :src-dirs ["src"]
+                :pom-data  [[:licenses
+                             [:license
+                              [:name "Apache License, Version 2.0"]
+                              [:url "http://www.apache.org/licenses/LICENSE-2.0"]]]]})
   (b/copy-dir {:src-dirs ["src/clj" "src/cljc" "resources"]
                :target-dir class-dir})
   (b/jar {:class-dir class-dir
