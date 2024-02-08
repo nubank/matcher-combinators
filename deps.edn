@@ -36,6 +36,6 @@
 
   :build
   {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.0"}
-                io.github.clojure/tools.build {:git/sha "fe6b1405ba888720c813c7488c03880be73bbe20"}}
+                io.github.clojure/tools.build {:mvn/version "0.9.6"}}
    :extra-paths ["src" "bb"]
    :ns-default build}}}
