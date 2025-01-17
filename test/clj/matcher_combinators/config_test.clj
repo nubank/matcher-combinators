@@ -55,6 +55,9 @@
              (c/match [#{2}] [#{1 2}])))))
 
   (config/enable-abbreviation!)
+  ;; TODO PLM: `[#{(unexpected 1)} ...]` feels not completely correct.
+  ;; shouldn't it be `[#{(unexpected 1) ...}]` or `[#{(unexpected 1)} ...]`
+  ;; instead?
   (is (= (str "[#{(unexpected " (colorize/red 1) ")} ...]\n")
          (printer/as-string
            (:matcher-combinators.result/value
