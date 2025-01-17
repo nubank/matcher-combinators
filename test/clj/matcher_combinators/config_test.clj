@@ -26,6 +26,7 @@
            (printer/as-string (list 'unexpected (printer/->ColorTag :red 1)))))))
 
 (deftest abbreviated-matched-output-test
+  (config/disable-abbreviation!)
   (is (= (str "[1\n 2\n {:a 2,\n  :b [4 (mismatch (expected " (colorize/yellow 5) ") (actual " (colorize/red 6) "))],\n  :c [2 [3 4]]}]\n")
          (printer/as-string
            (:matcher-combinators.result/value
@@ -43,4 +44,19 @@
          (printer/as-string
            (:matcher-combinators.result/value
              (c/match [1 2 {:a 2 :b [4 5] :c [2 [3 4]]}]
-                      [1 2 {:a 2 :b [4 6] :c [2 [3 4]]}]))))))
+                      [1 2 {:a 2 :b [4 6] :c [2 [3 4]]}])))))
+  (config/disable-abbreviation!))
+
+(deftest abbreviated-set-output-test
+  (config/disable-abbreviation!)
+  (is (= (str "[#{(unexpected " (colorize/red 1) ") 2}]\n")
+         (printer/as-string
+           (:matcher-combinators.result/value
+             (c/match [#{2}] [#{1 2}])))))
+
+  (config/enable-abbreviation!)
+  (is (= (str "[#{(unexpected " (colorize/red 1) ")} ...]\n")
+         (printer/as-string
+           (:matcher-combinators.result/value
+             (c/match [#{2}] [#{1 2}])))))
+  (config/disable-abbreviation!))
