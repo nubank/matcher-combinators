@@ -8,7 +8,7 @@ _current version:_
 [![join chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C04ABMF89D3)
 
 _docs:_
-[Found on cljdoc](https://cljdoc.xyz/d/nubank/matcher-combinators/)
+[Found on cljdoc](https://cljdoc.org/d/nubank/matcher-combinators/)
 
 _Clojure version compatibility:_ 1.8 and up
 
