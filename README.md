@@ -39,7 +39,7 @@ This library addresses this issue by providing composable matcher combinators th
 
 Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
 
- - `match?`: The first argument should be the matcher-combinator represented the expected value, and the second argument should be the expression being checked.
+ - `match?`: The first argument should be the matcher-combinator representing the expected value, and the second argument should be the expression being checked.
  - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinators, and the third the expression being checked.
 
 For example:
