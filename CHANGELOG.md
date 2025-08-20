@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.9.2 / 2025-08-20
+- Fix set mismatch info when experimental elision feature is enabled
+
 ## 3.9.1 / 2024-02-07
 - Add license to POM file to release on Clojars.
 
