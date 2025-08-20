@@ -246,7 +246,8 @@
 
 (defn- type-preserving-mismatch [base-list values]
   (let [lst (into base-list values)]
-    (if (vector? base-list)
+    (if (or (vector? base-list)
+            (set? base-list))
       lst
       (reverse lst))))
 
@@ -397,9 +398,11 @@
       {::result/type   :match
        ::result/value  elements
        ::result/weight 0}
-      (match (->EqualsSeq (concat (:matched result)
-                                  (:unmatched result)))
-             (:elements result)))))
+      (update (match (->EqualsSeq (concat (:matched result)
+                                          (:unmatched result)))
+                     (:elements result))
+              ::result/value
+              #(with-mismatch-meta % :mismatch-sequence)))))
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
@@ -445,7 +448,8 @@
                                      "set"))]
       issue
       (update (match-any-order (vec expected) (vec actual) false)
-              ::result/value set)))
+              ::result/value
+              #(with-meta (set %) (meta %)))))
   (-base-name [_] (if accept-seq? 'set-equals 'equals)))
 
 (defrecord Prefix [expected]
