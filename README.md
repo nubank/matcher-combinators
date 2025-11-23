@@ -6,6 +6,7 @@ _current version:_
 
 [![Current Version](https://img.shields.io/clojars/v/nubank/matcher-combinators.svg)](https://clojars.org/nubank/matcher-combinators)
 [![join chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C04ABMF89D3)
+[![bb compatible](https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg)](https://book.babashka.org#badges)
 
 _docs:_
 [Found on cljdoc](https://cljdoc.org/d/nubank/matcher-combinators/)
