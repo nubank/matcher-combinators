@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.10.0 / 2026-01-22
+- include reporting functions in standalone match result
+
+  ```
+  (def result (match {:name "Quercus suber"} {:name "Quercus lusitanica"}))
+  (print! result)
+  (report-clojure-test! result)
+  ```
+
 ## 3.9.2 / 2025-08-20
 - Fix set mismatch info when experimental elision feature is enabled
 
