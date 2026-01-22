@@ -338,10 +338,16 @@
   (or (and subset? (empty? unmatched))
       (and (not subset?) (empty? unmatched) (empty? elements))))
 
+(def ^:private memo-match
+  "Memoized version of match for use in `in-any-order`. Helpful because in the
+  case of a mismatch, `in-any-order` can call match several times on the same
+  input (to compute weight or minimal mismatch details)."
+  (memoize match))
+
 (defn- residual-matching-weight [matchers elements]
   (reduce (fn [w result] (+ w (::result/weight result)))
           0
-          (map match matchers elements)))
+          (map memo-match matchers elements)))
 
 (defn- matches-in-any-order? [unmatched elements subset? matching]
   (if (or (empty? unmatched) (empty? elements))
@@ -352,7 +358,7 @@
        :elements  (concat (map second matching) elements)
        :matched   (map first matching)})
     (let [[matcher & unmatched-rest] unmatched
-          matching-elem              (utils/find-first #(indicates-match? (match matcher %))
+          matching-elem              (utils/find-first #(indicates-match? (memo-match matcher %))
                                                        elements)]
       (if (nil? matching-elem)
         {:matched?  false
