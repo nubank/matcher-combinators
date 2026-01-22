@@ -192,10 +192,14 @@
       {::result/type   :match
        ::result/value  actual
        ::result/weight 0}
-      (let [mismatch-val (->> entry-results
+      (let [mismatches (->> entry-results
                               (map (fn [[key match-result]] [key (::result/value match-result)]))
-                              (concat unexpected-entries)
-                              (into actual))
+                              (concat unexpected-entries))
+            mismatch-val (try (into actual mismatches)
+                              (catch #?(:clj AbstractMethodError :cljs js/Error) _ame
+                                ;; converts things like Datomic EntityMaps into
+                                ;; maps, so assoc'ing can happen
+                                (into (into {} actual) mismatches)))
             weight        (->> entry-results
                                (map second)
                                (reduce (fn [acc-weight result] (+ acc-weight (::result/weight result)))

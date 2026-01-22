@@ -30,24 +30,26 @@
      {::result/value (model/->Mismatch a b)}
      (core/match (matchers/equals a) b))))
 
+(def map-like
+  (reify Associative
+    (seq [_] (map identity {:a 1}))
+    (valAt [_ k] (get {:a 1} k))
+    (valAt [_ k _] (get {:a 1} k))
+    (equiv [_ _] false)
+    (cons [_ _])))
+
 (deftest map-matchers-support-map-like-actual-values
-  (let [map-like (reify Associative
-                   (seq [_] (map identity {:a 1}))
-                   (valAt [_ k] (get {:a 1} k))
-                   (valAt [_ k _] (get {:a 1} k))
-                   (equiv [_ _] false)
-                   (cons [_ _]))]
-    (testing "map-like test value associative, but not a map or sequential"
-      (is (associative? map-like))
-      (is (not (map? map-like)))
-      (is (not (sequential? map-like))))
-    (testing "embeds"
-      (is (core/indicates-match?
-           (core/match (matchers/embeds {:a 1}) map-like)))
-      (is (not (core/indicates-match?
-                (core/match (matchers/embeds {:a 2}) map-like))))
-      (is (not (core/indicates-match?
-                (core/match (matchers/embeds {:b 1}) map-like)))))))
+  (testing "map-like test value associative, but not a map or sequential"
+    (is (associative? map-like))
+    (is (not (map? map-like)))
+    (is (not (sequential? map-like))))
+  (testing "embeds"
+    (is (core/indicates-match?
+          (core/match (matchers/embeds {:a 1}) map-like)))
+    (is (not (core/indicates-match?
+               (core/match (matchers/embeds {:a 2}) map-like))))
+    (is (not (core/indicates-match?
+               (core/match (matchers/embeds {:b 1}) map-like))))))
 
 (defspec map-matchers-mismatches-when-one-key-has-a-mismatched-value
   {:max-size 10}

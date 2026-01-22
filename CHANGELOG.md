@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.9.3 / 2026-01-22
+- Don't error on mismatches when `actual` value is a Datomic EntityMap.
+
 ## 3.9.2 / 2025-08-20
 - Fix set mismatch info when experimental elision feature is enabled
 
