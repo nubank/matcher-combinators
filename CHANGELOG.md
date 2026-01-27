@@ -3,13 +3,14 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## 3.10.0 / 2026-01-22
+## 3.10.0 / 2026-01-27
+- Don't error on mismatches when `actual` value is a Datomic EntityMap.
 - include reporting functions in standalone match result
 
   ```
-  (def result (match {:name "Quercus suber"} {:name "Quercus lusitanica"}))
-  (print! result)
-  (report-clojure-test! result)
+  (def result (matcher-combinators.standalone/match {:name "Quercus suber"} {:name "Quercus lusitanica"}))
+  (matcher-combinators.standalone/print! result)
+  (matcher-combinators.standalone/report-clojure-test! result)
   ```
 
 ## 3.9.2 / 2025-08-20
