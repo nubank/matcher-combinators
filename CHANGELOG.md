@@ -5,6 +5,13 @@ change log follows the conventions of
 
 ## 3.10.0 / 2026-01-27
 - Don't error on mismatches when `actual` value is a Datomic EntityMap.
+- include reporting functions in standalone match result
+
+  ```
+  (def result (matcher-combinators.standalone/match {:name "Quercus suber"} {:name "Quercus lusitanica"}))
+  (matcher-combinators.standalone/print! result)
+  (matcher-combinators.standalone/report-clojure-test! result)
+  ```
 
 ## 3.9.2 / 2025-08-20
 - Fix set mismatch info when experimental elision feature is enabled
