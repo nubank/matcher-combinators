@@ -46,7 +46,7 @@
 
 (defn print!
   "Given a `match`, pretty-print the mismatch data-structure"
-  [{::keys [pretty-print!] :as _match-result}]
+  [{pretty-print! ::pretty-print! :as _match-result}]
   (pretty-print!))
 
 (comment
