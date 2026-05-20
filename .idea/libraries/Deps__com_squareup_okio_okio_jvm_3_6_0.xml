@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: com.squareup.okio/okio-jvm:3.6.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/squareup/okio/okio-jvm/3.6.0/okio-jvm-3.6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
