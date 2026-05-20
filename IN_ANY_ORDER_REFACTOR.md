@@ -178,34 +178,36 @@ Kuhn's algorithm finds the largest possible matching using the concept of an **a
 
 ```clojure
 ;; AFTER
-(defn- try-augment [i matrix match-to used]
-  (let [n (count (get matrix 0 []))]
-    (loop [j 0 match-to match-to used used]
+(defn- try-augment [matcher-idx matrix match-to visited]
+  (let [num-elems (count (get matrix 0 []))]
+    (loop [elem-idx 0
+           match-to match-to
+           visited  visited]
       (cond
         ;; Exhausted all elements — no path found
-        (>= j n)
-        [false match-to used]
+        (>= elem-idx num-elems)
+        [false match-to visited]
 
-        ;; Element j was already visited in this attempt, or matcher i doesn't accept element j
-        (or (contains? used j)
-            (not (indicates-match? (get-in matrix [i j]))))
-        (recur (inc j) match-to used)
+        ;; elem-idx was already visited in this attempt, or matcher-idx doesn't accept elem-idx
+        (or (contains? visited elem-idx)
+            (not (indicates-match? (get-in matrix [matcher-idx elem-idx]))))
+        (recur (inc elem-idx) match-to visited)
 
-        ;; Element j is a candidate — try to assign
+        ;; elem-idx is a candidate — try to assign
         :else
-        (let [used'        (conj used j)          ; mark j as visited
-              prev         (get match-to j -1)    ; who is currently assigned to j?
-              [ok? mt' u'] (if (neg? prev)
-                             [true match-to used'] ; j is free!
-                             (try-augment prev matrix match-to used'))] ; try to push prev elsewhere
-          (if ok?
-            [true (assoc mt' j i) u'] ; success: assign i to j
-            (recur (inc j) match-to u')))))))
+        (let [visited+elem                     (conj visited elem-idx)
+              current-owner                    (get match-to elem-idx -1) ; -1 = free
+              [path-found? match-to' visited'] (if (neg? current-owner)
+                                                 [true match-to visited+elem]           ; elem-idx is free!
+                                                 (try-augment current-owner matrix match-to visited+elem))] ; try to push current-owner elsewhere
+          (if path-found?
+            [true (assoc match-to' elem-idx matcher-idx) visited'] ; success: assign matcher-idx to elem-idx
+            (recur (inc elem-idx) match-to visited')))))))
 
 (defn- max-bipartite-matching [matrix]
-  (reduce (fn [mt i]
-            (let [[_ mt'] (try-augment i matrix mt #{})]
-              mt'))
+  (reduce (fn [match-to matcher-idx]
+            (let [[_ match-to'] (try-augment matcher-idx matrix match-to #{})]
+              match-to'))
           {}
           (range (count matrix))))
 ```
@@ -223,28 +225,28 @@ Matchers             Elements
 
 Compatibility matrix (✓ = accepts, ✗ = rejects):
 
-              e0=42   e1="world"   e2=7
-m0=int?:       ✓          ✗         ✓      ← int? accepts 42 and 7
-m1=string?:    ✗          ✓         ✗      ← string? only accepts "world"
-m2=42:         ✓          ✗         ✗      ← literal 42 only accepts equal value
+                   e0=42   e1="world"   e2=7
+m0=int?:             ✓          ✗         ✓      ← int? accepts 42 and 7
+m1=string?:          ✗          ✓         ✗      ← string? only accepts "world"
+m2=42:               ✓          ✗         ✗      ← literal 42 only accepts equal value
 
-Running Kuhn (i = matcher index):
+Running Kuhn (matcher-idx = matcher index):
 
- i=0 (int?):
-   j=0 (42): int? accepts 42, e0 is free → assign m0→e0
+ matcher-idx=0 (int?):
+   elem-idx=0 (42): int? accepts 42, e0 is free → assign m0→e0
    match-to: {e0→m0}
 
- i=1 (string?):
-   j=0 (42): string? rejects 42, skip
-   j=1 ("world"): string? accepts, e1 is free → assign m1→e1
+ matcher-idx=1 (string?):
+   elem-idx=0 (42): string? rejects 42, skip
+   elem-idx=1 ("world"): string? accepts, e1 is free → assign m1→e1
    match-to: {e0→m0, e1→m1}
 
- i=2 (42):
-   j=0 (42): literal 42 accepts, but e0 is taken by m0 (int?)
+ matcher-idx=2 (42):
+   elem-idx=0 (42): literal 42 accepts, but e0 is taken by m0 (current-owner=m0)
      → try to move m0 elsewhere (augmenting path):
-       j=0 already visited, skip
-       j=1 ("world"): int? rejects, skip
-       j=2 (7): int? accepts 7, e2 is free → move m0 to e2 ✓
+       elem-idx=0 already in visited, skip
+       elem-idx=1 ("world"): int? rejects, skip
+       elem-idx=2 (7): int? accepts 7, e2 is free → move m0 to e2 ✓
    → e0 is now free for m2
    match-to: {e0→m2, e1→m1, e2→m0}
 

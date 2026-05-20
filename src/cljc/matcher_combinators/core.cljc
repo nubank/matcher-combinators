@@ -350,31 +350,33 @@
 (defn- build-match-matrix [matchers elements]
   (mapv (fn [m] (mapv #(match m %) elements)) matchers))
 
-(defn- try-augment [i matrix match-to used]
-  (let [n (count (get matrix 0 []))]
-    (loop [j 0 match-to match-to used used]
+(defn- try-augment [matcher-idx matrix match-to visited]
+  (let [num-elems (count (get matrix 0 []))]
+    (loop [elem-idx 0
+           match-to match-to
+           visited  visited]
       (cond
-        (>= j n)
-        [false match-to used]
+        (>= elem-idx num-elems)
+        [false match-to visited]
 
-        (or (contains? used j)
-            (not (indicates-match? (get-in matrix [i j]))))
-        (recur (inc j) match-to used)
+        (or (contains? visited elem-idx)
+            (not (indicates-match? (get-in matrix [matcher-idx elem-idx]))))
+        (recur (inc elem-idx) match-to visited)
 
         :else
-        (let [used'        (conj used j)
-              prev         (get match-to j -1)
-              [ok? mt' u'] (if (neg? prev)
-                             [true match-to used']
-                             (try-augment prev matrix match-to used'))]
-          (if ok?
-            [true (assoc mt' j i) u']
-            (recur (inc j) match-to u')))))))
+        (let [visited+elem                      (conj visited elem-idx)
+              current-owner                     (get match-to elem-idx -1)
+              [path-found? match-to' visited']  (if (neg? current-owner)
+                                                  [true match-to visited+elem]
+                                                  (try-augment current-owner matrix match-to visited+elem))]
+          (if path-found?
+            [true (assoc match-to' elem-idx matcher-idx) visited']
+            (recur (inc elem-idx) match-to visited')))))))
 
 (defn- max-bipartite-matching [matrix]
-  (reduce (fn [mt i]
-            (let [[_ mt'] (try-augment i matrix mt #{})]
-              mt'))
+  (reduce (fn [match-to matcher-idx]
+            (let [[_ match-to'] (try-augment matcher-idx matrix match-to #{})]
+              match-to'))
           {}
           (range (count matrix))))
 
