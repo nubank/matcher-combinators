@@ -264,6 +264,16 @@
        ::result/weight 1})
     (-base-name [_] 'unexpected)))
 
+(def ^:private pass-through-matcher
+  (reify Matcher
+    (-matcher-for [this] this)
+    (-matcher-for [this _] this)
+    (-match [_this actual]
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0})
+    (-base-name [_] 'pass-through)))
+
 (defrecord ViaMatcher [transform-actual-fn expected]
     Matcher
     (-matcher-for [_this] (-matcher-for expected))
@@ -419,9 +429,13 @@
             unmatched-mi (remove matched-mis (range n))
             unmatched-ej (remove matched-ejs (range (count elems)))
             all-mi->ej   (into mi->ej (min-cost-assign unmatched-mi unmatched-ej matrix matchers))
+            truly-extra  (when subset?
+                           (remove (set (vals all-mi->ej)) (range (count elems))))
             ordered-mi   (sort (keys all-mi->ej))
-            res-matchers (mapv #(get matchers %) ordered-mi)
-            res-elements (mapv #(get elems (get all-mi->ej %)) ordered-mi)]
+            res-matchers (into (mapv #(get matchers %) ordered-mi)
+                               (repeat (count truly-extra) pass-through-matcher))
+            res-elements (into (mapv #(get elems (get all-mi->ej %)) ordered-mi)
+                               (mapv #(get elems %) truly-extra))]
         (update (match (->EqualsSeq res-matchers) res-elements)
                 ::result/value
                 #(with-mismatch-meta % :mismatch-sequence))))))

@@ -253,6 +253,62 @@ count(match-to) = 3 = count(matchers) → MATCH ✓
 Final pairing: int?→7,  string?→"world",  42→42
 ```
 
+**Step-by-step example — mismatch** with `[1 2 2] => (m/in-any-order [1 int? odd?])`:
+
+The matchers are `[1, int?, odd?]` and the elements are `[1, 2, 2]`.
+`odd?` can't match either `2` because both are even — so a complete match is impossible.
+
+```
+Matchers             Elements
+  m0=1               e0=1
+  m1=int?            e1=2
+  m2=odd?            e2=2
+
+Compatibility matrix (✓ = accepts, ✗ = rejects):
+
+              e0=1   e1=2   e2=2
+m0=1:          ✓      ✗      ✗      ← literal 1 only accepts 1
+m1=int?:       ✓      ✓      ✓      ← int? accepts all three
+m2=odd?:       ✓      ✗      ✗      ← odd? only accepts 1; both 2s are even
+
+Running Kuhn:
+
+ i=0 (m0=1):
+   j=0 (1): matches, e0 is free → assign m0→e0
+   match-to: {e0→m0}
+
+ i=1 (m1=int?):
+   j=0 (1): matches, but e0 is taken by m0
+     → try to move m0 elsewhere (augmenting path):
+       j=0 already visited, skip
+       j=1 (2): match(1, 2) = ✗, skip
+       j=2 (2): match(1, 2) = ✗, skip → no path found for m0
+   j=1 (2): int? matches, e1 is free → assign m1→e1
+   match-to: {e0→m0, e1→m1}
+
+ i=2 (m2=odd?):
+   j=0 (1): matches, but e0 is taken by m0
+     → try to move m0 elsewhere: j=1 ✗, j=2 ✗ → no path
+   j=1 (2): odd? rejects 2, skip
+   j=2 (2): odd? rejects 2, skip → no path found for m2
+
+count(match-to) = 2 ≠ 3 = count(matchers) → MISMATCH
+
+Mismatch path:
+  matched:   m0→e0, m1→e1
+  unmatched: m2=odd? (no element accepted it)
+             e2=2   (no matcher was assigned to it)
+
+  min-cost-assign pairs m2 with e2 (only option):
+    match(odd?, 2) = Mismatch(odd?, 2), weight=1
+
+Final diff: [1, 2, Mismatch(odd?, 2)]
+            ↑   ↑   ↑
+           m0  m1  m2 — only odd? failed
+```
+
+---
+
 ### Step 3 — Mismatch path: permutations only where needed
 
 When bipartite matching fails to find a complete matching, we need to generate the best error report. Two concepts come into play here:
@@ -303,6 +359,34 @@ m2=unexpected: ✗     ✗     ✗   ← never matches
 
 The matching finds `{e0→m0, e1→m1}` — count = 2 ≠ 3, mismatch. But without running the matching, we wouldn't know that `1` and `2` matched correctly and only `3` is unexpected. The diff would be much less informative.
 
+#### The `pass-through-matcher` (subset path only)
+
+When `embeds` fails and `actual` has more elements than `expected`, elements not assigned to any matcher are appended to the diff using a second sentinel:
+
+```clojure
+(def ^:private pass-through-matcher
+  (reify Matcher
+    (-match [_this actual]
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0})   ; weight=0, element appears as-is
+    ...))
+```
+
+Unlike `unexpected-matcher` (which marks an element as wrong with weight=1), `pass-through-matcher` treats the element as **present-but-unchecked** — weight=0, no error annotation. This preserves debugging context without incorrectly flagging extra elements as `Unexpected`.
+
+```clojure
+;; (m/embeds [(m/equals 1) (m/equals 5)]) against [1 2 3]
+
+;; BEFORE (permutation algorithm): 3 elements, extra marked as Unexpected
+;; [1, Mismatch(5 ≠ 2), Unexpected(3)]
+
+;; AFTER (bipartite + pass-through): 3 elements, extra shown as-is
+;; [1, Mismatch(5 ≠ 2), 3]
+;;  ↑        ↑           ↑
+;; match  mismatch   pass-through (present, not an error)
+```
+
 #### `min-cost-assign`: optimal assignment for unmatched pairs
 
 ```clojure
@@ -348,6 +432,7 @@ After:  k! where k = unmatched regular matchers (k << N)
 | `max-bipartite-matching` | Orchestrates Kuhn's algorithm over all matchers |
 | `perms-of` | Generates permutations of a vector (local implementation, no longer an external dependency) |
 | `min-cost-assign` | Assigns unmatched matchers to unmatched elements with minimum cost |
+| `pass-through-matcher` | Sentinel for extra elements in `embeds` mismatches: returns `:match` with weight=0, making extra `actual` elements visible in the diff without an error marker |
 
 ### Functions removed (AFTER)
 
@@ -387,11 +472,11 @@ The dependency still exists, but now **only in tests** — where `combo/permutat
 | Scenario | Before | After |
 |:---|:---:|:---:|
 | Match found, N elements | O(N! × N) | O(N² × M) |
-| Mismatch, k regular matchers | O(N! × N) | O(k! × k), k ≪ N |
-| Mismatch with many `unexpected` | O(N! × N) | O(N) for unexpected + O(k!) for regular |
-| 7 elements, match | ~35,000 operations | ~49 operations |
-| 10 elements, match | ~36 million operations | ~100 operations |
-| 15 elements, 2 expected | ~1.3 trillion (hangs) | O(1) |
+| Mismatch, k regular matchers | O(N! × N) | O(N² × M) matching + O(k! × k), k ≪ N |
+| Mismatch with many `unexpected` | O(N! × N) | O(N² × M) matching + O(k!) for k regular matchers |
+| 7 elements, match | ~35,000 ops | ~75 ops (49 matrix + ~26 Kuhn) |
+| 10 elements, match | ~36 million ops | ~150 ops (100 matrix + ~55 Kuhn) |
+| 15 elements, 2 expected | ~1.3 trillion (hangs) | ~300 ops (225 matrix + Kuhn + O(2!) for 2 unmatched) |
 
 ---
 
@@ -417,7 +502,7 @@ The dependency still exists, but now **only in tests** — where `combo/permutat
 
 **For N ≥ 7 with any ordering**, the new algorithm is already much faster. The overhead is only observable for N ≤ 5 and only when elements are already in the "right" order — an atypical scenario for `in-any-order`, which exists precisely for cases where order is not guaranteed.
 
-**Why not implement two strategies (≤ 3 uses permutations, > 3 uses bipartite)?**
+**Why not implement two strategies (≤ 5 uses permutations, > 5 uses bipartite)?**
 
 Not worth it. The gain would be imperceptible in absolute terms (nanoseconds for N ≤ 5) and would add maintenance complexity: two code paths to test, document, and evolve. The right cutoff point would also be arbitrary.
 
@@ -447,28 +532,6 @@ Two maximum matchings of size 1 are possible for m0: `{m0→e0}` or `{m0→e1}`.
 **Why accept this limitation?**
 
 The globally optimal algorithm for this problem would be the **Hungarian algorithm** (minimum-cost matching), with O(N³) complexity. For a test matcher, a slightly suboptimal diff in rare cases does not justify the additional complexity. In practice, the problematic scenario — multiple maximum matchings where choices significantly affect the diff — is uncommon.
-
-### Changed mismatch diff for `embeds` with extra elements
-
-When `embeds` fails and `actual` has **more elements than `expected`**, the error report behavior changed.
-
-**Before:** the diff included all elements of `actual` — unmatched ones appeared marked as `Unexpected`.
-
-**After:** the diff shows only the elements paired with matchers (one per matcher). Extra `actual` elements do not appear in the diff.
-
-```clojure
-;; (m/embeds [(m/equals 1) (m/equals 5)]) against [1 2 3]
-
-;; BEFORE: 3 elements in the diff
-;; [1, Mismatch(5 ≠ 2), Unexpected(3)]
-
-;; AFTER: 2 elements in the diff (one per matcher)
-;; [1, Mismatch(5 ≠ 2)]
-```
-
-**Why does this change happen?** `res-elements` in `match-all-permutations` is built with exactly `n` elements — one per matcher. Elements of `actual` that were not assigned to any matcher simply don't enter `res-elements`.
-
-**Is this better or worse?** For `embeds`, extra elements in `actual` are semantically accepted — so marking them as `Unexpected` in the diff was conceptually incorrect. The new behavior is more correct. The downside is that it hides context about which extra elements exist in `actual`, which may make debugging harder in some cases.
 
 ---
 
