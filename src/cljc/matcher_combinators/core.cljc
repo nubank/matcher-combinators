@@ -1,6 +1,5 @@
 (ns matcher-combinators.core
-  (:require [clojure.math.combinatorics :as combo]
-            [clojure.pprint]
+  (:require [clojure.pprint]
             [clojure.string :as string]
             [matcher-combinators.model :as model]
             [matcher-combinators.result :as result]
@@ -338,75 +337,94 @@
          ::result/weight 1})))
   (-base-name [_] 'seq-of))
 
-(defn- matched-successfully? [unmatched elements subset?]
-  (or (and subset? (empty? unmatched))
-      (and (not subset?) (empty? unmatched) (empty? elements))))
+(defn- build-match-matrix [matchers elements]
+  (mapv (fn [m] (mapv #(match m %) elements)) matchers))
 
-(defn- residual-matching-weight [matchers elements]
-  (reduce (fn [w result] (+ w (::result/weight result)))
-          0
-          (map match matchers elements)))
-
-(defn- matches-in-any-order? [unmatched elements subset? matching]
-  (if (or (empty? unmatched) (empty? elements))
-    (let [matched? (matched-successfully? unmatched elements subset?)]
-      {:matched?  matched?
-       :unmatched unmatched
-       :weight    (if matched? 0 (residual-matching-weight unmatched elements))
-       :elements  (concat (map second matching) elements)
-       :matched   (map first matching)})
-    (let [[matcher & unmatched-rest] unmatched
-          matching-elem              (utils/find-first #(indicates-match? (match matcher %))
-                                                       elements)]
-      (if (nil? matching-elem)
-        {:matched?  false
-         :unmatched unmatched
-         :weight    (residual-matching-weight unmatched elements)
-         :elements  (concat (map second matching) elements)
-         :matched   (map first matching)}
-        (recur unmatched-rest
-               (utils/remove-first #(= matching-elem %) elements)
-               subset?
-               (conj matching [matcher matching-elem]))))))
-
-(defn- better-mismatch? [best candidate]
-  (let [best-matched      (-> best :matched count)
-        candidate-matched (-> candidate :matched count)
-        candidate-weight  (:weight candidate)
-        best-weight       (:weight best)]
-    (and (>= candidate-matched best-matched)
-         (<= candidate-weight best-weight))))
-
-(defn- matched-or-best-matchers [elements subset?]
-  (fn [best matchers]
-    (let [{:keys [matched?] :as result} (matches-in-any-order? matchers elements subset? [])]
+(defn- try-augment [i matrix match-to used]
+  (let [n (count (get matrix 0 []))]
+    (loop [j 0 match-to match-to used used]
       (cond
-        matched?                       (reduced ::match-found)
-        (better-mismatch? best result) result
-        :else                          best))))
+        (>= j n)
+        [false match-to used]
+
+        (or (contains? used j)
+            (not (indicates-match? (get-in matrix [i j]))))
+        (recur (inc j) match-to used)
+
+        :else
+        (let [used'        (conj used j)
+              prev         (get match-to j -1)
+              [ok? mt' u'] (if (neg? prev)
+                             [true match-to used']
+                             (try-augment prev matrix match-to used'))]
+          (if ok?
+            [true (assoc mt' j i) u']
+            (recur (inc j) match-to u')))))))
+
+(defn- max-bipartite-matching [matrix]
+  (reduce (fn [mt i]
+            (let [[_ mt'] (try-augment i matrix mt #{})]
+              mt'))
+          {}
+          (range (count matrix))))
+
+(defn- perms-of [v]
+  (if (empty? v)
+    [[]]
+    (for [i (range (count v))
+          p (perms-of (into (subvec v 0 i) (subvec v (inc i))))]
+      (into [(nth v i)] p))))
+
+(defn- min-cost-assign [unmatched-mi available-ej matrix matchers]
+  ;; unexpected-matchers always return weight=1 regardless of element, so their
+  ;; assignment order doesn't affect optimality — pair them with leftover elements.
+  ;; Only regular matchers need optimal (min-cost) assignment via perms-of.
+  (let [groups      (group-by #(identical? (nth matchers %) unexpected-matcher) unmatched-mi)
+        regular-mi  (vec (get groups false []))
+        extra-mi    (vec (get groups true []))
+        ejs         (vec available-ej)
+        k           (min (count regular-mi) (count ejs))
+        regular-ejs (subvec ejs 0 k)
+        extra-ejs   (subvec ejs k)]
+    (if (zero? k)
+      (mapv vector extra-mi extra-ejs)
+      (let [cost (fn [pairs]
+                   (reduce (fn [acc [mi ej]]
+                             (+ acc (::result/weight (get-in matrix [mi ej]))))
+                           0 pairs))]
+        (into (->> (perms-of regular-ejs)
+                   (map (fn [perm] (mapv vector regular-mi perm)))
+                   (reduce (fn [best a] (if (< (cost a) (cost best)) a best))))
+              (mapv vector extra-mi extra-ejs))))))
 
 (defn- match-all-permutations [expected elements subset?]
-  (let [[matchers elements] (if subset?
-                              [expected elements]
-                              (normalize-inputs-length expected elements))
-        matcher-perms       (combo/permutations matchers)
-        find-best-match     (matched-or-best-matchers elements subset?)
-        result              (reduce find-best-match
-                                    {:matched   []
-                                     :weight    #?(:clj Integer/MAX_VALUE
-                                                   :cljs (.-MAX_SAFE_INTEGER js/Number))
-                                     :elements  elements
-                                     :unmatched matchers}
-                                    matcher-perms)]
-    (if (= ::match-found result)
+  (let [[matchers elems] (if subset?
+                           (let [n (count expected)
+                                 m (count elements)]
+                             [(vec expected)
+                              (vec (if (>= m n)
+                                     elements
+                                     (take n (concat elements (repeat ::missing)))))])
+                           (mapv vec (normalize-inputs-length expected elements)))
+        n        (count matchers)
+        matrix   (build-match-matrix matchers elems)
+        match-to (max-bipartite-matching matrix)]
+    (if (= (count match-to) n)
       {::result/type   :match
        ::result/value  elements
        ::result/weight 0}
-      (update (match (->EqualsSeq (concat (:matched result)
-                                          (:unmatched result)))
-                     (:elements result))
-              ::result/value
-              #(with-mismatch-meta % :mismatch-sequence)))))
+      (let [mi->ej       (into {} (map (fn [[ej mi]] [mi ej]) match-to))
+            matched-ejs  (set (keys match-to))
+            matched-mis  (set (vals match-to))
+            unmatched-mi (remove matched-mis (range n))
+            unmatched-ej (remove matched-ejs (range (count elems)))
+            all-mi->ej   (into mi->ej (min-cost-assign unmatched-mi unmatched-ej matrix matchers))
+            ordered-mi   (sort (keys all-mi->ej))
+            res-matchers (mapv #(get matchers %) ordered-mi)
+            res-elements (mapv #(get elems (get all-mi->ej %)) ordered-mi)]
+        (update (match (->EqualsSeq res-matchers) res-elements)
+                ::result/value
+                #(with-mismatch-meta % :mismatch-sequence))))))
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
