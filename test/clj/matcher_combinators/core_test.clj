@@ -453,6 +453,15 @@
             ::result/weight 0}
            (core/match (matchers/embeds  short-equals-seq) [3 4 1 5]))))
 
+  (testing "embeds sequence mismatch only shows elements paired with matchers"
+    ;; actual has 3 elements but expected only has 2 matchers.
+    ;; The diff shows exactly 2 elements (one per matcher); extra actual elements
+    ;; are not reported as Unexpected because embeds semantically allows them.
+    (is (match? {::result/type   :mismatch
+                 ::result/value  [(matchers/equals 1) (model/->Mismatch 5 2)]
+                 ::result/weight 1}
+                (core/match (matchers/embeds [(matchers/equals 1) (matchers/equals 5)]) [1 2 3]))))
+
   (testing "embeds /set-equals matches"
     (is (= {::result/type   :match
             ::result/value  #{1 3}

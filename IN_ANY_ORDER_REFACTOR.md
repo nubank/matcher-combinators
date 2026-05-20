@@ -1,63 +1,63 @@
-# Refactor: `in-any-order` — de Permutações para Bipartite Matching
+# Refactor: `in-any-order` — from Permutations to Bipartite Matching
 
-> **Arquivo relevante:** `src/cljc/matcher_combinators/core.cljc`
+> **Relevant file:** `src/cljc/matcher_combinators/core.cljc`
 
 ---
 
-## O que é o `in-any-order`?
+## What is `in-any-order`?
 
-`in-any-order` é um matcher que verifica se dois vetores contêm os **mesmos elementos independentemente da ordem**.
+`in-any-order` is a matcher that verifies whether two sequences contain the **same elements regardless of order**.
 
-Cada posição do vetor `expected` pode ser um **valor literal** (comparado por igualdade) ou qualquer **matcher** — inclusive funções Clojure como `odd?`, `string?`, ou matchers compostos como `m/equals` e `m/embeds`. Qualquer função Clojure é automaticamente tratada como predicate matcher (via `parser.cljc`).
+Each position in the `expected` vector can be a **literal value** (compared by equality) or any **matcher** — including Clojure functions like `odd?`, `string?`, or composite matchers like `m/equals` and `m/embeds`. Any Clojure function is automatically treated as a predicate matcher (via `parser.cljc`).
 
 ```clojure
-;; Valores literais — comparação por igualdade, ordem não importa
+;; Literal values — equality comparison, order doesn't matter
 [3 1 2] => (match (m/in-any-order [1 2 3]))
 
-;; Funções Clojure são matchers automáticos — combinam com qualquer elemento que as satisfaça
+;; Clojure functions are automatic matchers — they match any element they accept
 [3 "hello" 4] => (match (m/in-any-order [string? odd? even?]))
-;;               ^ o algoritmo encontra: string?→"hello", odd?→3, even?→4
+;;               ^ the algorithm finds: string?→"hello", odd?→3, even?→4
 
-;; Mistura de literais e matchers na mesma lista
+;; Mix of literals and matchers in the same list
 [3 "hello" 42] => (match (m/in-any-order [42 odd? string?]))
-;;                  42 casa com 42, odd? casa com 3, string? casa com "hello"
+;;                  42 matches 42, odd? matches 3, string? matches "hello"
 
-;; Matchers compostos também funcionam
+;; Composite matchers also work
 [{:id 2 :name "Bob"} {:id 1 :name "Alice"}]
 => (match (m/in-any-order [{:id 1 :name string?}
                            {:id pos-int? :name "Bob"}]))
 
-;; Falha: nenhum emparelhamento válido — 4 não satisfaz string?, odd? nem 99
+;; Failure: no valid pairing — 4 doesn't satisfy string?, odd?, or 99
 [3 "hello" 4] =not=> (match (m/in-any-order [string? odd? 99]))
 ```
 
-Além de decidir se há match ou não, o matcher precisa gerar um **relatório de erro útil** quando falha — mostrando qual(is) elemento(s) não combinaram e com o menor número possível de diferenças.
+Beyond deciding whether there is a match or not, the matcher must generate a **useful error report** on failure — showing which element(s) didn't match and with the fewest possible differences.
 
 ---
 
-## O Problema de Base
+## The Core Problem
 
-Para verificar se dois vetores combinam em qualquer ordem, é preciso responder:
+To check whether two sequences match in any order, we need to answer:
 
-> "Existe alguma forma de parear cada matcher com um elemento do vetor real, tal que todos os pares sejam válidos?"
+> "Is there any way to pair each matcher with an element of the actual sequence such that every pair is valid?"
 
-Isso é o **problema do emparelhamento**: dado um conjunto de matchers e um conjunto de elementos, encontrar uma atribuição 1-para-1 onde todo matcher passa.
+This is the **matching problem**: given a set of matchers and a set of elements, find a 1-to-1 assignment where every matcher passes.
 
 ---
 
-## Antes: Busca Exaustiva por Permutações
+## Before: Exhaustive Permutation Search
 
-### Ideia central
+### Core idea
 
-A implementação original resolvia o problema de forma simples e direta: **tente todas as ordens possíveis dos matchers e veja qual funciona**.
+The original implementation solved the problem in a simple, direct way: **try every possible ordering of the matchers and see which one works**.
 
-Em termos de código:
+In code:
 
 ```clojure
-;; ANTES — match-all-permutations em master
+;; BEFORE — match-all-permutations in master
 (defn- match-all-permutations [expected elements subset?]
   (let [[matchers elements] (normalize-inputs-length expected elements)
-        matcher-perms       (combo/permutations matchers)   ; gera TODAS as permutações
+        matcher-perms       (combo/permutations matchers)   ; generates ALL permutations
         find-best-match     (matched-or-best-matchers elements subset?)
         result              (reduce find-best-match
                                     {:matched   []
@@ -68,24 +68,24 @@ Em termos de código:
     ...))
 ```
 
-Para cada permutação dos matchers, a função `matches-in-any-order?` tentava casar greedy (ganancioso) com os elementos em sequência:
+For each permutation of matchers, `matches-in-any-order?` attempted a greedy left-to-right match against the elements:
 
 ```clojure
-;; ANTES — tentativa greedy para uma permutação específica
+;; BEFORE — greedy attempt for a specific permutation
 (defn- matches-in-any-order? [unmatched elements subset? matching]
   (if (empty? unmatched)
-    ;; acabou os matchers — verifica se deu match
+    ;; ran out of matchers — check if it matched
     {:matched? true, ...}
     (let [[matcher & rest] unmatched
-          ;; pega o PRIMEIRO elemento que funciona
+          ;; grab the FIRST element that works
           matching-elem (find-first #(indicates-match? (match matcher %)) elements)]
       (if (nil? matching-elem)
         {:matched? false, ...}
-        ;; achou um par, continua com o resto
+        ;; found a pair, continue with the rest
         (recur rest (remove matching-elem elements) subset? ...)))))
 ```
 
-A melhor permutação (aquela com mais matches e menor peso total de erro) era escolhida via `better-mismatch?`:
+The best permutation (the one with the most matches and lowest total error weight) was chosen via `better-mismatch?`:
 
 ```clojure
 (defn- better-mismatch? [best candidate]
@@ -93,113 +93,113 @@ A melhor permutação (aquela com mais matches e menor peso total de erro) era e
        (<= (:weight candidate) (:weight best))))
 ```
 
-### Dependência externa
+### External dependency
 
-O algoritmo dependia da biblioteca `clojure.math.combinatorics` para gerar as permutações:
+The algorithm relied on `clojure.math.combinatorics` to generate permutations:
 
 ```clojure
-;; deps.edn — ANTES
+;; deps.edn — BEFORE
 :deps {org.clojure/clojure              {:mvn/version "1.8.0"}
-       org.clojure/math.combinatorics   {:mvn/version "0.2.0"}}  ; <-- dependência de produção
+       org.clojure/math.combinatorics   {:mvn/version "0.2.0"}}  ; <-- production dependency
 ```
 
-### Por que isso funciona... mas não escala
+### Why this works... but doesn't scale
 
-Para uma lista de N elementos, existem **N! (N fatorial)** permutações possíveis:
+For a list of N elements, there are **N! (N factorial)** possible permutations:
 
-| N (elementos) | N! permutações | Tempo estimado |
+| N (elements) | N! permutations | Estimated time |
 |:---:|---:|:---:|
-| 5  | 120 | instantâneo |
-| 7  | 5.040 | instantâneo |
-| 10 | 3.628.800 | lento (~segundos) |
-| 13 | 6.227.020.800 | muito lento (~horas) |
-| 15 | 1.307.674.368.000 | **trava** |
+| 5  | 120 | instant |
+| 7  | 5,040 | instant |
+| 10 | 3,628,800 | slow (~seconds) |
+| 13 | 6,227,020,800 | very slow (~hours) |
+| 15 | 1,307,674,368,000 | **hangs** |
 
-Para listas com mais de ~10 elementos, o teste simplesmente trava. Isso é um **problema de escalabilidade O(N! × N)**.
+For lists with more than ~10 elements, the test simply hangs. This is an **O(N! × N) scalability problem**.
 
-### Funções envolvidas (ANTES)
+### Functions involved (BEFORE)
 
-| Função | O que fazia |
+| Function | What it did |
 |---|---|
-| `matched-successfully?` | Verificava se o matching foi completo |
-| `residual-matching-weight` | Calculava o peso total dos mismatches restantes |
-| `matches-in-any-order?` | Tentava casar greedy para uma permutação específica |
-| `better-mismatch?` | Comparava qual permutação produzia o melhor relatório de erro |
-| `matched-or-best-matchers` | Função de redução que percorria todas as permutações |
+| `matched-successfully?` | Checked whether the matching was complete |
+| `residual-matching-weight` | Calculated the total weight of remaining mismatches |
+| `matches-in-any-order?` | Attempted a greedy match for a specific permutation |
+| `better-mismatch?` | Compared which permutation produced the best error report |
+| `matched-or-best-matchers` | Reduction function that iterated over all permutations |
 
 ---
 
-## Depois: Bipartite Matching (Algoritmo de Kuhn) + Permutações Restritas
+## After: Bipartite Matching (Kuhn's Algorithm) + Restricted Permutations
 
-### Ideia central
+### Core idea
 
-A nova implementação **separa os dois problemas**:
+The new implementation **separates the two problems**:
 
-1. **Decidir se há match** → Algoritmo de Kuhn (O(N² × M)) — muito mais rápido que N!
-2. **Gerar o relatório de erro** → Permutações, mas apenas sobre um subconjunto pequeno
+1. **Deciding whether there is a match** → Kuhn's algorithm (O(N² × M)) — much faster than N!
+2. **Generating the error report** → Permutations, but only over a small subset
 
-### O que é Bipartite Matching?
+### What is Bipartite Matching?
 
-Imagine dois grupos: matchers de um lado, elementos do outro. Desenhe uma aresta entre matcher `m` e elemento `e` se `m` aceita `e`. O problema é: **existe uma forma de conectar cada matcher a exatamente um elemento (e vice-versa) usando apenas essas arestas?**
+Imagine two groups: matchers on one side, elements on the other. Draw an edge between matcher `m` and element `e` if `m` accepts `e`. The problem is: **is there a way to connect each matcher to exactly one element (and vice-versa) using only those edges?**
 
 ```
-Matchers          Elementos
-    m0 ─── ✓ ──── e0   (m0 aceita e0)
-    m0 ─── ✓ ──── e1   (m0 aceita e1 também)
-    m1 ─── ✓ ──── e1   (m1 aceita e1)
-    m2 ─── ✓ ──── e2   (m2 só aceita e2)
+Matchers          Elements
+    m0 ─── ✓ ──── e0   (m0 accepts e0)
+    m0 ─── ✓ ──── e1   (m0 also accepts e1)
+    m1 ─── ✓ ──── e1   (m1 accepts e1)
+    m2 ─── ✓ ──── e2   (m2 only accepts e2)
 ```
 
-Um **matching** é qualquer conjunto de pares (matcher, elemento) onde cada matcher e cada elemento aparecem no máximo uma vez — sem repetições dos dois lados. O **matching máximo** é o matching com o maior número de pares possível, dado o grafo de compatibilidades.
+A **matching** is any set of (matcher, element) pairs where each matcher and each element appear at most once — no repetitions on either side. The **maximum matching** is the matching with the greatest number of pairs possible given the compatibility graph.
 
-No exemplo acima, há várias formas válidas de parear sem repetição. Listando as principais:
-- `{m0→e0, m1→e1, m2→e2}` — 3 pares ← **matching máximo** (todo matcher emparelhado)
-- `{m1→e1, m2→e2}` — 2 pares (m0 ficou sem par)
-- `{m0→e0, m2→e2}` — 2 pares (m1 ficou sem par)
-- `{m0→e0, m1→e1}` — 2 pares (m2 ficou sem par)
+In the example above, there are several valid ways to pair without repetition:
+- `{m0→e0, m1→e1, m2→e2}` — 3 pairs ← **maximum matching** (every matcher paired)
+- `{m1→e1, m2→e2}` — 2 pairs (m0 left unpaired)
+- `{m0→e0, m2→e2}` — 2 pairs (m1 left unpaired)
+- `{m0→e0, m1→e1}` — 2 pairs (m2 left unpaired)
 
-O algoritmo de Kuhn sempre encontra o matching máximo. Quando esse máximo tem tantos pares quanto matchers, significa que **todo matcher foi emparelhado** — há um match completo.
+Kuhn's algorithm always finds the maximum matching. When that maximum has as many pairs as there are matchers, it means **every matcher was paired** — there is a complete match.
 
-### Etapa 1 — Pré-computar a matriz de resultados
+### Step 1 — Pre-compute the result matrix
 
-Antes de rodar o algoritmo, todos os pares (matcher × elemento) são calculados e armazenados:
+Before running the algorithm, all (matcher × element) pairs are computed and stored:
 
 ```clojure
-;; DEPOIS
+;; AFTER
 (defn- build-match-matrix [matchers elements]
   (mapv (fn [m] (mapv #(match m %) elements)) matchers))
 ```
 
-Resultado: uma matriz `matrix[i][j]` que guarda o resultado de `(match matcher_i element_j)`. Isso evita recalcular o mesmo par múltiplas vezes.
+Result: a matrix `matrix[i][j]` that holds the result of `(match matcher_i element_j)`. This avoids recomputing the same pair multiple times.
 
-### Etapa 2 — Algoritmo de Kuhn (augmenting paths)
+### Step 2 — Kuhn's algorithm (augmenting paths)
 
-O algoritmo de Kuhn encontra o maior matching possível usando o conceito de **caminho aumentante**: se um elemento já está alocado para um matcher, tenta-se realocar esse matcher para outro elemento livre, liberando o original.
+Kuhn's algorithm finds the largest possible matching using the concept of an **augmenting path**: if an element is already assigned to a matcher, it tries to reassign that matcher to another free element, freeing up the original.
 
 ```clojure
-;; DEPOIS
+;; AFTER
 (defn- try-augment [i matrix match-to used]
   (let [n (count (get matrix 0 []))]
     (loop [j 0 match-to match-to used used]
       (cond
-        ;; Esgotou todos os elementos — não achou caminho
+        ;; Exhausted all elements — no path found
         (>= j n)
         [false match-to used]
 
-        ;; Elemento j já foi visitado nesta tentativa, ou matcher i não aceita elemento j
+        ;; Element j was already visited in this attempt, or matcher i doesn't accept element j
         (or (contains? used j)
             (not (indicates-match? (get-in matrix [i j]))))
         (recur (inc j) match-to used)
 
-        ;; Elemento j é candidato — tenta alocar
+        ;; Element j is a candidate — try to assign
         :else
-        (let [used'        (conj used j)          ; marca j como visitado
-              prev         (get match-to j -1)    ; quem está alocado em j agora?
+        (let [used'        (conj used j)          ; mark j as visited
+              prev         (get match-to j -1)    ; who is currently assigned to j?
               [ok? mt' u'] (if (neg? prev)
-                             [true match-to used'] ; j está livre!
-                             (try-augment prev matrix match-to used'))] ; tenta empurrar prev para outro lugar
+                             [true match-to used'] ; j is free!
+                             (try-augment prev matrix match-to used'))] ; try to push prev elsewhere
           (if ok?
-            [true (assoc mt' j i) u'] ; sucesso: aloca i em j
+            [true (assoc mt' j i) u'] ; success: assign i to j
             (recur (inc j) match-to u')))))))
 
 (defn- max-bipartite-matching [matrix]
@@ -210,71 +210,71 @@ O algoritmo de Kuhn encontra o maior matching possível usando o conceito de **c
           (range (count matrix))))
 ```
 
-**Exemplo passo a passo** com `[42 "world" 7] => (m/in-any-order [int? string? 42])`:
+**Step-by-step example** with `[42 "world" 7] => (m/in-any-order [int? string? 42])`:
 
-Os matchers são `[int?, string?, 42]` e os elementos são `[42, "world", 7]`.
-Note que `int?` e `string?` são funções Clojure — automaticamente tratadas como predicate matchers.
+The matchers are `[int?, string?, 42]` and the elements are `[42, "world", 7]`.
+Note that `int?` and `string?` are Clojure functions — automatically treated as predicate matchers.
 
 ```
-Matchers             Elementos
+Matchers             Elements
   m0=int?            e0=42
   m1=string?         e1="world"
   m2=42              e2=7
 
-Matriz de compatibilidade (✓ = aceita, ✗ = rejeita):
+Compatibility matrix (✓ = accepts, ✗ = rejects):
 
               e0=42   e1="world"   e2=7
-m0=int?:       ✓          ✗         ✓      ← int? aceita 42 e 7
-m1=string?:    ✗          ✓         ✗      ← string? só aceita "world"
-m2=42:         ✓          ✗         ✗      ← literal 42 só aceita o valor igual
+m0=int?:       ✓          ✗         ✓      ← int? accepts 42 and 7
+m1=string?:    ✗          ✓         ✗      ← string? only accepts "world"
+m2=42:         ✓          ✗         ✗      ← literal 42 only accepts equal value
 
-Rodando Kuhn (i = índice do matcher):
+Running Kuhn (i = matcher index):
 
  i=0 (int?):
-   j=0 (42): int? aceita 42, e0 está livre → aloca m0→e0
+   j=0 (42): int? accepts 42, e0 is free → assign m0→e0
    match-to: {e0→m0}
 
  i=1 (string?):
-   j=0 (42): string? rejeita 42, pula
-   j=1 ("world"): string? aceita, e1 está livre → aloca m1→e1
+   j=0 (42): string? rejects 42, skip
+   j=1 ("world"): string? accepts, e1 is free → assign m1→e1
    match-to: {e0→m0, e1→m1}
 
  i=2 (42):
-   j=0 (42): literal 42 aceita, mas e0 já está com m0 (int?)
-     → tenta mover m0 para outro lugar (caminho aumentante):
-       j=0 já visitado, pula
-       j=1 ("world"): int? rejeita, pula
-       j=2 (7): int? aceita 7, e2 está livre → move m0 para e2 ✓
-   → agora e0 ficou livre para m2
+   j=0 (42): literal 42 accepts, but e0 is taken by m0 (int?)
+     → try to move m0 elsewhere (augmenting path):
+       j=0 already visited, skip
+       j=1 ("world"): int? rejects, skip
+       j=2 (7): int? accepts 7, e2 is free → move m0 to e2 ✓
+   → e0 is now free for m2
    match-to: {e0→m2, e1→m1, e2→m0}
 
 count(match-to) = 3 = count(matchers) → MATCH ✓
 
-Emparelhamento final: int?→7,  string?→"world",  42→42
+Final pairing: int?→7,  string?→"world",  42→42
 ```
 
-### Etapa 3 — Caminho de mismatch: permutações só onde necessário
+### Step 3 — Mismatch path: permutations only where needed
 
-Quando o bipartite matching não consegue um matching completo, precisamos gerar o melhor relatório de erro. Aqui entram dois conceitos:
+When bipartite matching fails to find a complete matching, we need to generate the best error report. Two concepts come into play here:
 
-#### O `unexpected-matcher`
+#### The `unexpected-matcher`
 
-Antes de rodar o bipartite matching, os dois vetores precisam ter o mesmo tamanho. `normalize-inputs-length` faz esse ajuste:
+Before running bipartite matching, the two sequences must be the same length. `normalize-inputs-length` handles this:
 
 ```clojure
 (defn- normalize-inputs-length [matchers actuals]
   (let [matchers-count (count matchers)
         actuals-count  (count actuals)]
     (if (< actuals-count matchers-count)
-      ;; actual menor: preenche actual com ::missing
+      ;; actual is shorter: pad actual with ::missing
       [matchers
        (take matchers-count (concat actuals (repeat ::missing)))]
-      ;; actual maior: preenche matchers com unexpected-matcher
+      ;; actual is longer: pad matchers with unexpected-matcher
       [(take actuals-count (concat matchers (repeat unexpected-matcher)))
        actuals])))
 ```
 
-Quando `actual` tem **mais** elementos do que `expected`, a função preenche a diferença com instâncias de um sentinel especial:
+When `actual` has **more** elements than `expected`, the function pads the difference with instances of a special sentinel:
 
 ```clojure
 (def ^:private unexpected-matcher
@@ -282,42 +282,42 @@ Quando `actual` tem **mais** elementos do que `expected`, a função preenche a 
     (-match [_this actual]
       {::result/type   :mismatch
        ::result/value  (model/->Unexpected actual)
-       ::result/weight 1})   ; sempre weight=1, independente do elemento
+       ::result/weight 1})   ; always weight=1, regardless of element
     ...))
 ```
 
-**Propriedade chave:** `unexpected-matcher` sempre retorna `weight=1` para qualquer elemento. Isso significa que a ordem em que pareamos os `unexpected-matcher`s com os elementos sobrando **não importa** — qualquer ordem é igualmente ótima.
+**Key property:** `unexpected-matcher` always returns `weight=1` for any element. This means the order in which we pair `unexpected-matcher`s with leftover elements **doesn't matter** — any order is equally optimal.
 
-**Por que o bipartite matching ainda roda mesmo com tamanhos diferentes?**
+**Why does bipartite matching still run even when sizes differ?**
 
-Quando `actual` tem mais elementos que `expected`, o match completo é garantidamente impossível — `unexpected-matcher` nunca produz um match válido, então `count(match-to)` nunca chegará a `n`. Ainda assim, o algoritmo roda porque precisa descobrir **quais** matchers originais casaram, para gerar o relatório de erro mais informativo possível.
+When `actual` has more elements than `expected`, a complete match is guaranteed to be impossible — `unexpected-matcher` never produces a valid match, so `count(match-to)` will never reach `n`. Even so, the algorithm runs because it needs to discover **which** original matchers did match, in order to generate the most informative error report.
 
-Exemplo: `(m/in-any-order [1 2])` contra `[1 2 3]`. Após normalização, `n = 3`.
+Example: `(m/in-any-order [1 2])` against `[1 2 3]`. After normalization, `n = 3`.
 
 ```
               e0=1  e1=2  e2=3
 m0=1:          ✓     ✗     ✗
 m1=2:          ✗     ✓     ✗
-m2=unexpected: ✗     ✗     ✗   ← nunca casa
+m2=unexpected: ✗     ✗     ✗   ← never matches
 ```
 
-O matching encontra `{e0→m0, e1→m1}` — count = 2 ≠ 3, mismatch. Mas sem rodar o matching, não saberíamos que `1` e `2` casaram corretamente e só `3` é inesperado. O diff seria muito mais pobre.
+The matching finds `{e0→m0, e1→m1}` — count = 2 ≠ 3, mismatch. But without running the matching, we wouldn't know that `1` and `2` matched correctly and only `3` is unexpected. The diff would be much less informative.
 
-#### `min-cost-assign`: atribuição ótima para os não-emparelhados
+#### `min-cost-assign`: optimal assignment for unmatched pairs
 
 ```clojure
 (defn- min-cost-assign [unmatched-mi available-ej matrix matchers]
   (let [groups      (group-by #(identical? (nth matchers %) unexpected-matcher) unmatched-mi)
-        regular-mi  (vec (get groups false []))  ; matchers reais não-matched
+        regular-mi  (vec (get groups false []))  ; real unmatched matchers
         extra-mi    (vec (get groups true []))   ; unexpected-matchers
         ejs         (vec available-ej)
         k           (min (count regular-mi) (count ejs))
         regular-ejs (subvec ejs 0 k)
         extra-ejs   (subvec ejs k)]
     (if (zero? k)
-      ;; Só unexpected — pareia linearmente (qualquer ordem é ótima)
+      ;; Only unexpected — pair linearly (any order is optimal)
       (mapv vector extra-mi extra-ejs)
-      ;; Matchers regulares — testa todas as permutações e escolhe a de menor custo
+      ;; Regular matchers — try all permutations and pick the lowest-cost one
       (let [cost (fn [pairs]
                    (reduce (fn [acc [mi ej]]
                              (+ acc (::result/weight (get-in matrix [mi ej]))))
@@ -328,78 +328,155 @@ O matching encontra `{e0→m0, e1→m1}` — count = 2 ≠ 3, mismatch. Mas sem 
               (mapv vector extra-mi extra-ejs))))))
 ```
 
-A separação pelo `identical?` (comparação de referência ao singleton) é crucial: sem ela, casos com muitos `unexpected-matcher`s gerariam fatoriais gigantescos.
+The `identical?` separation (reference comparison against the singleton) is critical: without it, cases with many `unexpected-matcher`s would generate enormous factorials.
 
-### Por que isso não explode?
+### Why doesn't this blow up?
 
-Em casos reais de mismatch, o número de **matchers regulares não-emparelhados** (`k`) é quase sempre pequeno (1-3). Apenas esses passam pelo `perms-of`. Os `unexpected-matcher`s — que podem ser muitos — são pareados em O(N) sem permutações.
+In real mismatch cases, the number of **unmatched regular matchers** (`k`) is almost always small (1-3). Only those go through `perms-of`. The `unexpected-matcher`s — which can be numerous — are paired in O(N) without permutations.
 
 ```
-Antes: N! onde N = todos os matchers (incluindo unexpected)
-Depois: k! onde k = matchers regulares não-matched (k << N)
+Before: N! where N = all matchers (including unexpected)
+After:  k! where k = unmatched regular matchers (k << N)
 ```
 
-### Funções adicionadas (DEPOIS)
+### Functions added (AFTER)
 
-| Função | O que faz |
+| Function | What it does |
 |---|---|
-| `build-match-matrix` | Pré-computa todos os resultados de match(mi, ej) numa matriz |
-| `try-augment` | Tenta encontrar um caminho aumentante no grafo bipartido (Kuhn) |
-| `max-bipartite-matching` | Orquestra o algoritmo de Kuhn sobre todos os matchers |
-| `perms-of` | Gera permutações de um vetor (implementação local, não mais dependência externa) |
-| `min-cost-assign` | Atribui matchers não-matched a elementos não-matched com custo mínimo |
+| `build-match-matrix` | Pre-computes all match(mi, ej) results into a matrix |
+| `try-augment` | Tries to find an augmenting path in the bipartite graph (Kuhn) |
+| `max-bipartite-matching` | Orchestrates Kuhn's algorithm over all matchers |
+| `perms-of` | Generates permutations of a vector (local implementation, no longer an external dependency) |
+| `min-cost-assign` | Assigns unmatched matchers to unmatched elements with minimum cost |
 
-### Funções removidas (DEPOIS)
+### Functions removed (AFTER)
 
-| Função | Substituída por |
+| Function | Replaced by |
 |---|---|
-| `matched-successfully?` | Contagem de `match-to` vs `n` |
-| `residual-matching-weight` | Custo calculado dentro de `min-cost-assign` |
+| `matched-successfully?` | Count of `match-to` vs `n` |
+| `residual-matching-weight` | Cost computed inside `min-cost-assign` |
 | `matches-in-any-order?` | Bipartite matching (`max-bipartite-matching`) |
-| `better-mismatch?` | Função de custo em `min-cost-assign` |
-| `matched-or-best-matchers` | Lógica embutida em `match-all-permutations` |
+| `better-mismatch?` | Cost function in `min-cost-assign` |
+| `matched-or-best-matchers` | Logic embedded in `match-all-permutations` |
 
 ---
 
-## Mudanças em `deps.edn`
+## Changes in `deps.edn`
 
 ```clojure
-;; ANTES: math.combinatorics era dependência de PRODUÇÃO
+;; BEFORE: math.combinatorics was a PRODUCTION dependency
 :deps {org.clojure/clojure              {:mvn/version "1.8.0"}
-       org.clojure/math.combinatorics   {:mvn/version "0.2.0"}}  ; <-- produção
+       org.clojure/math.combinatorics   {:mvn/version "0.2.0"}}  ; <-- production
 
-;; DEPOIS: math.combinatorics movida para dependência de DEV (só para testes)
+;; AFTER: math.combinatorics moved to DEV dependency (tests only)
 :deps {org.clojure/clojure {:mvn/version "1.8.0"}}
 
 :aliases
   {:dev
    {:extra-deps {org.clojure/test.check         {:mvn/version "1.1.1"}
                  midje/midje                    {:mvn/version "1.10.9"}
-                 org.clojure/math.combinatorics {:mvn/version "0.2.0"}}}} ; <-- só em dev/test
+                 org.clojure/math.combinatorics {:mvn/version "0.2.0"}}}} ; <-- dev/test only
 ```
 
-A dependência ainda existe, mas agora **apenas nos testes** — onde `combo/permutations` é usada para gerar casos de teste, não para o algoritmo em si.
+The dependency still exists, but now **only in tests** — where `combo/permutations` is used to generate test cases, not as part of the algorithm itself.
 
 ---
 
-## Comparação de Complexidade
+## Complexity Comparison
 
-| Cenário | Antes | Depois |
+| Scenario | Before | After |
 |:---|:---:|:---:|
-| Match encontrado, N elementos | O(N! × N) | O(N² × M) |
-| Mismatch, k matchers regulares | O(N! × N) | O(k! × k), k ≪ N |
-| Mismatch com muitos `unexpected` | O(N! × N) | O(N) para unexpected + O(k!) para regulares |
-| 7 elementos, match | ~35.000 operações | ~49 operações |
-| 10 elementos, match | ~36 milhões de operações | ~100 operações |
-| 15 elementos, 2 expected | ~1,3 trilhão (trava) | O(1) |
+| Match found, N elements | O(N! × N) | O(N² × M) |
+| Mismatch, k regular matchers | O(N! × N) | O(k! × k), k ≪ N |
+| Mismatch with many `unexpected` | O(N! × N) | O(N) for unexpected + O(k!) for regular |
+| 7 elements, match | ~35,000 operations | ~49 operations |
+| 10 elements, match | ~36 million operations | ~100 operations |
+| 15 elements, 2 expected | ~1.3 trillion (hangs) | O(1) |
 
 ---
 
-## Testes que Provam a Correção
+## Known Trade-offs
 
-### 1. Match com o menor número de erros possível
+### Constant overhead for small N
 
-**Arquivo:** `test/clj/matcher_combinators/matchers_test.clj` — `deftest in-any-order`
+`build-match-matrix` always computes **all pairs** (matcher × element) before running Kuhn — even when a complete match could be confirmed with fewer operations.
+
+```clojure
+;; matrix[i][j] = result of match(matcher_i, element_j)
+;; For N=3, this is always 9 operations — no shortcut
+(defn- build-match-matrix [matchers elements]
+  (mapv (fn [m] (mapv #(match m %) elements)) matchers))
+```
+
+**Comparison with the previous algorithm for `(in-any-order [1 2 3])` vs `[1 2 3]` (same order):**
+
+| Algorithm | Operations in best case |
+|:---|:---:|
+| Before (permutations) | 3 — identity permutation is tried first and matches immediately |
+| After (bipartite) | 9 — full matrix always computed before Kuhn |
+
+**For N ≥ 7 with any ordering**, the new algorithm is already much faster. The overhead is only observable for N ≤ 5 and only when elements are already in the "right" order — an atypical scenario for `in-any-order`, which exists precisely for cases where order is not guaranteed.
+
+**Why not implement two strategies (≤ 3 uses permutations, > 3 uses bipartite)?**
+
+Not worth it. The gain would be imperceptible in absolute terms (nanoseconds for N ≤ 5) and would add maintenance complexity: two code paths to test, document, and evolve. The right cutoff point would also be arbitrary.
+
+### Non-global optimality of the error diff
+
+Kuhn finds the matching with **maximum cardinality** — the greatest number of (matcher, element) pairs where all matchers pass. It does not guarantee that its choice minimizes the total diff cost when multiple maximum matchings exist.
+
+**Example where Kuhn may make a suboptimal choice:**
+
+```
+Matchers          Elements
+  m0               e0   e1
+  m1               e2
+
+  match(m0, e0) = MATCH   match(m0, e1) = MATCH
+  match(m1, e0) = MATCH   match(m1, e2) = MISMATCH (weight=5)
+  match(m1, e1) = MISMATCH (weight=1)
+```
+
+Two maximum matchings of size 1 are possible for m0: `{m0→e0}` or `{m0→e1}`. Depending on which Kuhn picks, the element left for `min-cost-assign` to pair with m1 will differ:
+
+- If Kuhn picks `{m0→e0}` → m1 is left with e1 and e2 → `min-cost-assign` picks e1 (weight=1) ✓
+- If Kuhn picks `{m0→e1}` → m1 is left with e0 and e2 → `min-cost-assign` picks e0 (weight=5) — noisier diff
+
+`min-cost-assign` is optimal **given** the matching Kuhn already fixed, but cannot correct a poor choice made earlier.
+
+**Why accept this limitation?**
+
+The globally optimal algorithm for this problem would be the **Hungarian algorithm** (minimum-cost matching), with O(N³) complexity. For a test matcher, a slightly suboptimal diff in rare cases does not justify the additional complexity. In practice, the problematic scenario — multiple maximum matchings where choices significantly affect the diff — is uncommon.
+
+### Changed mismatch diff for `embeds` with extra elements
+
+When `embeds` fails and `actual` has **more elements than `expected`**, the error report behavior changed.
+
+**Before:** the diff included all elements of `actual` — unmatched ones appeared marked as `Unexpected`.
+
+**After:** the diff shows only the elements paired with matchers (one per matcher). Extra `actual` elements do not appear in the diff.
+
+```clojure
+;; (m/embeds [(m/equals 1) (m/equals 5)]) against [1 2 3]
+
+;; BEFORE: 3 elements in the diff
+;; [1, Mismatch(5 ≠ 2), Unexpected(3)]
+
+;; AFTER: 2 elements in the diff (one per matcher)
+;; [1, Mismatch(5 ≠ 2)]
+```
+
+**Why does this change happen?** `res-elements` in `match-all-permutations` is built with exactly `n` elements — one per matcher. Elements of `actual` that were not assigned to any matcher simply don't enter `res-elements`.
+
+**Is this better or worse?** For `embeds`, extra elements in `actual` are semantically accepted — so marking them as `Unexpected` in the diff was conceptually incorrect. The new behavior is more correct. The downside is that it hides context about which extra elements exist in `actual`, which may make debugging harder in some cases.
+
+---
+
+## Tests That Prove Correctness
+
+### 1. Match with the fewest possible errors
+
+**File:** `test/clj/matcher_combinators/matchers_test.clj` — `deftest in-any-order`
 
 ```clojure
 (testing "always prints the match with the fewest number of matchers that don't match"
@@ -408,21 +485,21 @@ A dependência ainda existe, mas agora **apenas nos testes** — onde `combo/per
                    (combo/permutations [1 2 3 500])))))
 ```
 
-Este teste gera **todas as permutações** de `[1 2 3 500]` e verifica que, para qualquer ordem de entrada, o relatório de erro mostra **exatamente 1 elemento errado** (o `500`). Se o algoritmo emparelhasse de forma subótima, poderia mostrar 2 ou mais diferenças.
+This test generates **all permutations** of `[1 2 3 500]` and verifies that, for any input ordering, the error report shows **exactly 1 wrong element** (the `500`). If the algorithm paired suboptimally, it could show 2 or more differences.
 
-### 2. Atribuição ótima de custo mínimo no mismatch
+### 2. Minimum-cost assignment in the mismatch path
 
-**Arquivo:** `test/clj/matcher_combinators/matchers_test.clj` — `deftest ordering`
+**File:** `test/clj/matcher_combinators/matchers_test.clj` — `deftest ordering`
 
 ```clojure
-;; Matriz de pesos para in-any-order [{:a 1} {:a 1 :b 2}] vs [{:a 2} {:b 2}]:
+;; Weight matrix for in-any-order [{:a 1} {:a 1 :b 2}] vs [{:a 2} {:b 2}]:
 ;;
 ;;              {:a 2}  {:b 2}
-;;  {:a 1}       w=1     w=1    ← falta :a
-;;  {:a 1,:b 2}  w=2     w=1    ← :a errado + :b falta  vs  só :a falta
+;;  {:a 1}       w=1     w=1    ← :a missing
+;;  {:a 1,:b 2}  w=2     w=1    ← :a wrong + :b missing  vs  only :a missing
 ;;
-;; Ótimo: {:a 1}→{:b 2}, {:a 1 :b 2}→{:a 2}  (custo total = 2)
-;; Greedy simples daria: {:a 1}→{:a 2}, {:a 1 :b 2}→{:b 2}  (custo total = 3)
+;; Optimal: {:a 1}→{:b 2}, {:a 1 :b 2}→{:a 2}  (total cost = 2)
+;; Simple greedy would give: {:a 1}→{:a 2}, {:a 1 :b 2}→{:b 2}  (total cost = 3)
 
 (is (every? one-mismatch?
             (->> [{:a 2} {:b 2}]
@@ -431,27 +508,27 @@ Este teste gera **todas as permutações** de `[1 2 3 500]` e verifica que, para
                  (map vals))))
 ```
 
-Verifica que `min-cost-assign` escolhe a atribuição de **menor custo total**, não apenas a primeira que encontra.
+Verifies that `min-cost-assign` picks the **lowest total cost** assignment, not just the first one it finds.
 
-### 3. Lista grande que travava antes
+### 3. Large list that used to hang
 
-**Arquivo:** `test/clj/matcher_combinators/midje_test.clj` — `big-list`
+**File:** `test/clj/matcher_combinators/midje_test.clj` — `big-list`
 
 ```clojure
 (def big-list [[:abc #{1}]
                [:xyz #{2 3 4 5 6 7}]
                [:def #{5 6}]
                [:ghi #{9 10 8 11 1}]
-               [:jkl #{9 2 3 4 12 5 10 13 6 14 15 16 17 7 8 11 1}]])  ; set com 17 elementos
+               [:jkl #{9 2 3 4 12 5 10 13 6 14 15 16 17 7 8 11 1}]])  ; set with 17 elements
 
 big-list =not=> (match (m/embeds [[:jkl #{1 2}]]))
 ```
 
-O `:jkl` tem um set de 17 elementos. Com o algoritmo antigo, `normalize-inputs-length` adicionaria 15 `unexpected-matcher`s → `perms-of(15)` → **15! ≈ 1,3 trilhão de permutações** → processo trava. Com o novo algoritmo, os 15 `unexpected-matcher`s são separados e pareados em O(N). Executa em milissegundos.
+`:jkl` has a set of 17 elements. With the old algorithm, `normalize-inputs-length` would add 15 `unexpected-matcher`s → `perms-of(15)` → **15! ≈ 1.3 trillion permutations** → process hangs. With the new algorithm, the 15 `unexpected-matcher`s are separated and paired in O(N). Runs in milliseconds.
 
-### 4. Matches com 7 a 10 elementos
+### 4. Matches with 7 to 10 elements
 
-**Arquivo:** `test/clj/matcher_combinators/midje_test.clj` — `facts "test large-ish in-any-order matches"`
+**File:** `test/clj/matcher_combinators/midje_test.clj` — `facts "test large-ish in-any-order matches"`
 
 ```clojure
 (fact "10 items"
@@ -459,24 +536,24 @@ O `:jkl` tem um set de 17 elementos. Com o algoritmo antigo, `normalize-inputs-l
   => (match (m/in-any-order ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"])))
 ```
 
-Antes: 10! = 3.628.800 permutações. Depois: bipartite matching termina em ~100 operações.
+Before: 10! = 3,628,800 permutations. After: bipartite matching finishes in ~100 operations.
 
-### 5. Paridade com o matcher nativo do Midje
+### 5. Parity with Midje's native matcher
 
-**Arquivo:** `test/clj/matcher_combinators/midje_test.clj` — `fact "Find optimal in-any-order matching just like midje"`
+**File:** `test/clj/matcher_combinators/midje_test.clj` — `fact "Find optimal in-any-order matching just like midje"`
 
 ```clojure
-[1 3] => (midje/just [odd? 1] :in-any-order)         ; comportamento referência (Midje)
+[1 3] => (midje/just [odd? 1] :in-any-order)         ; reference behavior (Midje)
 
-{:a [1 3]} => (match (m/equals {:a (m/in-any-order [odd? 1])}))  ; deve ser igual
-{:a [1 3]} => (match (m/equals {:a (m/in-any-order [1 odd?])}))  ; ordem do expected não importa
+{:a [1 3]} => (match (m/equals {:a (m/in-any-order [odd? 1])}))  ; must be equal
+{:a [1 3]} => (match (m/equals {:a (m/in-any-order [1 odd?])}))  ; expected order doesn't matter
 ```
 
-Garante que o novo algoritmo produz exatamente o mesmo resultado que o matcher `:in-any-order` nativo do Midje.
+Ensures the new algorithm produces exactly the same result as Midje's native `:in-any-order` matcher.
 
-### 6. Testes de unidade do core (casos de borda)
+### 6. Core unit tests (edge cases)
 
-**Arquivo:** `test/clj/matcher_combinators/core_test.clj`
+**File:** `test/clj/matcher_combinators/core_test.clj`
 
 ```clojure
 (let [matchers [(pred-matcher odd?) (pred-matcher even?)]]
@@ -491,21 +568,21 @@ Garante que o novo algoritmo produz exatamente o mesmo resultado que o matcher `
                 (#'core/match-any-order matchers [5] true)))))
 ```
 
-> **Sobre os testes removidos:** O refactor eliminou `matches-in-any-order?`, então os unit tests que testavam essa função diretamente foram deletados — não há como mantê-los sem a função. Eram 3 grupos:
+> **On removed tests:** The refactor removed `matches-in-any-order?`, so unit tests that tested that function directly were deleted — there is no way to keep them without the function. They covered 3 groups:
 >
-> | Comportamento removido | Cobertura restante |
+> | Removed behavior | Remaining coverage |
 > |---|---|
-> | Mais matchers que elementos (`subset=false`) | `core_test.clj:382–386` (`match-any-order` direto) + `core_test.clj:275–278` (integração) |
-> | Mais matchers que elementos (`subset=true`) | `core_test.clj:387–390` (`match-any-order` direto, mantido) |
-> | Subset com mais elementos que matchers (match) | `midje_test.clj:125` — `[5 1 4 2] => (match (m/embeds [odd? even?]))` |
-> | Subset com elemento ausente (mismatch) | `midje_test.clj:126` — `[5 1 4 2] =not=> (match (m/embeds [5 1 4 2 6]))` |
-> | Matchers idênticos | `core_test.clj:263–267` — `in-any-order [(equals 2) (equals 2)]` vs `[2 2]` |
+> | More matchers than elements (`subset=false`) | `core_test.clj:382–386` (direct `match-any-order`) + `core_test.clj:275–278` (integration) |
+> | More matchers than elements (`subset=true`) | `core_test.clj:387–390` (direct `match-any-order`, kept) |
+> | Subset with more elements than matchers (match) | `midje_test.clj:125` — `[5 1 4 2] => (match (m/embeds [odd? even?]))` |
+> | Subset with missing element (mismatch) | `midje_test.clj:126` — `[5 1 4 2] =not=> (match (m/embeds [5 1 4 2 6]))` |
+> | Identical matchers | `core_test.clj:263–267` — `in-any-order [(equals 2) (equals 2)]` vs `[2 2]` |
 >
-> As remoções são seguras: os comportamentos continuam cobertos em nível de integração, que é o nível correto para um algoritmo refatorado. O teste de regressão mais crítico — `big-list` no `midje_test.clj` — prova que o cenário que travava antes (17 `unexpected-matcher`s) agora executa corretamente.
+> The removals are safe: the behaviors remain covered at the integration level, which is the correct level for a refactored algorithm. The most critical regression test — `big-list` in `midje_test.clj` — proves that the scenario that used to hang (17 `unexpected-matcher`s) now executes correctly.
 
 ---
 
-## Resultado Final
+## Final Results
 
 ```
 clj-test  → 76 tests,  0 failures, 0 errors  ✓
