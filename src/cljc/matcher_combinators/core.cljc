@@ -270,9 +270,9 @@
     (-matcher-for [this _] this)
     (-match [_this actual]
       {::result/type   :match
-       ::result/value  actual
+       ::result/value  (model/->Extra actual)
        ::result/weight 0})
-    (-base-name [_] 'pass-through)))
+    (-base-name [_] 'extra)))
 
 (defrecord ViaMatcher [transform-actual-fn expected]
     Matcher
@@ -409,14 +409,17 @@
                    (reduce (fn [best a] (if (< (cost a) (cost best)) a best))))
               (mapv vector extra-mi extra-ejs))))))
 
+(defn- matchers+elems-for-subset [expected elements]
+  (let [n (count expected)
+        m (count elements)]
+    [(vec expected)
+     (vec (if (>= m n)
+            elements
+            (take n (concat elements (repeat ::missing)))))]))
+
 (defn- match-all-permutations [expected elements subset?]
   (let [[matchers elems] (if subset?
-                           (let [n (count expected)
-                                 m (count elements)]
-                             [(vec expected)
-                              (vec (if (>= m n)
-                                     elements
-                                     (take n (concat elements (repeat ::missing)))))])
+                           (matchers+elems-for-subset expected elements)
                            (mapv vec (normalize-inputs-length expected elements)))
         n        (count matchers)
         matrix   (build-match-matrix matchers elems)

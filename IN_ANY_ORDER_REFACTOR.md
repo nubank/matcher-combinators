@@ -370,23 +370,25 @@ When `embeds` fails and `actual` has more elements than `expected`, elements not
   (reify Matcher
     (-match [_this actual]
       {::result/type   :match
-       ::result/value  actual
-       ::result/weight 0})   ; weight=0, element appears as-is
+       ::result/value  (model/->Extra actual)
+       ::result/weight 0})   ; weight=0, annotated as Extra
     ...))
 ```
 
-Unlike `unexpected-matcher` (which marks an element as wrong with weight=1), `pass-through-matcher` treats the element as **present-but-unchecked** — weight=0, no error annotation. This preserves debugging context without incorrectly flagging extra elements as `Unexpected`.
+Unlike `unexpected-matcher` (which marks an element as wrong with weight=1), `pass-through-matcher` treats the element as **present-but-unchecked** — weight=0, annotated with `model/->Extra` so it appears as `(extra <value>)` in the diff. This distinguishes it visually from elements that genuinely passed a matcher, without incorrectly flagging it as `Unexpected`.
+
+The old algorithm (permutations) used `unexpected-matcher` for extras in `embeds` too, which was semantically wrong: it marked valid extra elements as errors with weight=1, inflating the mismatch cost. The `pass-through-matcher` fixes that while preserving the visual indication that those elements were not verified.
 
 ```clojure
 ;; (m/embeds [(m/equals 1) (m/equals 5)]) against [1 2 3]
 
-;; BEFORE (permutation algorithm): 3 elements, extra marked as Unexpected
+;; BEFORE (permutation algorithm): extra wrongly marked as Unexpected (weight=1)
 ;; [1, Mismatch(5 ≠ 2), Unexpected(3)]
 
-;; AFTER (bipartite + pass-through): 3 elements, extra shown as-is
-;; [1, Mismatch(5 ≠ 2), 3]
-;;  ↑        ↑           ↑
-;; match  mismatch   pass-through (present, not an error)
+;; AFTER (bipartite + pass-through): extra annotated as Extra (weight=0)
+;; [1, Mismatch(5 ≠ 2), Extra(3)]
+;;  ↑        ↑            ↑
+;; match  mismatch   present but not checked (not an error)
 ```
 
 #### `min-cost-assign`: optimal assignment for unmatched pairs
@@ -434,7 +436,7 @@ After:  k! where k = unmatched regular matchers (k << N)
 | `max-bipartite-matching` | Orchestrates Kuhn's algorithm over all matchers |
 | `perms-of` | Generates permutations of a vector (local implementation, no longer an external dependency) |
 | `min-cost-assign` | Assigns unmatched matchers to unmatched elements with minimum cost |
-| `pass-through-matcher` | Sentinel for extra elements in `embeds` mismatches: returns `:match` with weight=0, making extra `actual` elements visible in the diff without an error marker |
+| `pass-through-matcher` | Sentinel for extra elements in `embeds` mismatches: returns `:match` with weight=0 and value `(model/->Extra actual)`, making extra elements visible in the diff as `(extra <value>)` — present but unchecked, not an error |
 
 ### Functions removed (AFTER)
 
@@ -647,10 +649,23 @@ Ensures the new algorithm produces exactly the same result as Midje's native `:i
 
 ---
 
+## Model changes
+
+`model.cljc` gained one new record type:
+
+```clojure
+(defrecord Extra [actual])
+```
+
+Used exclusively by `pass-through-matcher` to annotate extra elements in `embeds` mismatches. Rendered by `printer.cljc` as `(extra <value>)` — no color, since it is not an error.
+
+`Extra` is intentionally absent from `complete-mismatch?` and `mismatch+?` in the printer: in abbreviated output mode (`*use-abbreviation* = true`), extra elements are filtered out because they are not failures.
+
+---
+
 ## Final Results
 
 ```
-clj-test  → 76 tests,  0 failures, 0 errors  ✓
-midje     → 117 checks, 0 failures            ✓
-test:node → 8 tests,  23 assertions, 0 errors ✓
+clj-test  → 48 tests,  182 assertions, 0 failures, 0 errors  ✓
+midje     → 117 checks, 0 failures                            ✓
 ```

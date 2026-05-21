@@ -5,6 +5,7 @@
             [matcher-combinators.core :as core]
             #?(:clj  [matcher-combinators.model]
                :cljs [matcher-combinators.model :refer [ExpectedMismatch
+                                                        Extra
                                                         Mismatch
                                                         Missing
                                                         Unexpected
@@ -14,7 +15,7 @@
             [clojure.walk :as walk]
             [matcher-combinators.ansi-color :as ansi-color])
   #?(:clj
-     (:import [matcher_combinators.model ExpectedMismatch Mismatch Missing
+     (:import [matcher_combinators.model ExpectedMismatch Extra Mismatch Missing
                Unexpected TypeMismatch InvalidMatcherContext InvalidMatcherType])))
 
 (defrecord ColorTag [color expression])
@@ -34,6 +35,9 @@
 
 (defmethod markup-expression Missing [missing]
   (list 'missing (->ColorTag :red (:expected missing))))
+
+(defmethod markup-expression Extra [extra]
+  (list 'extra (:actual extra)))
 
 (defmethod markup-expression Unexpected [unexpected]
   (list 'unexpected (->ColorTag :red (:actual unexpected))))

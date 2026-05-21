@@ -7,3 +7,4 @@
 (defrecord InvalidMatcherType [provided expected-type-msg])
 (defrecord InvalidMatcherContext [message])
 (defrecord TypeMismatch [expected actual])
+(defrecord Extra [actual])

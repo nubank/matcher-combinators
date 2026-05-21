@@ -458,7 +458,7 @@
     ;; The diff shows all 3 elements: matched elements show mismatches as usual,
     ;; extra elements appear as-is (without Unexpected marker) since embeds allows them.
     (is (= {::result/type   :mismatch
-            ::result/value  [1 (model/->Mismatch 5 2) 3]
+            ::result/value  [1 (model/->Mismatch 5 2) (model/->Extra 3)]
             ::result/weight 1}
            (core/match (matchers/embeds [(matchers/equals 1) (matchers/equals 5)]) [1 2 3]))))
 
