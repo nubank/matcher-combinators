@@ -81,6 +81,26 @@
                        ::result/value
                        (map vals)))))))
 
+(deftest greedy-fallback-for-large-k
+  ;; When k (unmatched regular matchers after Kuhn) exceeds max-perm-k=8,
+  ;; min-cost-assign falls back to greedy (index-order) instead of k! permutations.
+  ;; Realistic trigger: a migration changes a shared field across all records —
+  ;; every matcher fails bipartite matching, so k = N.
+  (let [n        9                                               ; k=9 > max-perm-k=8
+        expected (mapv (fn [i] {:a (* i 2) :b i}) (range n))   ; :a even,  :b = index
+        ordered  (mapv (fn [i] {:a (inc (* i 2)) :b i}) (range n)) ; :a odd, :b same
+        reversed (vec (rseq ordered))]
+
+    (testing "actual in same order: greedy pairs by index — each entry shows only :a mismatch"
+      (is (every? one-mismatch?
+                  (map vals (::result/value (c/match (m/in-any-order expected) ordered))))))
+
+    (testing "actual in different order: greedy fallback completes but pairs suboptimally"
+      (let [result (c/match (m/in-any-order expected) reversed)]
+        (is (= :mismatch (::result/type result)))
+        (is (= n (count (::result/value result))))
+        (is (not (every? one-mismatch? (map vals (::result/value result)))))))))
+
 (deftest regex-matching
   (is (match? {::result/type   :match
                ::result/value  {:one "1"}

@@ -387,6 +387,12 @@
           p (perms-of (into (subvec v 0 i) (subvec v (inc i))))]
       (into [(nth v i)] p))))
 
+(def ^:private max-perm-k
+  ;; Measured on JVM (Apple M-series): k=8 → ~120ms avg on failure path.
+  ;; k=9 → ~2s, k=10 → ~27s. Above this threshold we fall back to greedy:
+  ;; diff is real but not guaranteed minimum-cost. Acceptable cost for a failing test.
+  8)
+
 (defn- min-cost-assign [unmatched-mi available-ej matrix matchers]
   ;; unexpected-matchers always return weight=1 regardless of element, so their
   ;; assignment order doesn't affect optimality — pair them with leftover elements.
@@ -404,9 +410,11 @@
                    (reduce (fn [acc [mi ej]]
                              (+ acc (::result/weight (get-in matrix [mi ej]))))
                            0 pairs))]
-        (into (->> (perms-of regular-ejs)
-                   (map (fn [perm] (mapv vector regular-mi perm)))
-                   (reduce (fn [best a] (if (< (cost a) (cost best)) a best))))
+        (into (if (> k max-perm-k)
+                (mapv vector regular-mi regular-ejs)
+                (->> (perms-of regular-ejs)
+                     (map (fn [perm] (mapv vector regular-mi perm)))
+                     (reduce (fn [best a] (if (< (cost a) (cost best)) a best)))))
               (mapv vector extra-mi extra-ejs))))))
 
 (defn- matchers+elems-for-subset [expected elements]

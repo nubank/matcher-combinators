@@ -475,9 +475,9 @@ The dependency still exists, but now **only in tests** — where `combo/permutat
 
 | Scenario | Before | After |
 |:---|:---:|:---:|
-| Match found, N elements | O(N! × N) | O(N² × M) |
-| Mismatch, k regular matchers | O(N! × N) | O(N² × M) matching + O(k! × k), k ≪ N |
-| Mismatch with many `unexpected` | O(N! × N) | O(N² × M) matching + O(k!) for k regular matchers |
+| Match found, N elements | O(N! × N) | O(N × M) |
+| Mismatch, k regular matchers | O(N! × N) | O(N × M) matching + O(k! × k), k ≪ N |
+| Mismatch with many `unexpected` | O(N! × N) | O(N × M) matching + O(k!) for k regular matchers |
 | 7 elements, match | ~35,000 ops | ~75 ops (49 matrix + ~26 Kuhn) |
 | 10 elements, match | ~36 million ops | ~150 ops (100 matrix + ~55 Kuhn) |
 | 15 elements, 2 expected | ~1.3 trillion (hangs) | ~300 ops (225 matrix + Kuhn + O(2!) for 2 unmatched) |
@@ -509,6 +509,31 @@ The dependency still exists, but now **only in tests** — where `combo/permutat
 **Why not implement two strategies (≤ 5 uses permutations, > 5 uses bipartite)?**
 
 Not worth it. The gain would be imperceptible in absolute terms (nanoseconds for N ≤ 5) and would add maintenance complexity: two code paths to test, document, and evolve. The right cutoff point would also be arbitrary.
+
+### Greedy fallback when k exceeds the permutation threshold
+
+`min-cost-assign` exhausts all `k!` permutations of unmatched regular matchers to find the minimum-cost pairing. For large `k` this becomes prohibitively slow:
+
+| k | k! permutations | measured avg (JVM, Apple M-series) |
+|:--:|---:|:---:|
+| 6 | 720 | ~2ms |
+| 7 | 5,040 | ~14ms |
+| 8 | 40,320 | ~120ms |
+| 9 | 362,880 | ~2s |
+| 10 | 3,628,800 | ~27s |
+
+When `k > max-perm-k` (currently 8), `min-cost-assign` falls back to **greedy assignment** — pairs matchers with elements by index order, no permutations. 120ms on the failure path is acceptable; 2s+ is not.
+
+**Realistic trigger:** a migration that changes a shared field (e.g., `:a`) across all records. Every matcher fails bipartite matching because no matcher accepts any element → `k = N`.
+
+**What the user sees:**
+
+- **Actual in same order as expected:** greedy pairs by index, which coincides with the optimal pairing. Each entry shows only the changed field — clean diff.
+- **Actual in different order:** greedy may pair wrong maps together, producing a noisier diff with more apparent mismatches per entry than the true minimum. The values shown are real — no invented data — but the pairing is suboptimal.
+
+Better a suboptimal diff than a hang.
+
+---
 
 ### Non-global optimality of the error diff
 
