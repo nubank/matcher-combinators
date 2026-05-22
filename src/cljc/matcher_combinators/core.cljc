@@ -393,9 +393,14 @@
   ;; diff is real but not guaranteed minimum-cost. Acceptable cost for a failing test.
   8)
 
+(defn- pairing-cost [pairs matrix]
+  (reduce (fn [acc [mi ej]]
+            (+ acc (::result/weight (get-in matrix [mi ej]))))
+          0 pairs))
+
 (defn- min-cost-assign [unmatched-mi available-ej matrix matchers]
   ;; unexpected-matchers always return weight=1 regardless of element, so their
-  ;; assignment order doesn't affect optimality — pair them with leftover elements.
+  ;; assignment order doesn't affect optimality. Pair them with leftover elements.
   ;; Only regular matchers need optimal (min-cost) assignment via perms-of.
   (let [groups      (group-by #(identical? (nth matchers %) unexpected-matcher) unmatched-mi)
         regular-mi  (vec (get groups false []))
@@ -406,16 +411,15 @@
         extra-ejs   (subvec ejs k)]
     (if (zero? k)
       (mapv vector extra-mi extra-ejs)
-      (let [cost (fn [pairs]
-                   (reduce (fn [acc [mi ej]]
-                             (+ acc (::result/weight (get-in matrix [mi ej]))))
-                           0 pairs))]
-        (into (if (> k max-perm-k)
-                (mapv vector regular-mi regular-ejs)
-                (->> (perms-of regular-ejs)
-                     (map (fn [perm] (mapv vector regular-mi perm)))
-                     (reduce (fn [best a] (if (< (cost a) (cost best)) a best)))))
-              (mapv vector extra-mi extra-ejs))))))
+      (into (if (> k max-perm-k)
+              (mapv vector regular-mi regular-ejs)
+              (->> (perms-of regular-ejs)
+                   (map (fn [perm] (mapv vector regular-mi perm)))
+                   (reduce (fn [best current]
+                             (if (< (pairing-cost current matrix) (pairing-cost best matrix))
+                               current
+                               best)))))
+            (mapv vector extra-mi extra-ejs)))))
 
 (defn- matchers+elems-for-subset [expected elements]
   (let [n (count expected)
@@ -425,40 +429,42 @@
             elements
             (take n (concat elements (repeat ::missing)))))]))
 
-(defn- match-all-permutations [expected elements subset?]
+(defn- build-mismatch-result [matchers elems match-to matrix subset?]
+  (let [mi->ei       (into {} (map (fn [[ei mi]] [mi ei]) match-to))
+        matched-eis  (set (keys match-to))
+        matched-mis  (set (vals match-to))
+        unmatched-mi (remove matched-mis (range (count matchers)))
+        unmatched-ei (remove matched-eis (range (count elems)))
+        all-mi->ei   (into mi->ei (min-cost-assign unmatched-mi unmatched-ei matrix matchers))
+        truly-extra  (when subset?
+                       (remove (set (vals all-mi->ei)) (range (count elems))))
+        ordered-mi   (sort (keys all-mi->ei))
+        res-matchers (into (mapv #(get matchers %) ordered-mi)
+                           (repeat (count truly-extra) pass-through-matcher))
+        res-elements (into (mapv #(get elems (get all-mi->ei %)) ordered-mi)
+                           (mapv #(get elems %) truly-extra))]
+    (update (match (->EqualsSeq res-matchers) res-elements)
+            ::result/value
+            #(with-mismatch-meta % :mismatch-sequence))))
+
+(defn- find-optimal-match [expected elements subset?]
   (let [[matchers elems] (if subset?
                            (matchers+elems-for-subset expected elements)
                            (mapv vec (normalize-inputs-length expected elements)))
-        n        (count matchers)
         matrix   (build-match-matrix matchers elems)
         match-to (max-bipartite-matching matrix)]
-    (if (= (count match-to) n)
+    (if (= (count match-to) (count matchers))
       {::result/type   :match
        ::result/value  elements
        ::result/weight 0}
-      (let [mi->ej       (into {} (map (fn [[ej mi]] [mi ej]) match-to))
-            matched-ejs  (set (keys match-to))
-            matched-mis  (set (vals match-to))
-            unmatched-mi (remove matched-mis (range n))
-            unmatched-ej (remove matched-ejs (range (count elems)))
-            all-mi->ej   (into mi->ej (min-cost-assign unmatched-mi unmatched-ej matrix matchers))
-            truly-extra  (when subset?
-                           (remove (set (vals all-mi->ej)) (range (count elems))))
-            ordered-mi   (sort (keys all-mi->ej))
-            res-matchers (into (mapv #(get matchers %) ordered-mi)
-                               (repeat (count truly-extra) pass-through-matcher))
-            res-elements (into (mapv #(get elems (get all-mi->ej %)) ordered-mi)
-                               (mapv #(get elems %) truly-extra))]
-        (update (match (->EqualsSeq res-matchers) res-elements)
-                ::result/value
-                #(with-mismatch-meta % :mismatch-sequence))))))
+      (build-mismatch-result matchers elems match-to matrix subset?))))
 
 (defn- match-any-order [expected actual subset?]
   (if-not (sequential? actual)
     {::result/type   :mismatch
      ::result/value  (model/->Mismatch expected actual)
      ::result/weight 1}
-    (match-all-permutations expected actual subset?)))
+    (find-optimal-match expected actual subset?)))
 
 (defrecord InAnyOrder [expected]
   Matcher

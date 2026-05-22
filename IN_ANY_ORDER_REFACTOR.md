@@ -418,6 +418,117 @@ The old algorithm (permutations) used `unexpected-matcher` for extras in `embeds
 
 The `identical?` separation (reference comparison against the singleton) is critical: without it, cases with many `unexpected-matcher`s would generate enormous factorials.
 
+#### Step-by-step example — `embeds` with two mismatches and three extras
+
+**Input:** `(m/embeds [[:a 1] [:b 2] [:c 3]])` against `[[:a 1] [:b 3] [:c 4] [:d 5] [:e 6] [:f 7]]`
+
+```
+matchers = [[:a 1], [:b 2], [:c 3]]          n = 3
+elems    = [[:a 1], [:b 3], [:c 4], [:d 5], [:e 6], [:f 7]]   m = 6
+```
+
+Since `m >= n`, `matchers+elems-for-subset` does not pad — matchers and elems stay as-is.
+
+**Compatibility matrix** (✓ = value equality match):
+
+```
+             e0=[:a 1]  e1=[:b 3]  e2=[:c 4]  e3=[:d 5]  e4=[:e 6]  e5=[:f 7]
+m0=[:a 1]:      ✓           ✗          ✗          ✗          ✗          ✗
+m1=[:b 2]:      ✗           ✗          ✗          ✗          ✗          ✗    ← 2≠3, matches nothing
+m2=[:c 3]:      ✗           ✗          ✗          ✗          ✗          ✗    ← 3≠4, matches nothing
+```
+
+**Kuhn's algorithm** assigns only `m0→e0`. `count(match-to) = 1 ≠ n = 3` → mismatch.
+
+---
+
+**Back in `match-all-permutations`, starting from `mi->ej`:**
+
+```clojure
+match-to    = {0 → 0}               ; {ej → mi} as returned by max-bipartite-matching
+
+mi->ej      = (into {} (map (fn [[ej mi]] [mi ej]) match-to))
+            = {0 → 0}               ; {mi → ej}: m0 is paired with e0
+
+matched-ejs = (set (keys match-to)) = #{0}          ; e0 was claimed
+matched-mis = (set (vals match-to)) = #{0}          ; m0 was used
+
+unmatched-mi = (remove #{0} (range 3)) = [1, 2]     ; m1=[:b 2] and m2=[:c 3] have no pair
+unmatched-ej = (remove #{0} (range 6)) = [1, 2, 3, 4, 5]   ; e1..e5 are free
+```
+
+**`min-cost-assign`** receives `unmatched-mi=[1,2]`, `unmatched-ej=[1,2,3,4,5]`:
+
+```clojure
+;; Neither m1 nor m2 is unexpected-matcher → both go to regular-mi
+regular-mi  = [1, 2]
+extra-mi    = []
+ejs         = [1, 2, 3, 4, 5]
+k           = (min 2 5) = 2
+regular-ejs = [1, 2]          ; first k elements → will be permuted
+extra-ejs   = [3, 4, 5]       ; remainder → paired with extra-mi (empty here, so discarded)
+
+;; perms-of [1, 2] = [[1, 2], [2, 1]]
+
+;; Perm [1, 2] → pairs [[m1 e1] [m2 e2]]
+;;   pairing-cost = weight(m1,e1) + weight(m2,e2)
+;;                = weight([:b 2] vs [:b 3]) + weight([:c 3] vs [:c 4])
+;;                = 1 + 1 = 2    ← [:b mismatch :a] (one wrong field each)
+
+;; Perm [2, 1] → pairs [[m1 e2] [m2 e1]]
+;;   pairing-cost = weight([:b 2] vs [:c 4]) + weight([:c 3] vs [:b 3])
+;;                = 2 + 1 = 3    ← noisier: two wrong fields in the first pair
+
+;; Winner: perm [1, 2], cost = 2
+```
+
+Returns: `[[1 1] [2 2]]` — i.e., m1 paired with e1, m2 paired with e2.
+
+---
+
+**Continuing in `match-all-permutations`:**
+
+```clojure
+all-mi->ej = (into {0→0} [[1 1] [2 2]])
+           = {0→0, 1→1, 2→2}       ; every matcher now has an assigned element
+
+;; truly-extra: element indices NOT in (vals all-mi->ej)
+truly-extra = (remove #{0, 1, 2} (range 6))
+            = [3, 4, 5]             ; e3=[:d 5], e4=[:e 6], e5=[:f 7]
+
+ordered-mi  = [0, 1, 2]
+
+res-matchers = (into [matchers[0] matchers[1] matchers[2]]
+                     (repeat 3 pass-through-matcher))
+             = [[:a 1], [:b 2], [:c 3], pass-through, pass-through, pass-through]
+
+res-elements = (into [elems[0] elems[1] elems[2]]
+                     [elems[3] elems[4] elems[5]])
+             = [[:a 1], [:b 3], [:c 4], [:d 5], [:e 6], [:f 7]]
+```
+
+**Final match** — `(->EqualsSeq res-matchers)` vs `res-elements`, position by position:
+
+```
+match([:a 1],       [:a 1])   → :match,    weight=0
+match([:b 2],       [:b 3])   → :mismatch, Mismatch(2 ≠ 3),  weight=1
+match([:c 3],       [:c 4])   → :mismatch, Mismatch(3 ≠ 4),  weight=1
+match(pass-through, [:d 5])   → :match,    Extra([:d 5]),     weight=0
+match(pass-through, [:e 6])   → :match,    Extra([:e 6]),     weight=0
+match(pass-through, [:f 7])   → :match,    Extra([:f 7]),     weight=0
+```
+
+**Result:**
+
+```
+{::result/type   :mismatch
+ ::result/value  [[:a 1], [:b Mismatch(2≠3)], [:c Mismatch(3≠4)],
+                  Extra([:d 5]), Extra([:e 6]), Extra([:f 7])]
+ ::result/weight 2}
+```
+
+Two mismatches (wrong values in `:b` and `:c`), three extras (`:d`, `:e`, `:f` present but not verified). The weight is the sum of the two mismatched pairs — the `pass-through-matcher`s contribute zero.
+
 ### Why doesn't this blow up?
 
 In real mismatch cases, the number of **unmatched regular matchers** (`k`) is almost always small (1-3). Only those go through `perms-of`. The `unexpected-matcher`s — which can be numerous — are paired in O(N) without permutations.
