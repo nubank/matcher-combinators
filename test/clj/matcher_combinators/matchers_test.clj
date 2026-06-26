@@ -81,6 +81,55 @@
                        ::result/value
                        (map vals)))))))
 
+(deftest sorted-by-matcher
+  (testing "matches concrete values regardless of order"
+    (is (match? (m/sorted-by :x [{:x 1} {:x 2} {:x 3}])
+                [{:x 3} {:x 1} {:x 2}])))
+
+  (testing "works with submatchers when the sort key is unique"
+    (is (match? (m/sorted-by :x [{:x 1 :y odd?} {:x 2 :y even?}])
+                [{:x 2 :y 4} {:x 1 :y 1}])))
+
+  (testing "mismatch when an element doesn't match"
+    (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 2 :y even?}])
+                   [{:x 2 :y 4} {:x 1 :y 2}])))
+
+  (testing "catches a missing element (equals-like, not embeds-like)"
+    (is (no-match? (m/sorted-by :x [{:x 1} {:x 2} {:x 3}])
+                   [{:x 1} {:x 2}])))
+
+  (testing "non-sequential actual gives an invalid-type mismatch"
+    (is (match? {::result/type  :mismatch
+                 ::result/value mismatch?
+                 ::result/weight number?}
+                (c/match (m/sorted-by :x [{:x 1}]) {:x 1}))))
+
+  (testing "integrates with match-with (recurses into :expected, keeps :key-fn)"
+    (is (match? (m/match-with [map? m/equals]
+                              (m/sorted-by :x [{:x 1} {:x 2}]))
+                [{:x 2} {:x 1}])))
+
+  (testing "PRECONDITION/LIMITATION: tied keys + submatchers gives a spurious
+            mismatch even though a valid pairing exists. This documents why
+            `in-any-order` (not `sorted-by`) must be used here."
+    (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])
+                   [{:x 1 :y 2} {:x 1 :y 1}]))
+    ;; same data, in-any-order finds the valid pairing:
+    (is (match? (m/in-any-order [{:x 1 :y odd?} {:x 1 :y even?}])
+                [{:x 1 :y 2} {:x 1 :y 1}])))
+
+  (testing "PRECONDITION: tied keys on concrete values reordered within a tie
+            also mismatches; fix with a compound key"
+    (is (no-match? (m/sorted-by :x [{:x 1 :a "p"} {:x 1 :a "q"}])
+                   [{:x 1 :a "q"} {:x 1 :a "p"}]))
+    (is (match? (m/sorted-by (juxt :x :a) [{:x 1 :a "p"} {:x 1 :a "q"}])
+                [{:x 1 :a "q"} {:x 1 :a "p"}])))
+
+  (testing "PRECONDITION: a mixed-type key throws (by design, signals misuse)"
+    (is (thrown? ClassCastException
+                 (c/match (m/sorted-by :id [{:id 1} {:id "2"}])
+                          [{:id "2"} {:id 1}])))))
+
 (deftest regex-matching
   (is (match? {::result/type   :match
                ::result/value  {:one "1"}

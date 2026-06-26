@@ -426,6 +426,25 @@
       (match-any-order expected actual false)))
   (-base-name [_] 'in-any-order))
 
+(defrecord SortedBy [key-fn expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (validate-input
+                    expected actual sequential? (-base-name this) "sequential")]
+      issue
+      ;; Sort both sides by `key-fn` and compare in order (O(n log n)), instead
+      ;; of `in-any-order`'s bipartite/permutation matching. We deliberately do
+      ;; NOT catch a sort failure (e.g. mixed-type keys throwing
+      ;; ClassCastException): an unsortable `key-fn` is a violated precondition,
+      ;; not a mismatch, and masking it would hide the misuse. See
+      ;; `matchers/sorted-by` for the precondition and its limitations.
+      (sequence-match (sort-by key-fn expected)
+                      (sort-by key-fn actual)
+                      false)))
+  (-base-name [_] 'sorted-by))
+
 (defn- matchable-set?
   "Clojure's set functions expect clojure.lang.IPersistentSet, but
   matching works just fine with java.util.Set as well."

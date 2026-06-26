@@ -175,6 +175,13 @@ for a specific value, e.g.
 - `in-any-order` operates over sequences
 
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
+- `sorted-by` operates over sequences
+
+  takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, then compares them in order. An O(n log n) alternative to the computationally slower `in-any-order` for large sequences.
+
+  **Precondition (caller's responsibility):** `key-fn` must induce a *total order* — mutually-comparable, non-tied keys (just like `clojure.core/sort` needs a consistent comparator). Violating it gives unreliable results: tied keys can produce a spurious mismatch (fix with a compound key such as `(juxt :x :id)`), and mixed-type keys make `sort-by` throw (by design — it signals misuse, not a mismatch).
+
+  **Limitation (not fixable via `key-fn`):** when `expected` contains submatchers (predicates, `equals`, `regex`, ...), `key-fn` is applied to the matcher objects too, and a matcher cannot be sorted into alignment with the value it is meant to match — that pairing is only knowable by *running* the matcher. For those cases use `in-any-order`. `sorted-by` is meant for sequences of concrete, uniformly-typed, sortable values.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
 

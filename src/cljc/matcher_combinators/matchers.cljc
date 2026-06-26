@@ -105,6 +105,39 @@
   Consider sorting the expected and actual sequences and comparing those instead."
   [expected] (core/->InAnyOrder expected))
 
+(defn sorted-by
+  "Matcher that sorts both the `expected` and the `actual` sequences by
+  `key-fn` and then compares them in order (like `equals` over sequences).
+
+  This is an O(n log n) alternative to `in-any-order` for large sequences:
+  rather than searching for a valid pairing between matchers and elements, it
+  relies on `key-fn` to line them up. Use it when you have a stable, cheap
+  sort key.
+
+  PRECONDITION: `key-fn` must induce a *total order* over the elements, i.e.
+  it must return mutually-comparable, non-tied keys. This is the caller's
+  responsibility (analogous to `clojure.core/sort` requiring a consistent
+  comparator). When the precondition is violated, results are unreliable:
+
+   - Tied keys (non-injective `key-fn`): elements that share a key are left in
+     their incoming order, which may differ between `expected` and `actual`,
+     producing a spurious mismatch even though a valid pairing exists. Fix by
+     using a compound key that breaks ties, e.g. `(juxt :x :id)`.
+
+   - Mixed-type keys: `sort-by` throws (e.g. ClassCastException comparing a
+     String to a Long). This surfaces as a thrown exception, not a mismatch,
+     by design — it signals misuse of `key-fn`.
+
+  LIMITATION (not fixable via `key-fn`): when `expected` contains submatchers
+  (predicates, `equals`, `regex`, etc.), `key-fn` is applied to those matcher
+  objects too. A predicate cannot be sorted into alignment with the concrete
+  value it is meant to match, because the correct pairing is only knowable by
+  *running* the matcher. For such cases prefer `in-any-order`. `sorted-by` is
+  intended for sequences of concrete, uniformly-typed, totally-orderable
+  values."
+  [key-fn expected]
+  (core/->SortedBy key-fn expected))
+
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`
   list."
