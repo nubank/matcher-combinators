@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Deps: io.opentelemetry/opentelemetry-sdk-metrics:1.51.0">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/io/opentelemetry/opentelemetry-sdk-metrics/1.51.0/opentelemetry-sdk-metrics-1.51.0.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

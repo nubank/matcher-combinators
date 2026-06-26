@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Deps: org.jetbrains.kotlin/kotlin-stdlib-jdk8:1.9.10">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
