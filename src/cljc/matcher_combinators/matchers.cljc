@@ -114,10 +114,19 @@
   relies on `key-fn` to line them up. Use it when you have a stable, cheap
   sort key.
 
-  PRECONDITION: `key-fn` must induce a *total order* over the elements, i.e.
-  it must return mutually-comparable, non-tied keys. This is the caller's
-  responsibility (analogous to `clojure.core/sort` requiring a consistent
-  comparator). When the precondition is violated, results are unreliable:
+  `expected` is sorted eagerly here, at construction time, while it is still
+  concrete data — before any enclosing matcher (such as `match-with`) can wrap
+  its elements. `actual` is sorted at match time (it is always concrete). This
+  is what lets `sorted-by` compose with `match-with`: were `expected` sorted at
+  match time instead, `key-fn` would be applied to the already-wrapped matcher
+  objects and the reordering would silently break.
+
+  PRECONDITION: `key-fn` must return keys that are both *mutually comparable*
+  and *distinct* (injective) across the elements being compared. (Note this is
+  stronger than a mathematical total order, which permits ties.) This is the
+  caller's responsibility (analogous to `clojure.core/sort` requiring a
+  consistent comparator). When the precondition is violated, results are
+  unreliable:
 
    - Tied keys (non-injective `key-fn`): elements that share a key are left in
      their incoming order, which may differ between `expected` and `actual`,
@@ -125,18 +134,21 @@
      using a compound key that breaks ties, e.g. `(juxt :x :id)`.
 
    - Mixed-type keys: `sort-by` throws (e.g. ClassCastException comparing a
-     String to a Long). This surfaces as a thrown exception, not a mismatch,
-     by design — it signals misuse of `key-fn`.
+     String to a Long) — at construction time for `expected`, at match time for
+     `actual`. This surfaces as a thrown exception, not a mismatch, by design —
+     it signals misuse of `key-fn`.
 
-  LIMITATION (not fixable via `key-fn`): when `expected` contains submatchers
-  (predicates, `equals`, `regex`, etc.), `key-fn` is applied to those matcher
-  objects too. A predicate cannot be sorted into alignment with the concrete
-  value it is meant to match, because the correct pairing is only knowable by
-  *running* the matcher. For such cases prefer `in-any-order`. `sorted-by` is
-  intended for sequences of concrete, uniformly-typed, totally-orderable
-  values."
+  LIMITATION: `key-fn` must be able to derive a sort key from each `expected`
+  element. This holds when elements are concrete values (including maps whose
+  inner values are submatchers, since the sort key is read from the concrete
+  outer structure). It does NOT hold when an element is *itself* a bare matcher
+  with no concrete sort key, e.g. `(sorted-by identity [odd? even?])`: a
+  predicate matches many values and has no single position to sort into, so
+  `sort-by` cannot order it (and in fact throws, as predicates are not
+  Comparable). For sequences of bare matchers, use `in-any-order`, which finds
+  the pairing by running the matchers."
   [key-fn expected]
-  (core/->SortedBy key-fn expected))
+  (core/->SortedBy key-fn (sort-by key-fn expected)))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`

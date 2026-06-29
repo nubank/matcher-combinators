@@ -426,16 +426,17 @@
       (match-any-order expected actual false)))
   (-base-name [_] 'in-any-order))
 
-(defrecord SortedBy [key-fn expected]
+(defrecord SortedBy [key-fn sorted-expected]
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
   (-match [this actual]
     (if-let [issue (validate-input
-                    expected actual sequential? (-base-name this) "sequential")]
+                    sorted-expected actual sequential? (-base-name this) "sequential")]
       issue
-      (sequence-match (sort-by key-fn expected)
-                      (sort-by key-fn actual)
+      (sequence-match sorted-expected
+                      (cond-> (sort-by key-fn actual)
+                              (vector? actual) vec)
                       false)))
   (-base-name [_] 'sorted-by))
 

@@ -104,10 +104,23 @@
                  ::result/weight number?}
                 (c/match (m/sorted-by :x [{:x 1}]) {:x 1}))))
 
-  (testing "integrates with match-with (recurses into :expected, keeps :key-fn)"
+  (testing "composes with match-with: stays order-insensitive even though
+            match-with wraps the elements. This works because `sorted-by` sorts
+            `expected` eagerly at construction time, while it is still concrete
+            data, before match-with turns the elements into matchers. Both the
+            `expected` and the `actual` are out of order here."
     (is (match? (m/match-with [map? m/equals]
-                              (m/sorted-by :x [{:x 1} {:x 2}]))
-                [{:x 2} {:x 1}])))
+                              (m/sorted-by :x [{:x 2} {:x 1}]))
+                [{:x 1} {:x 2}])))
+
+  (testing "LIMITATION: a bare matcher element has no concrete sort key, so
+            `sorted-by` cannot order it (sort-by throws, as matchers/predicates
+            are not Comparable). Use `in-any-order` for sequences of bare
+            matchers."
+    (is (thrown? Exception
+                 (m/sorted-by identity [odd? even?])))
+    ;; in-any-order handles bare matchers by running them to find the pairing:
+    (is (match? (m/in-any-order [odd? even?]) [2 1])))
 
   (testing "PRECONDITION/LIMITATION: tied keys + submatchers gives a spurious
             mismatch even though a valid pairing exists. This documents why
@@ -125,9 +138,14 @@
     (is (match? (m/sorted-by (juxt :x :a) [{:x 1 :a "p"} {:x 1 :a "q"}])
                 [{:x 1 :a "q"} {:x 1 :a "p"}])))
 
-  (testing "PRECONDITION: a mixed-type key throws (by design, signals misuse)"
+  (testing "PRECONDITION: a mixed-type key throws (by design, signals misuse).
+            `expected` is sorted at construction time, so a mixed-type key there
+            throws on construction; a mixed-type key in `actual` throws at match
+            time."
     (is (thrown? ClassCastException
-                 (c/match (m/sorted-by :id [{:id 1} {:id "2"}])
+                 (m/sorted-by :id [{:id 1} {:id "2"}])))
+    (is (thrown? ClassCastException
+                 (c/match (m/sorted-by :id [{:id 1} {:id 2}])
                           [{:id "2"} {:id 1}])))))
 
 (deftest regex-matching

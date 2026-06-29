@@ -179,9 +179,11 @@ for a specific value, e.g.
 
   takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, then compares them in order. An O(n log n) alternative to the computationally slower `in-any-order` for large sequences.
 
-  **Precondition (caller's responsibility):** `key-fn` must induce a *total order* — mutually-comparable, non-tied keys (just like `clojure.core/sort` needs a consistent comparator). Violating it gives unreliable results: tied keys can produce a spurious mismatch (fix with a compound key such as `(juxt :x :id)`), and mixed-type keys make `sort-by` throw (by design — it signals misuse, not a mismatch).
+  The `expected` sequence is sorted eagerly when you build the matcher (while it is still concrete data), and `actual` is sorted at match time. This is what lets `sorted-by` compose with `match-with` — including when the `expected` elements carry submatchers in their values (e.g. `(match-with [map? equals] (sorted-by :x [{:x 1 :y odd?} ...]))`).
 
-  **Limitation (not fixable via `key-fn`):** when `expected` contains submatchers (predicates, `equals`, `regex`, ...), `key-fn` is applied to the matcher objects too, and a matcher cannot be sorted into alignment with the value it is meant to match — that pairing is only knowable by *running* the matcher. For those cases use `in-any-order`. `sorted-by` is meant for sequences of concrete, uniformly-typed, sortable values.
+  **Precondition (caller's responsibility):** `key-fn` must return *mutually-comparable* and *distinct* (injective) keys across the compared elements — stronger than a mathematical total order, which permits ties (just like `clojure.core/sort` needs a consistent comparator). Violating it gives unreliable results: tied keys can produce a spurious mismatch (fix with a compound key such as `(juxt :x :id)`), and mixed-type keys make `sort-by` throw (by design — it signals misuse, not a mismatch).
+
+  **Limitation:** an element that is *itself* a bare matcher with no concrete sort key (e.g. `(sorted-by identity [odd? even?])`) cannot be sorted — a predicate matches many values and has no single position. For sequences of bare matchers, use `in-any-order`, which finds the pairing by running the matchers.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
 
