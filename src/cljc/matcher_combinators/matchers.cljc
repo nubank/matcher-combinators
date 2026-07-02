@@ -101,9 +101,13 @@
   `expected` list but with elements in a different order.
 
   WARNING: in-any-order can match each expected element against every value
-  in the actual sequence, which may be cost prohibitive for large sequences
-  Consider sorting the expected and actual sequences and comparing those instead."
+  in the actual sequence, which may be cost prohibitive for large sequences,
+  for these cases, consider using sorted-by approach instead"
   [expected] (core/->InAnyOrder expected))
+
+(defn- sort-by-preserving-vector [key-fn coll]
+  (cond-> (sort-by key-fn coll)
+          (vector? coll) vec))
 
 (defn sorted-by
   "Matcher that sorts both the `expected` and the `actual` sequences by
@@ -114,14 +118,11 @@
   relies on `key-fn` to line them up. Use it when you have a stable, cheap
   sort key.
 
-  LIMITATION: `key-fn` needs a concrete value to read a sort key from. This
-  works for plain values and for maps whose inner values are submatchers (the
-  key comes from the concrete outer map). It does NOT work when an element is
-  itself a bare matcher, e.g. `(sorted-by identity [odd? even?])`: a predicate
-  has no single value to sort by, so there's nothing to order on. For sequences
-  of bare matchers, use `in-any-order` instead."
+  Limitation: values accessed under the key-fn must be sortable. Note that
+  functions and matchers cannot be sorted. In such cases, consider the in-any-order matcher."
   [key-fn expected]
-  (core/->SortedBy key-fn (sort-by key-fn expected)))
+  (core/->ViaMatcher #(sort-by-preserving-vector key-fn %)
+                     (sort-by-preserving-vector key-fn expected)))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`

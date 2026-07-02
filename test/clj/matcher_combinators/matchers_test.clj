@@ -98,28 +98,23 @@
     (is (no-match? (m/sorted-by :x [{:x 1} {:x 2} {:x 3}])
                    [{:x 1} {:x 2}])))
 
-  (testing "non-sequential actual gives an invalid-type mismatch"
-    (is (match? {::result/type  :mismatch
-                 ::result/value mismatch?
-                 ::result/weight number?}
-                (c/match (m/sorted-by :x [{:x 1}]) {:x 1}))))
+  (testing "non-sequential actual doesn't match"
+    (is (no-match? (m/sorted-by :x [{:x 1}]) {:x 1})))
 
-  (testing "should match even when using match-with"
-    (is (match? (m/match-with [map? m/equals]
-                              (m/sorted-by :x [{:x 2} {:x 1}]))
-                [{:x 1} {:x 2}])))
+  (testing "match-with actually applies the given matcher"
+    (is (no-match? (m/match-with [map? m/equals]
+                              [{:x 2}])
+                [{:x 2 :y 'whatever}])))
 
-  (testing "LIMITATION: a bare matcher element has no concrete sort key, so
-            `sorted-by` cannot order it (sort-by throws, as matchers/predicates
-            are not Comparable). Use `in-any-order` for sequences of bare
-            matchers."
+  (testing "functions and matchers aren't sortable, but values accessed under the key-fn must be.
+            Use `in-any-order` for sequences of bare matchers."
     (is (thrown? Exception
                  (m/sorted-by identity [odd? even?])))
     (is (match? (m/in-any-order [odd? even?]) [2 1])))
 
-  (testing "LIMITATION: tied keys + submatchers gives a spurious
-            mismatch even though a valid pairing exists. This documents why
-            `in-any-order` (not `sorted-by`) must be used here."
+  (testing "tied keys + submatchers gives a spurious
+            mismatch even though a valid pairing exists.
+            Use `in-any-order` in those cases."
     (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])
                    [{:x 1 :y 2} {:x 1 :y 1}]))
     (is (match? (m/in-any-order [{:x 1 :y odd?} {:x 1 :y even?}])

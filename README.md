@@ -175,13 +175,8 @@ for a specific value, e.g.
 - `in-any-order` operates over sequences
 
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
-- `sorted-by` operates over sequences
-
-  takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, then compares them in order. An O(n log n) alternative to the computationally slower `in-any-order` for large sequences.
-
-  The `expected` sequence is sorted eagerly when you build the matcher (while it is still concrete data), and `actual` is sorted at match time. This is what lets `sorted-by` compose with `match-with`, including when the `expected` elements carry submatchers in their values (e.g. `(match-with [map? equals] (sorted-by :x [{:x 1 :y odd?} ...]))`).
-
-  **Limitation:** an element that is *itself* a bare matcher with no concrete sort key (e.g. `(sorted-by identity [odd? even?])`) cannot be sorted. A predicate matches many values and has no single position. For sequences of bare matchers, use `in-any-order`, which finds the pairing by running the matchers.
+- `sorted-by` takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, and matches them in order. 
+   An alternative to `in-any-order` for large sequences of sortable values.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
 

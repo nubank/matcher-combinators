@@ -426,20 +426,6 @@
       (match-any-order expected actual false)))
   (-base-name [_] 'in-any-order))
 
-(defrecord SortedBy [key-fn sorted-expected]
-  Matcher
-  (-matcher-for [this] this)
-  (-matcher-for [this _] this)
-  (-match [this actual]
-    (if-let [issue (validate-input
-                    sorted-expected actual sequential? (-base-name this) "sequential")]
-      issue
-      (sequence-match sorted-expected
-                      (cond-> (sort-by key-fn actual)
-                              (vector? actual) vec)
-                      false)))
-  (-base-name [_] 'sorted-by))
-
 (defn- matchable-set?
   "Clojure's set functions expect clojure.lang.IPersistentSet, but
   matching works just fine with java.util.Set as well."
