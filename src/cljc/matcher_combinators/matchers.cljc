@@ -117,7 +117,12 @@
   incurs in its search for a minimal mismatch
 
   Limitation: values accessed under the key-fn must be sortable. Note that
-  functions and matchers cannot be sorted. In such cases, consider the in-any-order matcher."
+  functions and matchers cannot be sorted. In such cases, consider the in-any-order matcher.
+
+  Limitation: When two elements yield the same `key-fn` value, sorted-by can report a mismatch
+  even when a valid pairing exists.
+  e.g. `(sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])` fails against `[{:x 1 :y 2} {:x 1 :y 1}]`.
+  Prefer in-any-order when keys aren't unique, and elements are matched with submatchers."
   [key-fn expected]
   (core/->ViaMatcher #(sort-by-preserving-vector key-fn %)
                      (sort-by-preserving-vector key-fn expected)))
