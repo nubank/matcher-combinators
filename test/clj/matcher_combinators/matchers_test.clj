@@ -108,11 +108,14 @@
                                  (m/sorted-by :x [{:x 2}]))
                    [{:x 2 :y 'whatever}])))
 
-  (testing "functions and matchers aren't sortable, but values accessed under the key-fn must be.
-            Use `in-any-order` for sequences of bare matchers."
+  (testing "an unsortable actual returns a mismatch"
+    (is (= :mismatch
+           (::result/type (c/match (m/sorted-by :x [{:x 1} {:x 2}])
+                                   [{:x 1} {:x even?}])))))
+
+  (testing "an unsortable expected throws an exception"
     (is (thrown? Exception
-                 (m/sorted-by identity [odd? even?])))
-    (is (match? (m/in-any-order [odd? even?]) [2 1])))
+                 (m/sorted-by :x [{:x 1} {:x even?}]))))
 
   (testing "tied keys + submatchers gives a spurious
             mismatch even though a valid pairing exists.
