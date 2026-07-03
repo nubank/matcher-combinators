@@ -108,12 +108,12 @@
                                  (m/sorted-by :x [{:x 2}]))
                    [{:x 2 :y 'whatever}])))
 
-  (testing "an unsortable actual returns a mismatch"
+  (testing "an unsortable actual returns a mismatch. Use `in-any-order` in those cases"
     (is (= :mismatch
            (::result/type (c/match (m/sorted-by :x [{:x 1} {:x 2}])
                                    [{:x 1} {:x even?}])))))
 
-  (testing "an unsortable expected throws an exception"
+  (testing "an unsortable expected throws an exception. Use `in-any-order` in those cases"
     (is (thrown? Exception
                  (m/sorted-by :x [{:x 1} {:x even?}]))))
 
