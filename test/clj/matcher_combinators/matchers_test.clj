@@ -101,10 +101,12 @@
   (testing "non-sequential actual doesn't match"
     (is (no-match? (m/sorted-by :x [{:x 1}]) {:x 1})))
 
-  (testing "match-with actually applies the given matcher"
+  (testing "match-with applies the given matcher through sorted-by"
+    (is (match? (m/sorted-by :x [{:x 2}])
+                [{:x 2 :y 'whatever}]))
     (is (no-match? (m/match-with [map? m/equals]
-                              [{:x 2}])
-                [{:x 2 :y 'whatever}])))
+                                 (m/sorted-by :x [{:x 2}]))
+                   [{:x 2 :y 'whatever}])))
 
   (testing "functions and matchers aren't sortable, but values accessed under the key-fn must be.
             Use `in-any-order` for sequences of bare matchers."
