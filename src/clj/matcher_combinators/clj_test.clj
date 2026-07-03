@@ -156,8 +156,9 @@
   (binding [*out* out]
     (printer/pretty-print (::result/value match-result))))
 
-(defn ^:deprecated build-match-assert
-  "DEPRECATED: use (match? (matchers/match-with <overrides> <expected>) <actual>) "
+(defn build-match-assert
+  {:deprecated "3.0.0"
+   :doc "DEPRECATED: use (match? (matchers/match-with <overrides> <expected>) <actual>)"}
   ([match-assert-name type->matcher msg form]
    (build-match-assert match-assert-name type->matcher msg form
                        (str "DEPRECATION NOTICE: custom assertions for matcher-combinators are deprecated.\n"

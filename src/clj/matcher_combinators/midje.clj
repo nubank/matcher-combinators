@@ -1,5 +1,5 @@
 (ns matcher-combinators.midje
-  {:deprecated true
+  {:deprecated "3.8.4"
    :no-doc true}
   (:require [matcher-combinators.core :as core]
             [matcher-combinators.matchers :as matchers]

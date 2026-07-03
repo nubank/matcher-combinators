@@ -15,19 +15,45 @@
   Commonly, a dev-only user namespace will require this namespace."
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
-       :clj  [clojure.test :as t :refer        [is are deftest testing]])
-    #?(:cljs [matcher-combinators.cljs-test]
-       :clj  [matcher-combinators.clj-test])))
+      :clj  [clojure.test :as t :refer        [is are deftest testing]])
+   #?(:cljs [matcher-combinators.cljs-test]
+      :clj  [matcher-combinators.clj-test])))
 
-(declare ^{:arglists '([matcher actual])}
-         match?)
-(declare ^{:arglists '([type->matcher matcher actual])}
-         match-with?)
-(declare ^{:arglists '([matcher actual]
-                       [exception-class matcher actual])}
-         thrown-match?)
-(declare ^{:arglists '([delta matcher actual])}
-         match-roughly?)
+(defn match?
+  "Asserts that the `actual` matches the `expected`, where the `expected` can be a value, a predicate function, or a matcher-combinator.
+
+(is (match? [0 1 2] (range 3)))
+(is (match? (complement empty?) (range 3)))
+(is (match? (matcher-combinators.matchers/in-any-order [zero? odd? even?]) (range 3)))"
+  [matcher actual]
+  (throw (#?(:cljs js/Error. :clj AssertionError.)
+          "Should only be invoked within a `clojure.test/is` form")))
+
+(defn match-with?
+  {:deprecated "3.0.0"
+   :doc "DEPRECATED: Use (match? (matcher-combinators.matchers/match-with <type->matcher> <expected>) <actual>) instead."}
+  [type->matcher matcher actual]
+  (throw (#?(:cljs js/Error. :clj AssertionError.)
+          "Should only be invoked within a `clojure.test/is` form")))
+
+(defn thrown-match?
+  "Asserts that evaluating expr throws an exception where the excpetion's ex-data satisfies the provided matcher.
+
+2-arity: (is (thrown-with-match? matcher expr))
+3-arity: (is (thrown-with-match? exception-class matcher expr))"
+  ([matcher actual]
+   (throw (#?(:cljs js/Error. :clj AssertionError.)
+           "Should only be invoked within a `clojure.test/is` form")))
+  ([exception-class matcher actual]
+   (throw (#?(:cljs js/Error. :clj AssertionError.)
+           "Should only be invoked within a `clojure.test/is` form"))))
+
+(defn match-roughly?
+  {:deprecated "3.0.0"
+   :doc "DEPRECATED: Instead use (match? (matcher-combinators.matchers/match-with [number? (matcher-combinators.matchers/within-delta 0.01M)] <expected>) <actual>)"}
+  [delta matcher actual]
+  (throw (#?(:cljs js/Error. :clj AssertionError.)
+          "Should only be invoked within a `clojure.test/is` form")))
 
 #?(:clj
    (def build-match-assert
