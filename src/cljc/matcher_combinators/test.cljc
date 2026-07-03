@@ -30,7 +30,8 @@
           "Should only be invoked within a `clojure.test/is` form")))
 
 (defn match-with?
-  "DEPRECATED: Use (match? (matcher-combinators.matchers/match-with <type->matcher> <expected>) <actual>) instead."
+  {:deprecated "3.0.0"
+   :doc "DEPRECATED: Use (match? (matcher-combinators.matchers/match-with <type->matcher> <expected>) <actual>) instead."}
   [type->matcher matcher actual]
   (throw (#?(:cljs js/Error. :clj AssertionError.)
           "Should only be invoked within a `clojure.test/is` form")))
@@ -48,7 +49,8 @@
            "Should only be invoked within a `clojure.test/is` form"))))
 
 (defn match-roughly?
-  "DEPRECATED: Instead use (match? (matcher-combinators.matchers/match-with [number? (matcher-combinators.matchers/within-delta 0.01M)] <expected>) <actual>)"
+  {:deprecated "3.0.0"
+   :doc "DEPRECATED: Instead use (match? (matcher-combinators.matchers/match-with [number? (matcher-combinators.matchers/within-delta 0.01M)] <expected>) <actual>)"}
   [delta matcher actual]
   (throw (#?(:cljs js/Error. :clj AssertionError.)
           "Should only be invoked within a `clojure.test/is` form")))
