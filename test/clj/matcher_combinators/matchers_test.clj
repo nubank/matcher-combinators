@@ -120,6 +120,31 @@
     (is (match? (m/in-any-order [{:x 1 :y odd?} {:x 1 :y even?}])
                 [{:x 1 :y 2} {:x 1 :y 1}]))))
 
+(deftest sorted-by-with-sets
+  (testing "matches when both expected and actual are sets"
+    (is (match? (m/sorted-by :x #{{:x 1} {:x 2} {:x 3}})
+                #{{:x 3} {:x 1} {:x 2}})))
+
+  (testing "a set matches a sequential of the same elements (and vice-versa)"
+    (is (match? (m/sorted-by :x [{:x 1} {:x 2}])
+                #{{:x 2} {:x 1}}))
+    (is (match? (m/sorted-by :x #{{:x 1} {:x 2}})
+                [{:x 2} {:x 1}])))
+
+  (testing "submatchers work over sets when the sort key is unique"
+    (is (match? (m/sorted-by :x #{{:x 1 :y odd?} {:x 2 :y even?}})
+                #{{:x 2 :y 4} {:x 1 :y 1}})))
+
+  (testing "like set-equals (the default), a set actual can't have extra elements"
+    (is (no-match? (m/sorted-by :x #{{:x 1}})
+                   #{{:x 1} {:x 2 :y 2}})))
+
+  (testing "a set input is reported as the sorted sequence in the mismatch"
+    (let [value (::result/value (c/match (m/sorted-by :x #{{:x 1}})
+                                         #{{:x 1} {:x 2 :y 2}}))]
+      (is (sequential? value))
+      (is (= 2 (count value))))))
+
 (deftest regex-matching
   (is (match? {::result/type   :match
                ::result/value  {:one "1"}
