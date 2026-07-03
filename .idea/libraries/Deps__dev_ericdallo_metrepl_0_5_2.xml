@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: dev.ericdallo/metrepl:0.5.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/dev/ericdallo/metrepl/0.5.2/metrepl-0.5.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

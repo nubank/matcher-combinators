@@ -102,7 +102,7 @@
 
   WARNING: in-any-order can match each expected element against every value
   in the actual sequence, which may be cost prohibitive for large sequences,
-  for these cases, consider using sorted-by approach instead"
+  for these cases, consider using the `sorted-by` matcher instead"
   [expected] (core/->InAnyOrder expected))
 
 (defn- sort-by-preserving-vector [key-fn coll]
@@ -111,12 +111,10 @@
 
 (defn sorted-by
   "Matcher that sorts both the `expected` and the `actual` sequences by
-  `key-fn` and then compares them in order (like `equals` over sequences).
+  `key-fn` and then invokes `match` on them.
 
-  This is an O(n log n) alternative to `in-any-order` for large sequences:
-  rather than searching for a valid pairing between matchers and elements, it
-  relies on `key-fn` to line them up. Use it when you have a stable, cheap
-  sort key.
+  An alternative to in-any-order that avoids the exponential runtime that in-any-order
+  incurs in its search for a minimal mismatch
 
   Limitation: values accessed under the key-fn must be sortable. Note that
   functions and matchers cannot be sorted. In such cases, consider the in-any-order matcher."
