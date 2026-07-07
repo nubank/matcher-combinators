@@ -294,17 +294,3 @@ bb test:midje # run only Midje tests
 bb test:node  # run only ClojureScript tests
 bb test:browser # run ClojureScript tests in browser at `http://localhost:9158/`
 ```
-
-### Linting and formatting
-
-Check formatting and linting:
-
-```
-bb lint
-```
-
-Auto-fix formatting and linting:
-
-```
-bb lint:fix
-```
