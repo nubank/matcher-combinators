@@ -37,7 +37,7 @@
   (= :match (::result/type match-result)))
 
 (defn
-  ^{:deprecated true
+  ^{:deprecated "2.0.0"
     :doc "DEPRECATED! Use `indicates-match?` instead."}
   match?
   [match-result]

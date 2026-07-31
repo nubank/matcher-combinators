@@ -17,7 +17,7 @@ _Clojure version compatibility:_ 1.8 and up
 
 matcher-combinators is maintained by:
 * Devflow team at Nubank
-* [Phillip Mates](https://github.com/philomates)
+* [Phillip Mates](https://github.com/philomates) (not available for reviewing work done via LLM-assisted means)
 
 For questions and more info, please use the Clojurians channel [#matcher-combinators](https://clojurians.slack.com/archives/C04ABMF89D3).
 
@@ -41,7 +41,7 @@ This library addresses this issue by providing composable matcher combinators th
 Require the `matcher-combinators.test` namespace, which will extend `clojure.test`'s `is` macro to accept the `match?` and `thrown-match?` directives.
 
  - `match?`: The first argument should be the matcher-combinator representing the expected value, and the second argument should be the expression being checked.
- - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinator, and the third the expression being checked.
+ - `thrown-match?`: The first argument should be a throwable subclass, the second a matcher-combinator to be applied to the ex-data of the exception thrown, and the third the expression being checked. There is also a 2-arity version that takes just the matcher-combinator and expression.
 
 For example:
 

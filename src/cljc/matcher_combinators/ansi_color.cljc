@@ -8,7 +8,7 @@
   true)
 
 (defn
-  ^{:deprecated true
+  ^{:deprecated "3.8.7"
     :doc "DEPRECATED! Use matcher-combinators.config/enable-ansi-color!"}
   enable!
   []
@@ -16,7 +16,7 @@
      :cljs (set! *use-color* true)))
 
 (defn disable!
-  ^{:deprecated true
+  ^{:deprecated "3.8.7"
     :doc "DEPRECATED! Use matcher-combinators.config/disable-ansi-color!"}
   []
   #?(:clj (alter-var-root #'*use-color* (constantly false))
