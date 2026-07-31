@@ -23,7 +23,7 @@
    :extra-paths ["test/cljc" "test/clj" "bin"]}
 
   :cljs-test
-  {:override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}
+  {:override-deps {org.clojure/clojure {:mvn/version "1.12.4"}}
    :extra-paths ["test/cljc" "test/cljs"]
    :main-opts ["-m" "shadow.cljs.devtools.cli"]
    :extra-deps {org.clojure/test.check {:mvn/version "1.1.3"}
