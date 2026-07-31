@@ -11,10 +11,11 @@ jobs:
     name: 'Test using Java 8'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@v5
       with:
+        distribution: 'zulu'
         java-version: 8
 
     - name: Print java version
@@ -28,7 +29,7 @@ jobs:
         clj-kondo: latest
 
     - name: maven cache
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       with:
         path: ~/.m2
         key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
@@ -63,10 +64,11 @@ jobs:
     name: 'Test using Java 11'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@v5
       with:
+        distribution: 'zulu'
         java-version: 11
 
     - name: Print java version
@@ -80,7 +82,7 @@ jobs:
         clj-kondo: latest
 
     - name: maven cache
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       with:
         path: ~/.m2
         key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
