@@ -175,6 +175,8 @@ for a specific value, e.g.
 - `in-any-order` operates over sequences
 
   matches when the given a sequence that is the same as the `expected` sequence but with elements in a different order.  Similar to midje's `(just expected :in-any-order)`
+- `sorted-by` takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, and matches them in order.
+  An alternative to `in-any-order` for cases when inputs are sortable and `in-any-order` has poor performance, such as with large sequences.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
 

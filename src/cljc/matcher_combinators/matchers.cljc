@@ -101,9 +101,36 @@
   `expected` list but with elements in a different order.
 
   WARNING: in-any-order can match each expected element against every value
-  in the actual sequence, which may be cost prohibitive for large sequences
-  Consider sorting the expected and actual sequences and comparing those instead."
+  in the actual sequence, which may be cost prohibitive for large sequences,
+  for these cases, consider using the `sorted-by` matcher instead"
   [expected] (core/->InAnyOrder expected))
+
+(defn- sort-by-preserving-vector [key-fn coll]
+  (cond-> (sort-by key-fn coll)
+          (vector? coll) vec))
+
+(defn sorted-by
+  "Matcher that sorts both the `expected` and the `actual` sequences by
+  `key-fn` and then invokes `match` on them.
+
+  It is an alternative to the `in-any-order` that avoids the exponential
+  runtime that `in-any-order` incurs in its search for a minimal mismatch
+
+  Limitation: values accessed under the key-fn must be sortable. Note that
+  functions and matchers cannot be sorted. In such cases, consider the
+  `in-any-order` matcher.
+
+  Limitation: When two elements yield the same `key-fn` value, sorted-by can
+  report a mismatch even when a valid pairing exists.
+  e.g. `(sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])` fails against
+  `[{:x 1 :y 2} {:x 1 :y 1}]`.
+
+  Thus prefer `in-any-order` when keys aren't unique or elements are matched
+  with submatchers."
+  [key-fn expected]
+  (core/->ViaMatcher (symbol (str "sorted-by " key-fn))
+                     #(sort-by-preserving-vector key-fn %)
+                     (sort-by-preserving-vector key-fn expected)))
 
 (defn prefix
   "Matcher that will match when provided a (ordered) prefix of the `expected`
@@ -146,7 +173,7 @@
   ```
   "
   [transform-actual-fn expected]
-  (core/->ViaMatcher transform-actual-fn expected))
+  (core/->ViaMatcher 'via transform-actual-fn expected))
 
 (defn any-of
   "A matcher that successfully matches if one of the two provided matchers matches."

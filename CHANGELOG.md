@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This
 change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 3.11.0 / 2026-07-27
+- add the `sorted-by` matcher, which  takes a `key-fn` and an `expected` sequence, sorts both `expected` and `actual` by `key-fn`, and matches them in order. It is an alternative to `in-any-order` for cases when inputs are sortable and `in-any-order` has poor performance, such as with large sequences.
+
 ## 3.10.1 / 2026-04-13
 Add docstrings to matcher-combinators.test declarations, used with clojure.test
 

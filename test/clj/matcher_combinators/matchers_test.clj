@@ -81,6 +81,84 @@
                        ::result/value
                        (map vals)))))))
 
+(deftest sorted-by-matcher
+  (testing "matches concrete values regardless of order"
+    (is (match? (m/sorted-by :x [{:x 1} {:x 2} {:x 3}])
+                [{:x 3} {:x 1} {:x 2}])))
+
+  (testing "works with submatchers when the sort key is unique"
+    (is (match? (m/sorted-by :x [{:x 1 :y odd?} {:x 2 :y even?}])
+                [{:x 2 :y 4} {:x 1 :y 1}])))
+
+  (testing "mismatch when an element doesn't match"
+    (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 2 :y even?}])
+                   [{:x 2 :y 4} {:x 1 :y 2}])))
+
+  (testing "catches a missing element (equals-like, not embeds-like)"
+    (is (no-match? (m/sorted-by :x [{:x 1} {:x 2} {:x 3}])
+                   [{:x 1} {:x 2}])))
+
+  (testing "non-sequential actual doesn't match"
+    (is (no-match? (m/sorted-by :x [{:x 1}]) {:x 1})))
+
+  (testing "match-with applies the given matcher through sorted-by"
+    (is (match? (m/sorted-by :x [{:x 2}])
+                [{:x 2 :y 'whatever}]))
+    (is (no-match? (m/match-with [map? m/equals]
+                                 (m/sorted-by :x [{:x 2}]))
+                   [{:x 2 :y 'whatever}])))
+
+  (testing "an unsortable actual returns a mismatch. Use `in-any-order` in those cases"
+    (is (= :mismatch
+           (::result/type (c/match (m/sorted-by :x [{:x 1} {:x 2}])
+                                   [{:x 1} {:x even?}])))))
+
+  (testing "an unsortable expected throws an exception. Use `in-any-order` in those cases"
+    (is (thrown? Exception
+                 (m/sorted-by :x [{:x 1} {:x even?}]))))
+
+  (testing "tied keys + submatchers gives a spurious
+            mismatch even though a valid pairing exists.
+            Use `in-any-order` in those cases."
+    (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])
+                   [{:x 1 :y 2} {:x 1 :y 1}]))
+    (is (match? (m/in-any-order [{:x 1 :y odd?} {:x 1 :y even?}])
+                [{:x 1 :y 2} {:x 1 :y 1}])))
+
+  (testing "mismatch shows `sorted-by` in expected"
+    (is (match?
+         {:matcher-combinators.result/type :mismatch
+          :matcher-combinators.result/value
+          {:expected (list (symbol "sorted-by :a") [{:a 1} {:a 2}])
+           :actual any?}}
+         (c/match (m/sorted-by :a [{:a 1} {:a 2}])
+                  [{:a 2} {:a {:i-am-not-an-int 'foo}}])))))
+
+(deftest sorted-by-with-sets
+  (testing "matches when both expected and actual are sets"
+    (is (match? (m/sorted-by :x #{{:x 1} {:x 2} {:x 3}})
+                #{{:x 3} {:x 1} {:x 2}})))
+
+  (testing "a set matches a sequential of the same elements (and vice-versa)"
+    (is (match? (m/sorted-by :x [{:x 1} {:x 2}])
+                #{{:x 2} {:x 1}}))
+    (is (match? (m/sorted-by :x #{{:x 1} {:x 2}})
+                [{:x 2} {:x 1}])))
+
+  (testing "submatchers work over sets when the sort key is unique"
+    (is (match? (m/sorted-by :x #{{:x 1 :y odd?} {:x 2 :y even?}})
+                #{{:x 2 :y 4} {:x 1 :y 1}})))
+
+  (testing "like set-equals (the default), a set actual can't have extra elements"
+    (is (no-match? (m/sorted-by :x #{{:x 1}})
+                   #{{:x 1} {:x 2 :y 2}})))
+
+  (testing "a set input is reported as the sorted sequence in the mismatch"
+    (let [value (::result/value (c/match (m/sorted-by :x #{{:x 1}})
+                                         #{{:x 1} {:x 2 :y 2}}))]
+      (is (sequential? value))
+      (is (= 2 (count value))))))
+
 (deftest regex-matching
   (is (match? {::result/type   :match
                ::result/value  {:one "1"}
@@ -488,7 +566,8 @@
   (testing "erroring shows `(mismatch (expected (via some-fn expected-data))
                                       (actual actual-data))`"
     (is (match? {::result/type   :mismatch
-                 ::result/value  {:payloads [mismatch?]}
+                 ::result/value  {:payloads [{:expected (list 'via any?)
+                                              :actual 1}]}
                  ::result/weight number?}
                 (c/match {:payloads [(m/via read-string {:foo :barz})]}
                          {:payloads [1]})))))
