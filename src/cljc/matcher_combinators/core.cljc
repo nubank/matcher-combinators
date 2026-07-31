@@ -265,19 +265,21 @@
        ::result/weight 1})
     (-base-name [_] 'unexpected)))
 
-(defrecord ViaMatcher [transform-actual-fn expected]
-    Matcher
-    (-matcher-for [_this] (-matcher-for expected))
-    (-matcher-for [_this x] (-matcher-for expected x))
-    (-match [_ actual]
-      (let [transformed (try (transform-actual-fn actual)
-                             (catch #?(:clj Exception :cljs js/Error) e e))]
-        (if (instance? #?(:clj Exception :cljs js/Error) transformed)
-          {::result/type   :mismatch
-           ::result/value  (model/->Mismatch (list 'via (-> transform-actual-fn str symbol) expected) actual)
-           ::result/weight 1}
-          (match expected transformed))))
-    (-base-name [_] (-base-name expected)))
+(defrecord ViaMatcher [base-name transform-actual-fn expected]
+  Matcher
+  (-matcher-for [_this] (-matcher-for expected))
+  (-matcher-for [_this x] (-matcher-for expected x))
+  (-match [this actual]
+    (let [transformed (try (transform-actual-fn actual)
+                           (catch #?(:clj Exception :cljs js/Error) e e))]
+      (if (instance? #?(:clj Exception :cljs js/Error) transformed)
+        {::result/type   :mismatch
+         ::result/value  (model/->Mismatch
+                          (list (-base-name this) expected)
+                          actual)
+         ::result/weight 1}
+        (match expected transformed))))
+  (-base-name [_] base-name))
 
 (defn- normalize-inputs-length
   "Modify the matchers and actuals sequences to match in length.

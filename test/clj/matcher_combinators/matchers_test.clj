@@ -123,7 +123,16 @@
     (is (no-match? (m/sorted-by :x [{:x 1 :y odd?} {:x 1 :y even?}])
                    [{:x 1 :y 2} {:x 1 :y 1}]))
     (is (match? (m/in-any-order [{:x 1 :y odd?} {:x 1 :y even?}])
-                [{:x 1 :y 2} {:x 1 :y 1}]))))
+                [{:x 1 :y 2} {:x 1 :y 1}])))
+
+  (testing "mismatch shows `sorted-by` in expected"
+    (is (match?
+         {:matcher-combinators.result/type :mismatch
+          :matcher-combinators.result/value
+          {:expected (list (symbol "sorted-by :a") [{:a 1} {:a 2}])
+           :actual any?}}
+         (c/match (m/sorted-by :a [{:a 1} {:a 2}])
+                  [{:a 2} {:a {:i-am-not-an-int 'foo}}])))))
 
 (deftest sorted-by-with-sets
   (testing "matches when both expected and actual are sets"
@@ -557,7 +566,8 @@
   (testing "erroring shows `(mismatch (expected (via some-fn expected-data))
                                       (actual actual-data))`"
     (is (match? {::result/type   :mismatch
-                 ::result/value  {:payloads [mismatch?]}
+                 ::result/value  {:payloads [{:expected (list 'via any?)
+                                              :actual 1}]}
                  ::result/weight number?}
                 (c/match {:payloads [(m/via read-string {:foo :barz})]}
                          {:payloads [1]})))))
