@@ -60,8 +60,8 @@ jobs:
     # - name: Run cljs tests with Clojure 1.11
     #   run: bb test:node -A:1.11
 
-  test-using-java-11:
-    name: 'Test using Java 11'
+  test-using-java-21:
+    name: 'Test using Java 21'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -69,7 +69,7 @@ jobs:
     - uses: actions/setup-java@v5
       with:
         distribution: 'zulu'
-        java-version: 11
+        java-version: 21
 
     - name: Print java version
       run: java -version
