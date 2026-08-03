@@ -10,7 +10,7 @@
 
   Even if not concerned about linting, it is necessary to have
   some namespace require matcher-combinators.test to ensure that
-  match? and friends can be used withing clojure.test/is.
+  match? and friends can be used within clojure.test/is.
 
   Commonly, a dev-only user namespace will require this namespace."
   (:require
@@ -26,34 +26,34 @@
 (is (match? (complement empty?) (range 3)))
 (is (match? (matcher-combinators.matchers/in-any-order [zero? odd? even?]) (range 3)))"
   [matcher actual]
-  (throw (#?(:cljs js/Error. :clj AssertionError.)
-          "Should only be invoked within a `clojure.test/is` form")))
+  (throw (#?(:cljs js/Error. :clj IllegalArgumentException.)
+          "`match?` must be used inside of `clojure.test/is`")))
 
 (defn match-with?
   {:deprecated "3.0.0"
    :doc "DEPRECATED: Use (match? (matcher-combinators.matchers/match-with <type->matcher> <expected>) <actual>) instead."}
   [type->matcher matcher actual]
-  (throw (#?(:cljs js/Error. :clj AssertionError.)
-          "Should only be invoked within a `clojure.test/is` form")))
+  (throw (#?(:cljs js/Error. :clj IllegalArgumentException.)
+          "`match-with?` must be used inside of `clojure.test/is`")))
 
 (defn thrown-match?
-  "Asserts that evaluating expr throws an exception where the excpetion's ex-data satisfies the provided matcher.
+  "Asserts that evaluating expr throws an exception where the exception's ex-data satisfies the provided matcher.
 
-2-arity: (is (thrown-with-match? matcher expr))
-3-arity: (is (thrown-with-match? exception-class matcher expr))"
+2-arity: (is (thrown-match? matcher expr))
+3-arity: (is (thrown-match? exception-class matcher expr))"
   ([matcher actual]
-   (throw (#?(:cljs js/Error. :clj AssertionError.)
-           "Should only be invoked within a `clojure.test/is` form")))
+   (throw (#?(:cljs js/Error. :clj IllegalArgumentException.)
+           "`thrown-match?` must be used inside of `clojure.test/is`")))
   ([exception-class matcher actual]
-   (throw (#?(:cljs js/Error. :clj AssertionError.)
-           "Should only be invoked within a `clojure.test/is` form"))))
+   (throw (#?(:cljs js/Error. :clj IllegalArgumentException.)
+           "`thrown-match?` must be used inside of `clojure.test/is`"))))
 
 (defn match-roughly?
   {:deprecated "3.0.0"
    :doc "DEPRECATED: Instead use (match? (matcher-combinators.matchers/match-with [number? (matcher-combinators.matchers/within-delta 0.01M)] <expected>) <actual>)"}
   [delta matcher actual]
-  (throw (#?(:cljs js/Error. :clj AssertionError.)
-          "Should only be invoked within a `clojure.test/is` form")))
+  (throw (#?(:cljs js/Error. :clj IllegalArgumentException.)
+          "`match-roughly?` must be used inside of `clojure.test/is`")))
 
 #?(:clj
    (def build-match-assert
