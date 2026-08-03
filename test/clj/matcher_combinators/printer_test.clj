@@ -91,3 +91,11 @@
 (deftest abbreviation-test
   (testing "Abbreviation doesn't descend into complete mismatch data (doing so would result in an exception)"
     (is (printer/abbreviated (model/->Missing (->ExampleEntityMap {:a 1}))))))
+
+(deftest with-ellision-marker-sorted-map
+  (testing "sorted maps can be abbreviated without ClassCastException on non-Comparable keys"
+    (let [result (printer/with-ellision-marker (sorted-map :a 1 :b 2))]
+      (is (map? result))
+      (is (not (sorted? result))
+          "abbreviation should use a hash-map so EllisionMarker keys are legal")
+      (is (contains? result printer/ellision-marker)))))

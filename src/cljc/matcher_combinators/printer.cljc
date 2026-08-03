@@ -86,7 +86,12 @@
         (conj expr ellision-marker)
 
         (and (map? expr) (not (core/non-internal-record? expr)))
-        (assoc expr ellision-marker empty-marker)
+        ;; Sorted maps require Comparable keys; EllisionMarker is not
+        ;; Comparable, so convert to a plain hash-map before assoc.
+        ;; See https://github.com/nubank/matcher-combinators/issues/234
+        (assoc (if (sorted? expr) (into {} expr) expr)
+               ellision-marker
+               empty-marker)
 
         :else
         expr))
