@@ -131,13 +131,19 @@
   Matcher
   (-matcher-for [this] this)
   (-matcher-for [this _] this)
-  (-match [_this _actual]
-    ;; `Absent` should never be matched against directly. That happening means
-    ;; it wasn't used in the context of a map
-    {::result/type  :mismatch
-     ::result/value (model/->InvalidMatcherContext
-                      "`absent` matcher should only be used as the value in a map")
-     ::result/weight 1})
+  (-match [_this actual]
+    ;; Map matching special-cases bare `absent` via `match-kv`. When `absent`
+    ;; is nested (e.g. inside `any-of`), map matching passes `::missing` for a
+    ;; missing key — treat that as a successful absence match (#211).
+    (if (= actual ::missing)
+      {::result/type   :match
+       ::result/value  actual
+       ::result/weight 0}
+      ;; Any other direct use means `absent` wasn't applied as a map value.
+      {::result/type  :mismatch
+       ::result/value (model/->InvalidMatcherContext
+                        "`absent` matcher should only be used as the value in a map")
+       ::result/weight 1}))
   (-base-name [_] 'absent))
 
 (defmethod clojure.pprint/simple-dispatch Absent [absent]

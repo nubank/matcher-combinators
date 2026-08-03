@@ -602,6 +602,22 @@
                                      :actual 3}}}
                 (c/match {:a (m/any-of 1 2)} {:a 3}))))
 
+  (testing "`any-of` + `absent` matches when the key is missing (#211)"
+    (is (match? {::result/type  :match
+                 ::result/value {:c 'd}}
+                (c/match {:a (m/any-of 'b m/absent)} {:c 'd})))
+    (is (c/indicates-match?
+         (c/match {:a (m/any-of 'b m/absent)} {:c 'd}))))
+
+  (testing "`any-of` + `absent` still matches when the alternate value is present"
+    (is (match? {::result/type  :match
+                 ::result/value {:a 'b}}
+                (c/match {:a (m/any-of 'b m/absent)} {:a 'b}))))
+
+  (testing "`any-of` + `absent` mismatches when the key has a different value"
+    (is (match? {::result/type :mismatch}
+                (c/match {:a (m/any-of 'b m/absent)} {:a 'c}))))
+
   (testing "`any-of` + `seq-of` works great"
     (is (match? {::result/type :mismatch
                  ::result/value [1 "2" mismatch? 4 "5" mismatch?]}
