@@ -135,6 +135,23 @@ We've deprecated support for [Midje](https://github.com/marick/midje) in `matche
 
 The `matcher-combinators.standalone` namespace provides an API for using matcher-combinators outside the context of a test framework.
 
+When a map mismatch includes missing keys, `:mismatch/detail` is a plain map with explicit keys:
+
+```clojure
+(require '[matcher-combinators.standalone :as standalone]
+         '[matcher-combinators.matchers :as m])
+
+(standalone/match (m/equals {:a 1}) {:b 2})
+;;=> {:match/result :mismatch,
+;;     :mismatch/detail {:value {:b 2}
+;;                       :missing-keys [:a]
+;;                       :missing {:a 1}
+;;                       :unexpected-keys [:b]}
+;;     ...}
+```
+
+`:missing` holds the expected values for keys absent from the actual map. Value mismatches on present keys keep the previous annotated-map shape.
+
 ## Matchers
 
 ### Default matchers
