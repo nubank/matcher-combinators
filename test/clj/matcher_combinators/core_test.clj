@@ -598,7 +598,46 @@
                  ::result/weight 1}
                 (core/match (matchers/equals even-odd-set) #{1})))))
 
-(deftest in-any-order-minimal-mismatch-test
+(deftest entry-embeds-test
+  (testing "matches map entries with predicate keys (issue #132)"
+    (is (= {::result/type   :match
+            ::result/value  {:a :b}
+            ::result/weight 0}
+           (core/match (matchers/entry-embeds [[keyword? :b]])
+                       {:a :b})))
+    (is (= {::result/type   :mismatch
+            ::result/weight pos-int?
+            ::result/value  map?}
+           (core/match (matchers/entry-embeds [[keyword? :b]])
+                       {:a :c}))))
+
+  (testing "default map matcher does not match predicate keys"
+    (is (= {::result/type   :mismatch
+            ::result/weight pos-int?
+            ::result/value  map?}
+           (core/match {keyword? :b} {:a :b}))))
+
+  (testing "philomates-style multi-entry matching with extra keys"
+    (is (= {::result/type   :match
+            ::result/value  {:a 1 :x -1 :whatever "foo"}
+            ::result/weight 0}
+           (core/match (matchers/entry-embeds [[keyword? odd?] [:x pos?]])
+                       {:a 1 :x -1 :whatever "foo"}))))
+
+  (testing "duplicate key matchers via entry pairs (symbols)"
+    (is (= {::result/type   :match
+            ::result/value  {'x 1 'y 2}
+            ::result/weight 0}
+           (core/match (matchers/entry-embeds [[symbol? 2] [symbol? 1]])
+                       {'x 1 'y 2}))))
+
+  (testing "mismatches when type is not a map"
+    (is (match? {::result/type   :mismatch
+                 ::result/value  {:expected-type-msg #"^entry-embeds *"
+                                  :actual-type     sequential?
+                                  :provided        "provided: sequential"}
+                 ::result/weight 1}
+                (core/match (matchers/entry-embeds [[keyword? odd?]]) [1 2 3])))))
   (is (= {::result/type   :mismatch
           ::result/value  [{:a "1" :x (model/->Mismatch "12" "12=")}]
           ::result/weight 1}
