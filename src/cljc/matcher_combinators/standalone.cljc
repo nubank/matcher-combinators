@@ -5,7 +5,41 @@
                :clj  [matcher-combinators.clj-test :as internal.clj-test])
             #?(:cljs [cljs.test :as t]
                :clj  [clojure.test :as t])
-            [matcher-combinators.parser]))
+            #?(:clj  [matcher-combinators.model]
+               :cljs [matcher-combinators.model :refer [Missing Unexpected]])
+            [matcher-combinators.parser])
+  #?(:clj
+     (:import [matcher_combinators.model Missing Unexpected])))
+
+(defn- missing? [v] (instance? Missing v))
+(defn- unexpected? [v] (instance? Unexpected v))
+
+(defn- map-mismatch? [value]
+  (and (map? value)
+       (= :mismatch-map (:mismatch (meta value)))))
+
+(defn- structured-map-detail [value]
+  (let [missing-entries     (filter (fn [[_ v]] (missing? v)) value)
+        missing-keys        (vec (map first missing-entries))
+        missing             (into {} (map (fn [[k v]] [k (:expected v)]) missing-entries))
+        unexpected-entries  (filter (fn [[_ v]] (unexpected? v)) value)
+        unexpected-keys     (vec (map first unexpected-entries))
+        mismatch-entries    (remove (fn [[_ v]] (or (missing? v) (unexpected? v))) value)
+        clean-value         (into {}
+                                    (concat
+                                     (map (fn [[k v]] [k (:actual v)]) unexpected-entries)
+                                     mismatch-entries))]
+    (cond-> {}
+      (seq clean-value)     (assoc :value clean-value)
+      (seq missing-keys)    (assoc :missing-keys missing-keys
+                                     :missing missing)
+      (seq unexpected-keys) (assoc :unexpected-keys unexpected-keys))))
+
+(defn- format-mismatch-detail [value]
+  (if (and (map-mismatch? value)
+           (some (fn [[_ v]] (missing? v)) value))
+    (structured-map-detail value)
+    value))
 
 (defn match
   "Returns a map indicating whether the `actual` value matches `expected`.
@@ -15,7 +49,11 @@
   Return map includes the following keys:
 
   - :match/result          - either :match or :mismatch
-  - :mismatch/detail       - the actual value with mismatch annotations.
+  - :mismatch/detail       - mismatch annotations. For map mismatches with
+                              missing keys, a structured map with `:value`,
+                              `:missing-keys`, and `:missing` (expected values
+                              for absent keys). Other map mismatches and
+                              non-map mismatches keep the previous shape.
   - ::pretty-print!        - function that pretty prints the mismatch
   - ::report-clojure-test! - function that reports failure to clojure.test"
   [matcher actual]
@@ -36,7 +74,7 @@
                                           :expected matcher
                                           :actual   (list 'match? matcher actual)}))}
       (= :mismatch type)
-      (assoc :mismatch/detail value
+      (assoc :mismatch/detail (format-mismatch-detail value)
              ::pretty-print! #(print printable-match-data)))))
 
 (defn report-clojure-test!

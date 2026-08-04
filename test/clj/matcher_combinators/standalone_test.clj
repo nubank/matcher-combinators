@@ -23,7 +23,21 @@
 
   ;; TODO (dchelimsky,2020-03-11): consider making it a plain datastructure
   (testing ":match/detail binds to a Mismatch object"
-    (is (instance? matcher_combinators.model.Mismatch (:mismatch/detail (standalone/match 37 42))))))
+    (is (instance? matcher_combinators.model.Mismatch (:mismatch/detail (standalone/match 37 42)))))
+
+  (testing ":mismatch/detail surfaces missing map keys explicitly (fixes #107)"
+    (let [detail (:mismatch/detail (standalone/match (m/equals {:a 1}) {:b 2}))]
+      (is (= {:value {:b 2} :missing-keys [:a] :missing {:a 1} :unexpected-keys [:b]} detail)))
+    (let [detail (:mismatch/detail (standalone/match (m/equals {:a 1}) {}))]
+      (is (= {:missing-keys [:a] :missing {:a 1}} detail)))
+    (let [detail (:mismatch/detail (standalone/match (m/equals {:a 1 :c 3}) {:b 2}))]
+      (is (= #{:a :c} (set (:missing-keys detail))))
+      (is (= {:a 1 :c 3} (:missing detail)))
+      (is (= #{:b} (set (:unexpected-keys detail)))))
+    (testing "value mismatches without missing keys keep prior shape"
+      (let [detail (:mismatch/detail (standalone/match (m/equals {:a 1}) {:a 2}))]
+        (is (map? detail))
+        (is (instance? matcher_combinators.model.Mismatch (:a detail)))))))
 
 (deftest test-match?
   (testing "parser defaults"
