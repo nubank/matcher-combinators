@@ -634,6 +634,15 @@
     (is (match? (m/seq-of (m/all-of integer? odd?))
                 [1 -1 3 -3]))))
 
+(deftest entry-embeds-matcher
+  (testing "clojure.test match? integration"
+    (is (match? (m/entry-embeds [[keyword? odd?] [:x pos?]])
+                {:a 1 :x -1 :whatever "foo"}))
+    (is (match? (m/entry-embeds [[keyword? :b]])
+                {:a :b}))
+    (is (not (match? (m/entry-embeds [[keyword? :b]])
+                     {:a :c})))))
+
 (deftest pred-matcher
   (testing "pred matcher without description argument gives mismatch info with the pred function's object representation"
     (is (match? {::result/type   :mismatch

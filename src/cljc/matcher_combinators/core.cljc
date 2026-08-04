@@ -502,6 +502,21 @@
               ::result/value set)))
   (-base-name [_] (if accept-seq? 'set-embeds 'embeds)))
 
+(defn- map->entry-vectors [m]
+  (mapv (fn [[k v]] [k v]) m))
+
+(defrecord EntryEmbeds [expected]
+  Matcher
+  (-matcher-for [this] this)
+  (-matcher-for [this _] this)
+  (-match [this actual]
+    (if-let [issue (validate-input expected actual map? map-like? (-base-name this) "map")]
+      issue
+      (let [entry-matchers (vec expected)
+            actual-entries (map->entry-vectors actual)]
+        (match-any-order entry-matchers actual-entries true))))
+  (-base-name [_] 'entry-embeds))
+
 (defrecord PredMatcher [pred desc]
   Matcher
   (-matcher-for [this] this)

@@ -101,7 +101,11 @@ For example:
   (is (match? {:name/first "Alfredo"}
               {:name/first  "Alfredo"
                :name/last   "da Rocha Viana"
-               :name/suffix "Jr."}))))
+               :name/suffix "Jr."}))
+
+  ;; Predicate keys are not supported by default map matching; use entry-embeds
+  (is (not (match? {keyword? :b} {:a :b})))
+  (is (match? (m/entry-embeds [[keyword? :b]]) {:a :b})))
 
 (deftest test-matching-nested-datastructures
   ;; Maps, sequences, and sets follow the same semantics whether at
@@ -179,6 +183,8 @@ for a specific value, e.g.
   An alternative to `in-any-order` for cases when inputs are sortable and `in-any-order` has poor performance, such as with large sequences.
 
 - `set-equals`/`set-embeds` similar behavior to `equals`/`embeds` for sets, but allows one to specify the matchers using a sequence so that duplicate matchers are not removed. For example, `(equals #{odd? odd?})` becomes `(equals #{odd})`, so to get around this one should use `(set-equals [odd? odd])`.
+
+- `entry-embeds` opt-in matcher for maps when keys and/or values should be matched with predicates or submatchers. Provide a sequential collection of `[key-matcher value-matcher]` pairs; extra entries in the actual map are ignored. Default map matching uses literal keys only — `(match? {keyword? :b} {:a :b})` does **not** match; use `(match? (m/entry-embeds [[keyword? :b]]) {:a :b})` instead. See [issue #132](https://github.com/nubank/matcher-combinators/issues/132). Like `embeds`/`in-any-order`, avoid large maps.
 
 - `seq-of` takes an expected matcher and creates a new matcher over a sequence, where each element matches the provided expected matcher. Analogous to `clojure.core/every?`, although seq-of expects a non-empty sequence.
 

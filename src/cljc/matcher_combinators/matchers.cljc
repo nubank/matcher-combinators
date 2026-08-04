@@ -96,6 +96,29 @@
   [expected]
   (core/->SetEmbeds expected true))
 
+(defn entry-embeds
+  "Opt-in matcher for maps whose keys and/or values should be matched with
+  predicates or submatchers instead of literal equality.
+
+  `expected` is a sequential collection of `[key-matcher value-matcher]`
+  pairs. Each pair is matched against some `[key value]` entry in the actual
+  map; extra entries in the actual map are ignored (embeds semantics).
+
+  Default map matching uses literal keys only — predicates in map key
+  position are not supported. Use `entry-embeds` when you need that
+  behaviour, e.g. matching any keyword key:
+
+  ```clojure
+  (is (match? (m/entry-embeds [[keyword? odd?] [:x pos?]])
+              {:a 1 :x -1 :whatever \"foo\"}))
+  ```
+
+  WARNING: like `embeds` and `in-any-order`, this matcher may compare every
+  expected entry with every actual entry to find a best pairing. Avoid large
+  maps."
+  [expected]
+  (core/->EntryEmbeds expected))
+
 (defn in-any-order
   "Matcher that will match when the given a list that is the same as the
   `expected` list but with elements in a different order.
