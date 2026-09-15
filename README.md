@@ -273,8 +273,8 @@ For convenience we've also added the built-in matcher `nested-equals` to reduce 
 
 ``` clojure
 (deftest exact-map-matching-with-match-with
-  (is (match? (m/nested-equals {:a {:b {:c odd?}}}))
-              {:a {:b {:c 1}}}))
+  (is (match? (m/nested-equals {:a {:b {:c odd?}}})
+              {:a {:b {:c 1}}})))
 ```
 
 ## Development
