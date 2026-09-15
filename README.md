@@ -236,12 +236,13 @@ Negative matchers, that is, those asserting the absence of something, are genera
 
 ```clojure
 (deftest avoid-negative-matchers
-  (testing "normal assertion that `:a` is present"
-    (match? {:a any?}
-            actual))
-  (testing "double negation version"
-    (match? (matcher-combinators.matchers/mismatch {:a matcher-combinators.matchers/absent})
-            actual)))
+  (let [actual {:a 1}]
+    (testing "normal assertion that `:a` is present"
+      (is (match? {:a any?}
+                  actual)))
+    (testing "double negation version"
+      (is (match? (matcher-combinators.matchers/mismatch {:a matcher-combinators.matchers/absent})
+                  actual)))))
 ```
 
 ### building new matchers
