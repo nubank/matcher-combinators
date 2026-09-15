@@ -101,7 +101,7 @@ For example:
   (is (match? {:name/first "Alfredo"}
               {:name/first  "Alfredo"
                :name/last   "da Rocha Viana"
-               :name/suffix "Jr."}))))
+               :name/suffix "Jr."})))
 
 (deftest test-matching-nested-datastructures
   ;; Maps, sequences, and sets follow the same semantics whether at
@@ -219,7 +219,7 @@ The `via` matcher can help us out with this:
   (is (match? (m/match-with
                [vector? (fn [expected] (m/via sort expected))]
                {:payloads [1 2 3]})
-              {:payloads (shuffle [3 2 1])}))))
+              {:payloads (shuffle [3 2 1])})))
 ```
 
 In this example we decorate `vector?`'s matcher to first sort the `actual` and then do matching.
