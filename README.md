@@ -209,7 +209,7 @@ The `via` matcher can help us out with this:
 ```clojure
 (let [result {:payloads ["{:foo :bar :baz :qux}"]}]
   (is (match? {:payloads [(m/via read-string {:foo :bar})]}
-              {:payloads result})))
+              result)))
 ```
 
 `via`, when paired with `match-with`, can be used to apply `actual` pre-processing before applying an underlying matcher:
