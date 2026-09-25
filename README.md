@@ -101,7 +101,7 @@ For example:
   (is (match? {:name/first "Alfredo"}
               {:name/first  "Alfredo"
                :name/last   "da Rocha Viana"
-               :name/suffix "Jr."}))))
+               :name/suffix "Jr."})))
 
 (deftest test-matching-nested-datastructures
   ;; Maps, sequences, and sets follow the same semantics whether at
@@ -209,7 +209,7 @@ The `via` matcher can help us out with this:
 ```clojure
 (let [result {:payloads ["{:foo :bar :baz :qux}"]}]
   (is (match? {:payloads [(m/via read-string {:foo :bar})]}
-              {:payloads result})))
+              result)))
 ```
 
 `via`, when paired with `match-with`, can be used to apply `actual` pre-processing before applying an underlying matcher:
@@ -219,7 +219,7 @@ The `via` matcher can help us out with this:
   (is (match? (m/match-with
                [vector? (fn [expected] (m/via sort expected))]
                {:payloads [1 2 3]})
-              {:payloads (shuffle [3 2 1])}))))
+              {:payloads (shuffle [3 2 1])})))
 ```
 
 In this example we decorate `vector?`'s matcher to first sort the `actual` and then do matching.
@@ -236,12 +236,13 @@ Negative matchers, that is, those asserting the absence of something, are genera
 
 ```clojure
 (deftest avoid-negative-matchers
-  (testing "normal assertion that `:a` is present"
-    (match? {:a any?}
-            actual))
-  (testing "double negation version"
-    (match? (matcher-combinators.matchers/mismatch {:a matcher-combinators.matchers/absent})
-            actual)))
+  (let [actual {:a 1}]
+    (testing "normal assertion that `:a` is present"
+      (is (match? {:a any?}
+                  actual)))
+    (testing "double negation version"
+      (is (match? (matcher-combinators.matchers/mismatch {:a matcher-combinators.matchers/absent})
+                  actual)))))
 ```
 
 ### building new matchers
@@ -272,8 +273,8 @@ For convenience we've also added the built-in matcher `nested-equals` to reduce 
 
 ``` clojure
 (deftest exact-map-matching-with-match-with
-  (is (match? (m/nested-equals {:a {:b {:c odd?}}}))
-              {:a {:b {:c 1}}}))
+  (is (match? (m/nested-equals {:a {:b {:c odd?}}})
+              {:a {:b {:c 1}}})))
 ```
 
 ## Development
