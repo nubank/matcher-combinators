@@ -63,3 +63,12 @@
            (:matcher-combinators.result/value
              (c/match [#{2}] [#{1 2}])))))
   (config/disable-abbreviation!))
+
+(deftest abbreviated-predicate-mismatch-output-test
+  (config/enable-abbreviation!)
+  (is (string?
+        (printer/as-string
+          (:matcher-combinators.result/value
+            (c/match {:a list?}
+                     {:a (into [] (repeat 400 :a))})))))
+  (config/disable-abbreviation!))

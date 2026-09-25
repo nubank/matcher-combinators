@@ -69,7 +69,9 @@
       (colorized-print markup)
       (pprint/simple-dispatch markup))))
 
-(defrecord EllisionMarker [])
+(defrecord EllisionMarker []
+  #?@(:clj [Comparable
+            (compareTo [_ _] 1)]))
 (defmethod markup-expression EllisionMarker [_] '...)
 (def ellision-marker (EllisionMarker.))
 
